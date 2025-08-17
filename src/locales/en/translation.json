@@ -1,0 +1,97 @@
+
+{
+  "title": "QuizRush",
+  "description": "Speed thinking or face the chase!",
+  "atmosphereText": "Speed thinking or face the chase.",
+  "atmosphereTextInitial": "Select Quiz to start",
+  "atmosphereText1": "You don't know who is behind you",
+  "atmosphereText2": "Screams of fear were heard everywhere",
+  "atmosphereText3": "You have to be right or you'll be caught",
+  "joinGame": "Join Game",
+  "joinDescription": "Enter the room code below to play.",
+  "hostGame": "Host Game",
+  "hostDescription": "Create a new room to play",
+  "gameCodePlaceholder": "Enter the room code",
+  "nicknamePlaceholder": "Your Name",
+  "joinButton": "Join",
+  "createRoomButton": "Create Room",
+  "joining": "Joining...",
+  "creatingRoom": "Creating Room...",
+  "selectQuizTitle": "Select Quiz",
+  "searchButton": "Look for quizzes",
+  "searchPlaceholder": "Search",
+  "closeSearch": "Close search",
+  "defaultQuizDescription": "Fun quiz to play!",
+  "durationLabel": "Duration: {{duration}} minutes",
+  "noQuizzesFound": "No quizzes match your search.",
+  "noQuizzesAvailable": "No quizzes found.",
+  "previousButton": "Previous",
+  "nextButton": "Next",
+  "pageInfo": "Page {{current}} of {{total}}",
+  "backButton": "Back to home",
+  "settingsTitle": "Settings",
+  "settingsDescription": "Choose your chaser and set up your game!",
+  "gameSettingsTitle": "Game Settings",
+  "gameDurationLabel": "Game Duration (minutes)",
+  "gameDurationPlaceholder": "Enter duration (minutes)",
+  "gameDurationValue": "{{minutes}} Minutes",
+  "questionCountLabel": "Number of Questions",
+  "selectQuestionCount": "Select number of questions",
+  "questionCountOptions": {
+    "10": "10 Questions - Quick Finish",
+    "20": "20 Questions - Standard",
+    "30": "30 Questions - Many",
+    "40": "40 Questions - Very Many",
+    "50": "50 Questions - Extreme"
+  },
+  "questionCountValue": "{{count}} Questions",
+  "summaryTitle": "Summary",
+  "chaserLabel": "Chaser",
+  "chaserNotSelected": "Not selected",
+  "chaserSelectTitle": "Choose Chaser",
+  "selectedChaser": "Selected Chaser: {{name}}",
+  "startButton": "Start",
+  "warningText": "WARNING: This game contains horror elements that may not be suitable for all players",
+  "chasers": {
+    "zombie": {
+      "name": "Zombie",
+      "alt": "Zombie Chaser",
+      "description": "Slow but relentless. Will keep chasing without stopping."
+    },
+    "monster1": {
+      "name": "Mad Mutant",
+      "alt": "Mad Mutant Chaser",
+      "description": "Moves quickly with unpredictable patterns. Hard to anticipate."
+    },
+    "monster2": {
+      "name": "Hellhound",
+      "alt": "Hellhound Chaser",
+      "description": "Tracks its prey from afar. Speed increases when close to the target."
+    },
+    "monster3": {
+      "name": "Slaughter Samurai",
+      "alt": "Slaughter Samurai Chaser",
+      "description": "Moves with deadly precision. Strikes suddenly."
+    },
+    "darknight": {
+      "name": "Dark King",
+      "alt": "Dark King Chaser",
+      "description": "Controls darkness itself. Speed and movement patterns vary."
+    }
+  },
+  "errorMessages": {
+    "missingInput": "Enter game code and name!",
+    "roomNotFound": "Game code not found!",
+    "roomFull": "Room is full!",
+    "joinFailed": "Failed to join game! Try again later.",
+    "fetchQuizzesFailed": "Failed to load quizzes!",
+    "createGameFailed": "Failed to create game!",
+    "fetchRoomFailed": "Failed to fetch room!",
+    "saveSettingsFailed": "Failed to save settings!"
+  },
+  "start": "Start Quiz",
+  "login": "Login with Supabase",
+  "loading": "Loading...",
+  "selectQuizDescription": "Choose a quiz to start your adventure!",
+  "characterSelectDescription": "Select your chaser and configure your game settings!"
+}

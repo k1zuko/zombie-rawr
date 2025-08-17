@@ -1,0 +1,97 @@
+
+{
+  "title": "QuizRush",
+  "description": "Berpikir cepat atau dikejar!",
+  "atmosphereText": "Berpikir cepat atau hadapi kejaran.",
+  "atmosphereTextInitial": "Pilih kuis untuk memulai",
+  "atmosphereText1": "Kamu tidak tahu siapa yang ada di belakangmu",
+  "atmosphereText2": "Teriakan ketakutan terdengar di mana-mana",
+  "atmosphereText3": "Kamu harus benar atau akan tertangkap",
+  "joinGame": "Gabung Permainan",
+  "joinDescription": "Masukkan kode ruangan di bawah untuk bermain.",
+  "hostGame": "Buat Permainan",
+  "hostDescription": "Buat ruangan baru untuk bermain",
+  "gameCodePlaceholder": "Masukkan kode ruangan",
+  "nicknamePlaceholder": "Nama Anda",
+  "joinButton": "Gabung",
+  "createRoomButton": "Buat Ruangan",
+  "joining": "Sedang bergabung...",
+  "creatingRoom": "Sedang membuat ruangan...",
+  "selectQuizTitle": "Pilih Kuis",
+  "searchButton": "Cari kuis",
+  "searchPlaceholder": "Cari",
+  "closeSearch": "Tutup pencarian",
+  "defaultQuizDescription": "Kuis seru untuk dimainkan!",
+  "durationLabel": "Durasi: {{duration}} menit",
+  "noQuizzesFound": "Tidak ada kuis yang cocok dengan pencarian.",
+  "noQuizzesAvailable": "Tidak ada kuis yang ditemukan.",
+  "previousButton": "Sebelumnya",
+  "nextButton": "Selanjutnya",
+  "pageInfo": "Halaman {{current}} dari {{total}}",
+  "backButton": "Kembali ke beranda",
+  "settingsTitle": "Pengaturan",
+  "settingsDescription": "Pilih karakter pengejar dan atur permainanmu!",
+  "gameSettingsTitle": "Pengaturan Permainan",
+  "gameDurationLabel": "Durasi Permainan (menit)",
+  "gameDurationPlaceholder": "Masukkan durasi (menit)",
+  "gameDurationValue": "{{minutes}} Menit",
+  "questionCountLabel": "Jumlah Soal",
+  "selectQuestionCount": "Pilih jumlah soal",
+  "questionCountOptions": {
+    "10": "10 Soal - Cepat Selesai",
+    "20": "20 Soal - Standar",
+    "30": "30 Soal - Banyak",
+    "40": "40 Soal - Sangat Banyak",
+    "50": "50 Soal - Ekstrem"
+  },
+  "questionCountValue": "{{count}} Soal",
+  "summaryTitle": "Kesimpulan",
+  "chaserLabel": "Pengejar",
+  "chaserNotSelected": "Belum dipilih",
+  "chaserSelectTitle": "Pilih Pengejar",
+  "selectedChaser": "Karakter Terpilih: {{name}}",
+  "startButton": "Mulai",
+  "warningText": "PERINGATAN: Permainan ini mengandung unsur horor yang mungkin tidak cocok untuk semua pemain",
+  "chasers": {
+    "zombie": {
+      "name": "Zombie",
+      "alt": "Zombie Pengejar",
+      "description": "Lambat tapi tak kenal lelah. Akan terus mengejar tanpa henti."
+    },
+    "monster1": {
+      "name": "Mutant Gila",
+      "alt": "Mutant Gila Pengejar",
+      "description": "Bergerak cepat dengan pola tak terduga. Sulit ditebak."
+    },
+    "monster2": {
+      "name": "Anjing Neraka",
+      "alt": "Anjing Neraka Pengejar",
+      "description": "Mengendus mangsanya dari jarak jauh. Kecepatan meningkat saat mendekati korban."
+    },
+    "monster3": {
+      "name": "Samurai Pembantai",
+      "alt": "Samurai Pembantai Pengejar",
+      "description": "Bergerak dengan presisi mematikan. Menyerang secara tiba-tiba."
+    },
+    "darknight": {
+      "name": "Raja Kegelapan",
+      "alt": "Raja Kegelapan Pengejar",
+      "description": "Mengendalikan kegelapan itu sendiri. Kecepatan dan pola gerakan berubah-ubah."
+    }
+  },
+  "errorMessages": {
+    "missingInput": "Masukkan kode permainan dan nama!",
+    "roomNotFound": "Kode permainan tidak ditemukan!",
+    "roomFull": "Ruangan penuh!",
+    "joinFailed": "Gagal bergabung ke permainan! Coba lagi nanti.",
+    "fetchQuizzesFailed": "Gagal memuat kuis!",
+    "createGameFailed": "Gagal membuat permainan!",
+    "fetchRoomFailed": "Gagal mengambil ruangan!",
+    "saveSettingsFailed": "Gagal menyimpan pengaturan!"
+  },
+  "start": "Mulai Kuis",
+  "login": "Masuk dengan Supabase",
+  "loading": "Memuat...",
+  "selectQuizDescription": "Pilih kuis untuk memulai petualanganmu!",
+  "characterSelectDescription": "Pilih pengejar dan atur pengaturan permainanmu!"
+}

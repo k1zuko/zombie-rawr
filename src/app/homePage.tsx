@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
+import { useTranslation } from "react-i18next"; // Impor hook untuk terjemahan
 
 // Types for TypeScript
 interface BloodDrip {
@@ -36,6 +37,7 @@ interface FloatingIcon {
 }
 
 export default function HomePage() {
+  const { t, i18n } = useTranslation(); // Hook untuk terjemahan
   const [gameCode, setGameCode] = useState<string>("");
   const [nickname, setNickname] = useState<string>("");
   const [isJoining, setIsJoining] = useState<boolean>(false);
@@ -46,7 +48,7 @@ export default function HomePage() {
   const searchParams = useSearchParams();
 
   // Atmosphere texts
-  const atmosphereTexts = useMemo(() => ["Speed thinking or face the chase."], []);
+  const atmosphereTexts = useMemo(() => [t("atmosphereText")], [t]);
 
   // Blood drips with precomputed opacity
   const bloodDrips = useMemo(
@@ -139,59 +141,64 @@ export default function HomePage() {
   // Join game
   const handleJoinGame = useCallback(async () => {
     if (!gameCode || !nickname) {
-      setErrorMessage("Enter game code and name!");
+      setErrorMessage(t("errorMessages.missingInput"));
       return;
     }
 
     setIsJoining(true);
-  setErrorMessage(null);
+    setErrorMessage(null);
 
-  try {
-    const { data: room, error } = await supabase
-      .from("game_rooms")
-      .select("*")
-      .eq("room_code", gameCode.toUpperCase())
-      .single();
+    try {
+      const { data: room, error } = await supabase
+        .from("game_rooms")
+        .select("*")
+        .eq("room_code", gameCode.toUpperCase())
+        .single();
 
-    if (error || !room) {
-      setErrorMessage("Game code not found!");
-      return;
+      if (error || !room) {
+        setErrorMessage(t("errorMessages.roomNotFound"));
+        return;
+      }
+
+      const { count } = await supabase
+        .from("players")
+        .select("*", { count: "exact" })
+        .eq("room_id", room.id);
+
+      if (count && count >= room.max_players) {
+        setErrorMessage(t("errorMessages.roomFull"));
+        return;
+      }
+
+      const { error: playerError } = await supabase.from("players").insert({
+        room_id: room.id,
+        nickname,
+        character_type: `robot${Math.floor(Math.random() * 4) + 1}`,
+      });
+
+      if (playerError) throw playerError;
+
+      localStorage.setItem("nickname", nickname);
+      localStorage.setItem("roomCode", gameCode.toUpperCase());
+
+      router.push(`/game/${gameCode.toUpperCase()}`);
+    } catch (error) {
+      console.error("Error joining game:", error);
+      setErrorMessage(t("errorMessages.joinFailed"));
+    } finally {
+      setIsJoining(false);
     }
-
-    const { count } = await supabase
-      .from("players")
-      .select("*", { count: "exact" })
-      .eq("room_id", room.id);
-
-    if (count && count >= room.max_players) {
-      setErrorMessage("Room is full!");
-      return;
-    }
-
-    const { error: playerError } = await supabase.from("players").insert({
-      room_id: room.id,
-      nickname,
-      character_type: `robot${Math.floor(Math.random() * 4) + 1}`,
-    });
-
-    if (playerError) throw playerError;
-
-    localStorage.setItem("nickname", nickname);
-    localStorage.setItem("roomCode", gameCode.toUpperCase());
-
-    router.push(`/game/${gameCode.toUpperCase()}`);
-  } catch (error) {
-    console.error("Error joining game:", error);
-    setErrorMessage("Failed to join game! Try again later.");
-  } finally {
-    setIsJoining(false);
-  }
-}, [gameCode, nickname, router]);
+  }, [gameCode, nickname, router, t]);
 
   // Settings navigation
   const handleSettingsClick = useCallback(() => {
     router.push("/questions");
   }, [router]);
+
+  // Fungsi untuk mengganti bahasa
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none">
@@ -259,6 +266,24 @@ export default function HomePage() {
           <Gamepad2 className="h-6 w-6 animate-pulse" />
         </Button>
 
+        {/* Tombol pemilihan bahasa */}
+        <div className="absolute top-4 right-4 space-x-2">
+          <Button
+            variant="ghost"
+            onClick={() => changeLanguage("en")}
+            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "en" ? "bg-red-900/30" : ""}`}
+          >
+            EN
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => changeLanguage("id")}
+            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "id" ? "bg-red-900/30" : ""}`}
+          >
+            ID
+          </Button>
+        </div>
+
         <div className="w-full max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: -50 }}
@@ -270,7 +295,7 @@ export default function HomePage() {
               className="text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
-              QuizRush
+              {t("title")}
             </h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -308,17 +333,17 @@ export default function HomePage() {
                     <Hash className="w-10 h-10 text-red-400" aria-hidden="true" />
                   </motion.div>
                   <CardTitle className="text-3xl font-bold text-red-400 font-mono mb-2">
-                    Join Game
+                    {t("joinGame")}
                   </CardTitle>
                   <CardDescription className="text-red-400/80 text-lg font-mono">
-                    Enter the room code below to play.
+                    {t("joinDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-0">
                   <div className="space-y-4">
                     <div>
                       <Input
-                        placeholder="Enter the room code"
+                        placeholder={t("gameCodePlaceholder")}
                         value={gameCode}
                         onChange={(e) => handleGameCodeChange(e.target.value)}
                         className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-xl font-mono h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30"
@@ -327,7 +352,7 @@ export default function HomePage() {
                     </div>
                     <div>
                       <Input
-                        placeholder="Your Name"
+                        placeholder={t("nicknamePlaceholder")}
                         value={nickname}
                         onChange={(e) => handleNicknameChange(e.target.value)}
                         className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-xl font-mono h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30"
@@ -340,7 +365,7 @@ export default function HomePage() {
                     onClick={handleJoinGame}
                     disabled={!gameCode || !nickname || isJoining}
                     className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-lg py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
-                    aria-label={isJoining ? "Joining..." : "Join the game"}
+                    aria-label={isJoining ? t("joining") : t("joinButton")}
                   >
                     <span className="relative z-10 flex items-center">
                       {isJoining ? (
@@ -354,7 +379,7 @@ export default function HomePage() {
                       ) : (
                         <Hash className="w-5 h-5 mr-2" aria-hidden="true" />
                       )}
-                      {isJoining ? "Joining..." : "Join"}
+                      {isJoining ? t("joining") : t("joinButton")}
                     </span>
                   </Button>
                 </CardContent>
@@ -377,10 +402,10 @@ export default function HomePage() {
                     <Users className="w-10 h-10 text-red-400" aria-hidden="true" />
                   </motion.div>
                   <CardTitle className="text-3xl font-bold text-red-400 font-mono mb-2">
-                    Host Game
+                    {t("hostGame")}
                   </CardTitle>
                   <CardDescription className="text-red-400/80 text-lg font-mono">
-                    Create a new room to play
+                    {t("hostDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -388,7 +413,7 @@ export default function HomePage() {
                     onClick={handleHostGame}
                     disabled={isCreating}
                     className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-lg py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 group"
-                    aria-label={isCreating ? "Creating room..." : "Create Room"}
+                    aria-label={isCreating ? t("creatingRoom") : t("createRoomButton")}
                   >
                     <span className="relative z-10 flex items-center">
                       {isCreating ? (
@@ -402,7 +427,7 @@ export default function HomePage() {
                       ) : (
                         <Play className="w-5 h-5 mr-2" aria-hidden="true" />
                       )}
-                      {isCreating ? "Creating Room..." : "Create Room"}
+                      {isCreating ? t("creatingRoom") : t("createRoomButton")}
                     </span>
                   </Button>
                 </CardContent>

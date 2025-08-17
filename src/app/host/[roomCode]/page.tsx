@@ -215,7 +215,7 @@ export default function HostPage() {
     }
 
     const updateCountdown = () => {
-      const remaining = calculateCountdown(room.countdown_start, 10000)
+      const remaining = calculateCountdown(room.countdown_start, 3000)
       console.log("⏰ HostPage: Server-synced countdown:", remaining)
       setCountdown(remaining)
 
@@ -359,7 +359,7 @@ export default function HostPage() {
           setIsStarting(false)
           setCountdown(null)
         }
-      }, 10000)
+      }, 3000)
     } catch (error) {
       console.error("Error memulai countdown:", error)
       alert("Gagal memulai countdown: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"))

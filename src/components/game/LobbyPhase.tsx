@@ -120,7 +120,7 @@ export default function LobbyPhase({
     }
 
     const updateCountdown = () => {
-      const remaining = calculateCountdown(room.countdown_start, 10000)
+      const remaining = calculateCountdown(room.countdown_start, 3000)
       console.log("⏰ LobbyPhase: Server-synced countdown:", remaining)
       setCountdown(remaining)
 

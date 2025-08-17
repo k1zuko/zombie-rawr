@@ -4,10 +4,8 @@ import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams } from "next/navigation" // useSearchParams dihapus
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
 import { Trophy, Skull, Heart, Target, Clock, Home, RotateCcw, AlertTriangle, Zap } from "lucide-react"
-import { motion, AnimatePresence, Transition } from "framer-motion"
+import { motion, AnimatePresence, type Transition } from "framer-motion"
 import { HorrorCard } from "@/components/ui/horror-card"
 import type { GameRoom } from "@/lib/supabase"
 import Image from "next/image"
@@ -76,16 +74,16 @@ interface PlayerData {
 }
 
 const characterGifs = [
-  '/character.gif',
-  '/character1.gif',
-  '/character2.gif',
-  '/character3.gif',
-  '/character4.gif',
-  '/character5.gif',
-  '/character6.gif',
-  '/character7.gif',
-  '/character8.gif',
-  '/character9.gif'
+  "/character.gif",
+  "/character1.gif",
+  "/character2.gif",
+  "/character3.gif",
+  "/character4.gif",
+  "/character5.gif",
+  "/character6.gif",
+  "/character7.gif",
+  "/character8.gif",
+  "/character9.gif",
 ]
 
 export default function ResultsPage() {
@@ -105,126 +103,158 @@ export default function ResultsPage() {
   const isMountedRef = useRef(true)
   const channelsRef = useRef<any[]>([])
 
+  const initializePlayerData = useCallback(
+    async (roomId: string) => {
+      console.log("Menginisialisasi data pemain...")
+      let localData = null
 
-  const initializePlayerData = useCallback(async (roomId: string) => {
-    console.log("Menginisialisasi data pemain...");
-    const localData = (typeof window !== "undefined" && JSON.parse(localStorage.getItem('lastGameResult') || '{}')) || null;
+      try {
+        // Try specific key first
+        const specificKey = `gameResult_${roomCode}_`
+        const allKeys = Object.keys(localStorage).filter((key) => key.startsWith(specificKey))
 
-    // Langkah 1: Coba ambil data dari localStorage sebagai fallback
-    // try {
-    //   const storedResult = localStorage.getItem('lastGameResult');
-    //   console.log("Mengambil data dari localStorage:", storedResult);
-    //   if (storedResult) {
-    //     localData = JSON.parse(storedResult);
-    //     if (localData.roomCode !== roomCode) {
-    //       console.warn("Data LocalStorage berasal dari ruangan yang berbeda. Mengabaikan.");
-    //       localData = null;
-    //     }
-    //   }
-    // } catch (err) {
-    //   console.error("Gagal mem-parsing data dari localStorage:", err);
-    // }
+        if (allKeys.length > 0) {
+          // Get the most recent one
+          const recentKey = allKeys.sort((a, b) => {
+            const dataA = JSON.parse(localStorage.getItem(a) || "{}")
+            const dataB = JSON.parse(localStorage.getItem(b) || "{}")
+            return (dataB.timestamp || 0) - (dataA.timestamp || 0)
+          })[0]
 
-    if (!localData?.playerId) {
-      setError("Tidak dapat mengidentifikasi pemain. Hanya menampilkan data ruangan.");
-      console.error("Tidak ada playerId yang ditemukan di localStorage. Pengguna mungkin langsung membuka URL ini.");
-      return;
-    }
+          localData = JSON.parse(localStorage.getItem(recentKey) || "{}")
+          console.log("Found specific game result:", localData)
+        } else {
+          // Fallback to general key
+          const storedResult = localStorage.getItem("lastGameResult")
+          if (storedResult) {
+            localData = JSON.parse(storedResult)
+            if (localData.roomCode !== roomCode) {
+              console.warn("Data LocalStorage berasal dari ruangan yang berbeda. Mengabaikan.")
+              localData = null
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Gagal mem-parsing data dari localStorage:", err)
+      }
 
-    // Langkah 2: Coba ambil data terbaru dari Supabase menggunakan player_id
-    try {
-      console.log(`Mencari data penyelesaian untuk playerId: ${localData.playerId} di roomId: ${roomId}`);
-      const { data: completionData, error: completionError } = await supabase
-        .from('game_completions')
-        .select('*, players!inner(nickname, character_type)')
-        .eq('room_id', roomId)
-        .eq('player_id', localData.playerId)
-        .order('completed_at', { ascending: false })
-        .limit(1)
-        .single();
+      if (!localData?.playerId) {
+        setError("Tidak dapat mengidentifikasi pemain. Hanya menampilkan data ruangan.")
+        console.error("Tidak ada playerId yang ditemukan di localStorage. Pengguna mungkin langsung membuka URL ini.")
+        return
+      }
 
-      if (completionError || !completionData) {
-        console.warn("Gagal mengambil data dari Supabase, menggunakan fallback localStorage.", completionError?.message);
-        if (localData) {
-          const totalQuestions = localData.total || 10;
+      try {
+        console.log(`Mencari data penyelesaian untuk playerId: ${localData.playerId} di roomId: ${roomId}`)
+        const { data: completionData, error: completionError } = await supabase
+          .from("game_completions")
+          .select("*, players!inner(nickname, character_type)")
+          .eq("room_id", roomId)
+          .eq("player_id", localData.playerId)
+          .order("completed_at", { ascending: false })
+          .limit(1)
+          .single()
+
+        if (completionError || !completionData) {
+          console.warn(
+            "Gagal mengambil data dari Supabase, menggunakan fallback localStorage.",
+            completionError?.message,
+          )
+          if (localData && localData.health !== undefined && localData.correct !== undefined) {
+            const totalQuestions = localData.total || 10
+            const data: PlayerData = {
+              health: localData.health,
+              correct: localData.correct,
+              total: totalQuestions,
+              eliminated: localData.eliminated || localData.health <= 0,
+              perfect: localData.correct === totalQuestions && totalQuestions > 0,
+              nickname: localData.nickname,
+            }
+            setPlayerData(data)
+            console.log("Data pemain diatur dari localStorage:", data)
+          }
+        } else {
+          console.log("Data penyelesaian dari Supabase berhasil ditemukan:", completionData)
+          const totalQuestions = completionData.total_questions_answered || 10
+          const data: PlayerData = {
+            health: completionData.final_health,
+            correct: completionData.correct_answers,
+            total: totalQuestions,
+            eliminated: completionData.is_eliminated,
+            perfect: completionData.correct_answers === totalQuestions && totalQuestions > 0,
+            nickname: completionData.players.nickname,
+          }
+          setPlayerData(data)
+          console.log("Data pemain diatur dari Supabase:", data)
+
+          if (completionData.players?.character_type) {
+            const charIndex = Number.parseInt(completionData.players.character_type.replace("robot", "")) - 1
+            const gifPath = `/character/character${charIndex === 0 ? "" : charIndex}.gif`
+            setCharacterGif(gifPath)
+            console.log("Character GIF diatur:", gifPath)
+          }
+        }
+      } catch (err: any) {
+        console.error("Terjadi kesalahan saat initializePlayerData:", err.message)
+        if (localData && localData.health !== undefined && localData.correct !== undefined) {
+          const totalQuestions = localData.total || 10
           const data: PlayerData = {
             health: localData.health,
             correct: localData.correct,
             total: totalQuestions,
-            eliminated: localData.eliminated,
+            eliminated: localData.eliminated || localData.health <= 0,
             perfect: localData.correct === totalQuestions && totalQuestions > 0,
             nickname: localData.nickname,
-          };
-          setPlayerData(data);
-          console.log("Data pemain diatur dari localStorage:", data);
+          }
+          setPlayerData(data)
+          console.log("Data pemain diatur dari localStorage (fallback):", data)
+        } else {
+          setError("Terjadi kesalahan saat memuat hasil spesifik Anda.")
         }
-      } else {
-        console.log("Data penyelesaian dari Supabase berhasil ditemukan:", completionData);
-        const totalQuestions = completionData.total_questions_answered || 10;
-        const data: PlayerData = {
-          health: completionData.final_health,
-          correct: completionData.correct_answers,
-          total: totalQuestions,
-          eliminated: completionData.is_eliminated,
-          perfect: completionData.correct_answers === totalQuestions && totalQuestions > 0,
-          nickname: completionData.players.nickname,
-        };
-        setPlayerData(data);
-        console.log("Data pemain diatur dari Supabase:", data);
-
-        if (completionData.players?.character_type) {
-          const charIndex = parseInt(completionData.players.character_type.replace("robot", "")) - 1;
-          const gifPath = `/character/character${charIndex === 0 ? "" : charIndex}.gif`;
-          setCharacterGif(gifPath);
-          console.log("Character GIF diatur:", gifPath);
-        }
+      } finally {
+        // localStorage.removeItem('lastGameResult');
       }
-    } catch (err: any) {
-      console.error("Terjadi kesalahan saat initializePlayerData:", err.message);
-      setError("Terjadi kesalahan saat memuat hasil spesifik Anda.");
-    } finally {
-      // Hapus data setelah digunakan untuk menghindari penggunaan ulang yang tidak disengaja
-      localStorage.removeItem('lastGameResult');
-    }
-  }, [roomCode]);
+    },
+    [roomCode],
+  )
   // =================================================================
   // END: LOGIKA BARU
   // =================================================================
 
   const fetchInitialData = useCallback(async () => {
-    console.log("Memulai fetchInitialData untuk roomCode:", roomCode);
+    console.log("Memulai fetchInitialData untuk roomCode:", roomCode)
     if (!roomCode) {
-      setError("Kode ruangan tidak valid");
-      setIsLoading(false);
-      return;
+      setError("Kode ruangan tidak valid")
+      setIsLoading(false)
+      return
     }
 
     try {
-      setIsLoading(true);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
 
       const { data: roomData, error: roomError } = await supabase
         .from("game_rooms")
         .select("id, *") // Ambil semua data ruangan
         .eq("room_code", roomCode)
-        .single();
+        .single()
 
       if (roomError || !roomData) {
-        setError(`Ruangan tidak ditemukan: ${roomError?.message || "Ruangan tidak valid"}`);
-        setIsLoading(false);
-        return;
+        setError(`Ruangan tidak ditemukan: ${roomError?.message || "Ruangan tidak valid"}`)
+        setIsLoading(false)
+        return
       }
 
-      setRoom(roomData);
+      setRoom(roomData)
 
       // Panggil inisialisasi data pemain SEBELUM panggilan lainnya
-      await initializePlayerData(roomData.id);
+      await initializePlayerData(roomData.id)
 
       const [
         { data: completionsData, error: completionsError },
         { data: leaderboardData, error: leaderboardError },
         { data: battleStatsData, error: battleStatsError },
-        { data: activityData, error: activityError }
+        { data: activityData, error: activityError },
       ] = await Promise.all([
         supabase
           .from("game_completions")
@@ -234,12 +264,12 @@ export default function ResultsPage() {
           .limit(10),
         supabase.rpc("get_room_leaderboard", { p_room_id: roomData.id }),
         supabase.rpc("get_room_battle_stats", { p_room_id: roomData.id }),
-        supabase.rpc("get_recent_game_activity", { p_room_id: roomData.id, p_limit: 10 })
-      ]);
+        supabase.rpc("get_recent_game_activity", { p_room_id: roomData.id, p_limit: 10 }),
+      ])
 
       if (completionsError) {
-        console.warn("Error fetching game completions:", completionsError.message);
-        setGameCompletions([]);
+        console.warn("Error fetching game completions:", completionsError.message)
+        setGameCompletions([])
       } else {
         const formattedCompletions = completionsData.map((completion: any) => ({
           ...completion,
@@ -247,43 +277,43 @@ export default function ResultsPage() {
             nickname: completion.players?.nickname || "Tidak Dikenal",
             character_type: completion.players?.character_type || "default",
           },
-        }));
-        setGameCompletions(formattedCompletions);
+        }))
+        setGameCompletions(formattedCompletions)
       }
 
       if (leaderboardError) {
-        console.warn("Error fetching leaderboard:", leaderboardError.message);
-        setPlayerStats([]);
+        console.warn("Error fetching leaderboard:", leaderboardError.message)
+        setPlayerStats([])
       } else if (leaderboardData) {
-        setPlayerStats(leaderboardData);
+        setPlayerStats(leaderboardData)
       }
 
       if (battleStatsError) {
-        console.warn("Error fetching battle stats:", battleStatsError.message);
-        setRoomStats(null);
+        console.warn("Error fetching battle stats:", battleStatsError.message)
+        setRoomStats(null)
       } else {
-        setRoomStats(battleStatsData[0] || null);
+        setRoomStats(battleStatsData[0] || null)
       }
 
       if (activityError) {
-        console.warn("Error fetching recent activities:", activityError.message);
-        setRecentActivities([]);
+        console.warn("Error fetching recent activities:", activityError.message)
+        setRecentActivities([])
       } else {
-        setRecentActivities(activityData);
+        setRecentActivities(activityData)
       }
     } catch (err: any) {
-      console.error("Fetch initial data error:", err.message);
-      setError(err.message || "Gagal memuat data tambahan, menampilkan hasil parsial");
+      console.error("Fetch initial data error:", err.message)
+      setError(err.message || "Gagal memuat data tambahan, menampilkan hasil parsial")
     } finally {
       if (isMountedRef.current) {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
-  }, [roomCode, initializePlayerData]);
+  }, [roomCode, initializePlayerData])
 
   const setupRealtimeSubscriptions = useCallback(() => {
     // ... (Fungsi ini tidak perlu diubah, tetap sama seperti di kode asli Anda)
-    if (!room || !isMountedRef.current) return () => { }
+    if (!room || !isMountedRef.current) return () => {}
 
     console.log("Setting up realtime subscriptions for room:", room.id)
     const completionsChannel = supabase
@@ -439,12 +469,11 @@ export default function ResultsPage() {
       })
       channelsRef.current = []
     }
-  }, [room]);
-
+  }, [room])
 
   useEffect(() => {
-    isMountedRef.current = true;
-    fetchInitialData();
+    isMountedRef.current = true
+    fetchInitialData()
 
     // const timeout = setTimeout(() => {
     //   if (isMountedRef.current && isLoading) {
@@ -457,38 +486,37 @@ export default function ResultsPage() {
     // }, 18000); // Waktu timeout sedikit diperpanjang
 
     return () => {
-      isMountedRef.current = false;
+      isMountedRef.current = false
       // clearTimeout(timeout);
-    };
-  }, [fetchInitialData]);
+    }
+  }, [fetchInitialData])
 
   useEffect(() => {
     if (room) {
-      const cleanup = setupRealtimeSubscriptions();
-      return cleanup;
+      const cleanup = setupRealtimeSubscriptions()
+      return cleanup
     }
-  }, [room, setupRealtimeSubscriptions]);
+  }, [room, setupRealtimeSubscriptions])
 
   useEffect(() => {
     return () => {
-      console.log("Komponen dilepas (unmounting)");
-      isMountedRef.current = false;
+      console.log("Komponen dilepas (unmounting)")
+      isMountedRef.current = false
       channelsRef.current.forEach((channel) => {
         supabase.removeChannel(channel)
-      });
-      channelsRef.current = [];
-    };
-  }, []);
+      })
+      channelsRef.current = []
+    }
+  }, [])
 
   // ... (Sisa fungsi helper seperti getPlayerRank, getPerformanceTitle, dll, tetap sama)
   const getPlayerRank = () => {
-    if (!playerData || playerStats.length === 0) return playerStats.length + 1;
-    const playerRank = playerStats.find(p => p.nickname === playerData.nickname);
-    return playerRank ? playerRank.rank : playerStats.length + 1;
+    if (!playerData || playerStats.length === 0) return playerStats.length + 1
+    const playerRank = playerStats.find((p) => p.nickname === playerData.nickname)
+    return playerRank ? playerRank.rank : playerStats.length + 1
   }
 
   const getPerformanceTitle = () => {
-
     if (!playerData) return "PENJELAJAH YANG TERSERAP KABUT"
     const accuracy = playerData.total > 0 ? (playerData.correct / playerData.total) * 100 : 0
 
@@ -505,27 +533,29 @@ export default function ResultsPage() {
   }
 
   const getPerformanceMessage = () => {
-    if (!playerData) return "Jejakmu masih tersembunyi di kabut... bangkit dan coba lagi!";
-    const accuracy = playerData.total > 0 ? (playerData.correct / playerData.total) * 100 : 0;
-    if (playerData.perfect) return "Keren! Kamu menaklukkan malam dengan sempurna! Jadi legenda sejati!";
-    if (playerData.eliminated) return "Kegelapan menantangmu kali ini, tapi semangatmu masih menyala! Coba lagi, pahlawan!";
-    if (accuracy >= 90) return "Luar biasa! Kamu hampir tak terhentikan di medan horor ini!";
-    if (accuracy >= 70) return "Hebat! Kamu berjuang dengan gagah berani melawan kegelapan!";
-    if (accuracy >= 50) return "Bagus sekali! Teruslah berjuang, kamu semakin kuat!";
-    return "Setiap langkah adalah awal baru! Bangkit dan hadapi horor berikutnya!";
+    if (!playerData) return "Jejakmu masih tersembunyi di kabut... bangkit dan coba lagi!"
+    const accuracy = playerData.total > 0 ? (playerData.correct / playerData.total) * 100 : 0
+    if (playerData.perfect) return "Keren! Kamu menaklukkan malam dengan sempurna! Jadi legenda sejati!"
+    if (playerData.eliminated)
+      return "Kegelapan menantangmu kali ini, tapi semangatmu masih menyala! Coba lagi, pahlawan!"
+    if (accuracy >= 90) return "Luar biasa! Kamu hampir tak terhentikan di medan horor ini!"
+    if (accuracy >= 70) return "Hebat! Kamu berjuang dengan gagah berani melawan kegelapan!"
+    if (accuracy >= 50) return "Bagus sekali! Teruslah berjuang, kamu semakin kuat!"
+    return "Setiap langkah adalah awal baru! Bangkit dan hadapi horor berikutnya!"
   }
 
   const getActivityMessage = (activity: GameActivity) => {
-    if (!playerData) return "";
+    const totalQuestions = playerData?.total || 10
+
     if (activity.activity_type === "completion") {
       const { correct_answers, final_health, is_eliminated, completion_type } = activity.activity_data
       if (is_eliminated) {
-        return `${activity.player_nickname} bertarung gagah berani! (${correct_answers}/${playerData.total} benar)`
+        return `${activity.player_nickname} bertarung gagah berani! (${correct_answers}/${totalQuestions} benar)`
       }
       if (completion_type === "completed") {
-        return `${activity.player_nickname} menaklukkan petualangan! (${correct_answers}/${playerData.total} benar, ${final_health} HP)`
+        return `${activity.player_nickname} menaklukkan petualangan! (${correct_answers}/${totalQuestions} benar, ${final_health} HP)`
       }
-      return `${activity.player_nickname} menyelesaikan tantangan! (${correct_answers}/${playerData.total} benar, ${final_health} HP)`
+      return `${activity.player_nickname} menyelesaikan tantangan! (${correct_answers}/${totalQuestions} benar, ${final_health} HP)`
     }
     if (activity.activity_type === "attack") {
       const { attack_type, attack_data, damage } = activity.activity_data
@@ -550,7 +580,7 @@ export default function ResultsPage() {
           <p className="text-gray-400 font-mono text-sm">Sebentar lagi, hasil petualanganmu akan terungkap!</p>
         </div>
       </div>
-    );
+    )
   }
 
   // Tampilan jika data pemain tidak bisa dimuat tapi data lain mungkin ada
@@ -563,7 +593,8 @@ export default function ResultsPage() {
           <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
           <p className="text-white font-mono text-xl mb-4 tracking-widest">KABUT MENYELIMUTI JEJAKMU</p>
           <p className="text-yellow-400 font-mono text-sm mb-6 max-w-md mx-auto">
-            {error || "Kami tidak dapat menemukan hasil spesifik petualanganmu. Ini bisa terjadi jika kamu langsung membuka halaman ini. Tapi jangan khawatir, kamu masih bisa melihat statistik ruangan."}
+            {error ||
+              "Kami tidak dapat menemukan hasil spesifik petualanganmu. Ini bisa terjadi jika kamu langsung membuka halaman ini. Tapi jangan khawatir, kamu masih bisa melihat statistik ruangan."}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -583,7 +614,7 @@ export default function ResultsPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // Render utama jika playerData berhasil dimuat
@@ -625,16 +656,17 @@ export default function ResultsPage() {
               y: -100,
               opacity: [0, 0.5, 0],
             }}
-            transition={{
-              duration: 5 + Math.random() * 5,
-              repeat: Infinity,
-              repeatType: "loop",
-              delay: Math.random() * 5,
-            } as Transition}
+            transition={
+              {
+                duration: 5 + Math.random() * 5,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "loop",
+                delay: Math.random() * 5,
+              } as Transition
+            }
           />
         ))}
       </div>
-
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* ... (sisa dari JSX render tidak berubah) ... */}
@@ -679,13 +711,11 @@ export default function ResultsPage() {
                   {getPerformanceTitle()}
                 </h2>
 
-                <p className="text-gray-300 mb-6 italic font-mono text-sm">
-                  {getPerformanceMessage()}
-                </p>
+                <p className="text-gray-300 mb-6 italic font-mono text-sm">{getPerformanceMessage()}</p>
 
                 <div className="mb-6 flex justify-center">
                   <Image
-                    src={characterGif}
+                    src={characterGif || "/placeholder.svg"}
                     width={120}
                     height={120}
                     alt="Karakter"
@@ -747,19 +777,19 @@ export default function ResultsPage() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 50 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className={`flex items-center justify-between p-3 rounded-lg border ${player.nickname === playerData.nickname
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          player.nickname === playerData.nickname
                             ? "bg-purple-900/30 border-purple-700 ring-2 ring-purple-500"
                             : index === 0
                               ? "bg-yellow-900/20 border-yellow-800"
                               : "bg-gray-900/50 border-gray-800"
-                          }`}
+                        }`}
                       >
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${index === 0
-                                ? "bg-yellow-600 text-white"
-                                : "bg-gray-700 text-gray-300"
-                              }`}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                              index === 0 ? "bg-yellow-600 text-white" : "bg-gray-700 text-gray-300"
+                            }`}
                           >
                             {player.rank}
                           </div>
@@ -811,12 +841,13 @@ export default function ResultsPage() {
                       >
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`w-2 h-2 rounded-full ${activity.activity_type === "completion"
+                            className={`w-2 h-2 rounded-full ${
+                              activity.activity_type === "completion"
                                 ? activity.activity_data.is_eliminated
                                   ? "bg-red-500"
                                   : "bg-green-500"
                                 : "bg-yellow-500"
-                              } animate-pulse`}
+                            } animate-pulse`}
                           />
                           <div>
                             <div className="text-white font-mono text-sm tracking-wider">

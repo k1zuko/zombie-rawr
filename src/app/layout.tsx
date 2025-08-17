@@ -1,6 +1,11 @@
-import type { Metadata } from "next";
+
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ClientProviders from "./ClientProviders";
+import { useTranslation } from "react-i18next";
+import { useEffect } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,22 +17,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "QuizRush",
-  description: "Speed thinking or face the chase!",
-};
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const { i18n } = useTranslation();
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+  // Update HTML lang attribute when language changes
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang={i18n.language}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

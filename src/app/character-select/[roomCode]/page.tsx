@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Skull, Bone, HeartPulse, Ghost, Zap, Clock, BookOpen } from "lucide-react";
+import { Skull, Bone, HeartPulse, Ghost, Zap, Clock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
 type ChaserType = typeof validChaserTypes[number];
@@ -25,64 +27,67 @@ interface GameRoom {
   chaser_type: ChaserType;
 }
 
-const chaserOptions = [
-  { 
-    value: "zombie" as const, 
-    name: "Zombie", 
-    gif: "/images/zombie.gif", 
-    alt: "Zombie Pengejar",
-    description: "Lambat tapi tak kenal lelah. Akan terus mengejar tanpa henti."
-  },
-  { 
-    value: "monster1" as const, 
-    name: "Mutant Gila", 
-    gif: "/images/monster1.gif", 
-    alt: "Mutant Gila Pengejar",
-    description: "Bergerak cepat dengan pola tak terduga. Sulit ditebak."
-  },
-  { 
-    value: "monster2" as const, 
-    name: "Anjing Neraka", 
-    gif: "/images/monster2.gif", 
-    alt: "Anjing Neraka Pengejar",
-    description: "Mengendus mangsanya dari jarak jauh. Kecepatan meningkat saat mendekati korban."
-  },
-  { 
-    value: "monster3" as const, 
-    name: "Samurai Pembantai", 
-    gif: "/images/monster3.gif", 
-    alt: "Samurai Pembantai Pengejar",
-    description: "Bergerak dengan presisi mematikan. Menyerang secara tiba-tiba."
-  },
-  { 
-    value: "darknight" as const, 
-    name: "Raja Kegelapan", 
-    gif: "/images/darknight.gif", 
-    alt: "Raja Kegelapan Pengejar",
-    description: "Mengendalikan kegelapan itu sendiri. Kecepatan dan pola gerakan berubah-ubah."
-  },
-];
-
 export default function CharacterSelectPage() {
+  const { t, i18n } = useTranslation();
   const params = useParams();
   const router = useRouter();
   const roomCode = params.roomCode as string;
 
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [gameDuration, setGameDuration] = useState<string>("10"); // Changed default to minutes
-  const [questionCount, setQuestionCount] = useState<string>("20");
+  const [gameDuration, setGameDuration] = useState<string>("10");
+  const [questionCount, setQuestionCount] = useState<number>(20); // Changed to number
   const [chaserType, setChaserType] = useState<ChaserType>("zombie");
   const [flickerText, setFlickerText] = useState(true);
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([]);
-  const [sounds, setSounds] = useState<{ whisper: HTMLAudioElement | null; heartbeat: HTMLAudioElement | null }>({ whisper: null, heartbeat: null });
+  const [sounds, setSounds] = useState<{ whisper: HTMLAudioElement | null; heartbeat: HTMLAudioElement | null }>({
+    whisper: null,
+    heartbeat: null,
+  });
   const [selectedChaser, setSelectedChaser] = useState<typeof chaserOptions[number] | null>(null);
 
+  const chaserOptions = [
+    {
+      value: "zombie" as const,
+      name: t("chasers.zombie.name"),
+      gif: "/images/zombie.gif",
+      alt: t("chasers.zombie.alt"),
+      description: t("chasers.zombie.description"),
+    },
+    {
+      value: "monster1" as const,
+      name: t("chasers.monster1.name"),
+      gif: "/images/monster1.gif",
+      alt: t("chasers.monster1.alt"),
+      description: t("chasers.monster1.description"),
+    },
+    {
+      value: "monster2" as const,
+      name: t("chasers.monster2.name"),
+      gif: "/images/monster2.gif",
+      alt: t("chasers.monster2.alt"),
+      description: t("chasers.monster2.description"),
+    },
+    {
+      value: "monster3" as const,
+      name: t("chasers.monster3.name"),
+      gif: "/images/monster3.gif",
+      alt: t("chasers.monster3.alt"),
+      description: t("chasers.monster3.description"),
+    },
+    {
+      value: "darknight" as const,
+      name: t("chasers.darknight.name"),
+      gif: "/images/darknight.gif",
+      alt: t("chasers.darknight.alt"),
+      description: t("chasers.darknight.description"),
+    },
+  ];
+
   useEffect(() => {
-    // Initialize sounds
     setSounds({
-      whisper: new Audio('/sounds/whisper.mp3'),
-      heartbeat: new Audio('/sounds/heartbeat.mp3')
+      whisper: new Audio("/sounds/whisper.mp3"),
+      heartbeat: new Audio("/sounds/heartbeat.mp3"),
     });
 
     return () => {
@@ -101,25 +106,27 @@ export default function CharacterSelectPage() {
           .single();
 
         if (error || !data) {
-          console.error("Room tidak ditemukan:", error);
+          console.error(t("errorMessages.roomNotFoundLog"), error);
+          alert(t("errorMessages.roomNotFound"));
           router.push("/");
           return;
         }
 
         const fetchedChaserType = validChaserTypes.includes(data.chaser_type) ? data.chaser_type : "zombie";
         setRoom({ ...data, chaser_type: fetchedChaserType });
-        setGameDuration((data.duration ? data.duration / 60 : 10).toString()); // Convert seconds to minutes
-        setQuestionCount(data.question_count?.toString() || "20");
+        setGameDuration((data.duration ? data.duration / 60 : 10).toString());
+        setQuestionCount(data.question_count ?? 20);
         setChaserType(fetchedChaserType);
         setIsLoading(false);
       } catch (error) {
-        console.error("Error mengambil room:", error);
+        console.error(t("errorMessages.fetchRoomFailedLog"), error);
+        alert(t("errorMessages.fetchRoomFailed"));
         router.push("/");
       }
     };
 
     fetchRoom();
-  }, [roomCode, router]);
+  }, [roomCode, router, t]);
 
   useEffect(() => {
     const generateBlood = () => {
@@ -153,8 +160,8 @@ export default function CharacterSelectPage() {
 
   useEffect(() => {
     if (selectedChaser) {
-      sounds.whisper?.play().catch(e => console.log("Autoplay prevented:", e));
-      sounds.heartbeat?.play().catch(e => console.log("Autoplay prevented:", e));
+      sounds.whisper?.play().catch((e) => console.log("Autoplay prevented:", e));
+      sounds.heartbeat?.play().catch((e) => console.log("Autoplay prevented:", e));
     }
 
     return () => {
@@ -167,13 +174,13 @@ export default function CharacterSelectPage() {
     if (!room) return;
 
     const validatedChaserType = validChaserTypes.includes(chaserType) ? chaserType : "zombie";
-    const durationInSeconds = parseInt(gameDuration) * 60; // Convert minutes to seconds
+    const durationInSeconds = parseInt(gameDuration) * 60;
     try {
       const { error } = await supabase
         .from("game_rooms")
         .update({
           duration: durationInSeconds,
-          question_count: parseInt(questionCount),
+          question_count: questionCount,
           chaser_type: validatedChaserType,
           updated_at: new Date().toISOString(),
         })
@@ -183,27 +190,30 @@ export default function CharacterSelectPage() {
 
       router.push(`/host/${roomCode}`);
     } catch (error) {
-      console.error("Error menyimpan pengaturan:", error);
-      alert("Gagal menyimpan pengaturan!");
+      console.error(t("errorMessages.saveSettingsFailedLog"), error);
+      alert(t("errorMessages.saveSettingsFailed"));
     }
   };
 
   const handleChaserSelect = (chaser: typeof chaserOptions[number]) => {
     setChaserType(chaser.value);
     setSelectedChaser(chaser);
-    
-    // Play selection sound
-    const selectSound = new Audio('/sounds/select.mp3');
+
+    const selectSound = new Audio("/sounds/select.mp3");
     selectSound.volume = 0.6;
-    selectSound.play().catch(e => console.log("Sound play prevented:", e));
+    selectSound.play().catch((e) => console.log("Sound play prevented:", e));
   };
 
   const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Ensure only positive integers
     if (value === "" || /^[0-9]+$/.test(value)) {
       setGameDuration(value);
     }
+  };
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    router.push(`/character-select/${roomCode}?lng=${lng}`);
   };
 
   if (isLoading) {
@@ -217,12 +227,12 @@ export default function CharacterSelectPage() {
         >
           <div className="absolute inset-0 rounded-full border-4 border-red-900 border-l-transparent border-r-transparent animate-ping" />
         </motion.div>
-        <motion.p 
+        <motion.p
           className="absolute bottom-1/4 text-red-400 font-mono text-sm"
           animate={{ opacity: [0.3, 1, 0.3] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          Memuat ruang horor...
+          {t("loading")}
         </motion.p>
       </div>
     );
@@ -234,8 +244,8 @@ export default function CharacterSelectPage() {
         <div className="absolute inset-0 bg-[url('/images/static-noise.gif')] opacity-15 pointer-events-none" />
         <div className="text-red-400 text-xl font-mono relative z-10 text-center p-6 border border-red-900/50 bg-black/60 backdrop-blur-sm">
           <Skull className="w-12 h-12 mx-auto mb-4 animate-pulse" />
-          <p>Room tidak ditemukan...</p>
-          <p className="text-sm mt-2 text-red-300">Kembali ke lobi</p>
+          <p>{t("roomNotFound")}</p>
+          <p className="text-sm mt-2 text-red-300">{t("backToLobby")}</p>
         </div>
       </div>
     );
@@ -243,10 +253,7 @@ export default function CharacterSelectPage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none">
-      {/* Background Audio */}
       <audio src="/musics/background-music-room.mp3" autoPlay loop />
-      
-      {/* Visual Effects Layers */}
       <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 via-black to-purple-900/5">
         <div className="absolute inset-0 opacity-20">
           {[...Array(10)].map((_, i) => (
@@ -263,7 +270,6 @@ export default function CharacterSelectPage() {
         </div>
       </div>
 
-      {/* Blood Drips */}
       {bloodDrips.map((drip) => (
         <div
           key={drip.id}
@@ -276,7 +282,6 @@ export default function CharacterSelectPage() {
         />
       ))}
 
-      {/* Floating Skulls and Bones */}
       <div className="absolute inset-0 pointer-events-none">
         {[...Array(12)].map((_, i) => (
           <div
@@ -295,15 +300,26 @@ export default function CharacterSelectPage() {
         ))}
       </div>
 
-      {/* TV Static Noise */}
-      <div className="absolute inset-0 bg-[url('/images/static-noise.gif')] opacity-10 pointer-events-none" />
-
-      {/* Scratch Marks Overlay */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwTDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBMNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
 
-      {/* Main Content */}
       <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
-        {/* Header with Flickering Title */}
+        <div className="fixed top-2 right-2 space-x-2 z-30">
+          <Button
+            variant="ghost"
+            onClick={() => changeLanguage("en")}
+            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "en" ? "bg-red-900/30" : ""}`}
+          >
+            EN
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => changeLanguage("id")}
+            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "id" ? "bg-red-900/30" : ""}`}
+          >
+            ID
+          </Button>
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -318,18 +334,16 @@ export default function CharacterSelectPage() {
               } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
-              PENGATURAN
+              {t("settingsTitle")}
             </h1>
             <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
           </div>
           <p className="text-red-300 font-mono max-w-2xl mx-auto text-sm md:text-base">
-            Pilih karakter pengejar dan atur permainanmu!
+            {t("settingsDescription")}
           </p>
         </motion.div>
 
-        {/* Settings Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Game Settings */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -339,12 +353,12 @@ export default function CharacterSelectPage() {
             <div className="bg-black/40 border border-red-900/50 p-6 rounded-lg backdrop-blur-sm">
               <div className="flex items-center mb-4">
                 <Clock className="w-5 h-5 text-red-500 mr-2" />
-                <h2 className="text-xl font-mono text-red-400">Pengaturan Waktu</h2>
+                <h2 className="text-xl font-mono text-red-400">{t("gameSettingsTitle")}</h2>
               </div>
-              
+
               <div className="mb-6">
                 <Label htmlFor="duration" className="text-red-300 mb-2 block font-medium text-sm font-mono">
-                  Durasi Permainan (menit)
+                  {t("gameDurationLabel")}
                 </Label>
                 <Input
                   id="duration"
@@ -354,24 +368,24 @@ export default function CharacterSelectPage() {
                   value={gameDuration}
                   onChange={handleDurationChange}
                   className="bg-black/50 border-red-900/50 text-red-200 font-mono focus:border-red-400/50 focus:ring-red-400/20"
-                  placeholder="Masukkan durasi (menit)"
+                  placeholder={t("gameDurationPlaceholder")}
                 />
               </div>
 
               <div>
                 <Label htmlFor="questionCount" className="text-red-300 mb-2 block font-medium text-sm font-mono">
-                  JUMLAH SOAL
+                  {t("questionCountLabel")}
                 </Label>
-                <Select value={questionCount} onValueChange={setQuestionCount}>
+                <Select value={questionCount.toString()} onValueChange={(value) => setQuestionCount(Number(value))}>
                   <SelectTrigger className="w-full bg-black/70 border-red-800/70 text-red-400 rounded-lg hover:bg-red-900/30 transition-colors font-mono">
-                    <SelectValue placeholder="Pilih jumlah soal" />
+                    <SelectValue placeholder={t("selectQuestionCount")} />
                   </SelectTrigger>
                   <SelectContent className="bg-black/95 text-red-400 border-red-800/50 rounded-lg font-mono backdrop-blur-sm">
-                    <SelectItem value="10">10 Soal - Cepat Selesai</SelectItem>
-                    <SelectItem value="20">20 Soal - Standar</SelectItem>
-                    <SelectItem value="30">30 Soal - Banyak</SelectItem>
-                    <SelectItem value="40">40 Soal - Sangat Banyak</SelectItem>
-                    <SelectItem value="50">50 Soal - Ekstrem</SelectItem>
+                    <SelectItem value="10">{t("questionCountOptions.10")}</SelectItem>
+                    <SelectItem value="20">{t("questionCountOptions.20")}</SelectItem>
+                    <SelectItem value="30">{t("questionCountOptions.30")}</SelectItem>
+                    <SelectItem value="40">{t("questionCountOptions.40")}</SelectItem>
+                    <SelectItem value="50">{t("questionCountOptions.50")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -380,41 +394,36 @@ export default function CharacterSelectPage() {
             <div className="bg-black/40 border border-red-900/50 p-6 rounded-lg backdrop-blur-sm">
               <div className="flex items-center mb-4">
                 <Zap className="w-5 h-5 text-red-500 mr-2" />
-                <h2 className="text-xl font-mono text-red-400">Kesimpulan</h2>
+                <h2 className="text-xl font-mono text-red-400">{t("summaryTitle")}</h2>
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between text-red-300 font-mono text-sm">
-                  <span>Durasi Permainan:</span>
-                  <span className="text-red-400">{gameDuration} Menit</span>
+                  <span>{t("gameDurationLabel")}</span>
+                  <span className="text-red-400">{t("gameDurationValue", { minutes: gameDuration })}</span>
                 </div>
                 <div className="flex justify-between text-red-300 font-mono text-sm">
-                  <span>Jumlah Soal:</span>
-                  <span className="text-red-400">{questionCount} Soal</span>
+                  <span>{t("questionCountLabel")}</span>
+                  <span className="text-red-400">{t("questionCountValue", { count: questionCount })}</span>
                 </div>
                 <div className="flex justify-between text-red-300 font-mono text-sm">
-                  <span>Karakter Pengejar:</span>
+                  <span>{t("chaserLabel")}</span>
                   <span className="text-red-400">
-                    {chaserOptions.find(c => c.value === chaserType)?.name || "Belum dipilih"}
+                    {chaserOptions.find((c) => c.value === chaserType)?.name || t("chaserNotSelected")}
                   </span>
                 </div>
               </div>
 
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="mt-6"
-              >
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="mt-6">
                 <Button
                   onClick={saveSettings}
                   className="w-full bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white rounded-lg font-mono text-lg py-6 shadow-lg shadow-red-900/30 transition-all"
                 >
-                  MULAI 
+                  {t("startButton")}
                 </Button>
               </motion.div>
             </div>
           </motion.div>
 
-          {/* Right Column - Character Selection */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -424,7 +433,7 @@ export default function CharacterSelectPage() {
             <div className="bg-black/40 border border-red-900/50 p-6 rounded-lg h-full backdrop-blur-sm">
               <div className="flex items-center mb-6">
                 <Ghost className="w-5 h-5 text-red-500 mr-2" />
-                <h2 className="text-xl font-mono text-red-400">PILIH PENGEJAR</h2>
+                <h2 className="text-xl font-mono text-red-400">{t("chaserSelectTitle")}</h2>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
@@ -462,7 +471,7 @@ export default function CharacterSelectPage() {
                       <span className="text-red-400 font-mono text-center font-bold mb-1">{chaser.name}</span>
                       <span className="text-red-300 font-mono text-xs text-center opacity-80">{chaser.description}</span>
                       {chaserType === chaser.value && (
-                        <motion.span 
+                        <motion.span
                           className="absolute top-2 right-2 text-red-400"
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ duration: 1, repeat: Infinity }}
@@ -475,7 +484,6 @@ export default function CharacterSelectPage() {
                 ))}
               </div>
 
-              {/* Selected Character Details */}
               {selectedChaser && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -484,7 +492,9 @@ export default function CharacterSelectPage() {
                 >
                   <div className="flex items-center">
                     <Skull className="w-5 h-5 text-red-500 mr-2" />
-                    <h3 className="text-lg font-mono text-red-400">KARAKTER TERPILIH: {selectedChaser.name}</h3>
+                    <h3 className="text-lg font-mono text-red-400">
+                      {t("selectedChaser", { name: selectedChaser.name })}
+                    </h3>
                   </div>
                   <p className="text-red-300 font-mono text-sm mt-2">{selectedChaser.description}</p>
                 </motion.div>
@@ -494,16 +504,14 @@ export default function CharacterSelectPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <motion.div 
+      <motion.div
         className="absolute bottom-4 left-0 right-0 text-center text-red-900/50 font-mono text-xs"
         animate={{ opacity: [0.3, 0.7, 0.3] }}
         transition={{ duration: 5, repeat: Infinity }}
       >
-        PERINGATAN: Permainan ini mengandung unsur horor yang mungkin tidak cocok untuk semua pemain
+        {t("warningText")}
       </motion.div>
 
-      {/* Global Styles */}
       <style jsx global>{`
         @keyframes fall {
           to {
@@ -511,7 +519,8 @@ export default function CharacterSelectPage() {
           }
         }
         @keyframes float {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0px) rotate(0deg);
           }
           50% {
