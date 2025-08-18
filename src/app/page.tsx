@@ -1,13 +1,24 @@
+// src/app/page.tsx
 
+import { headers } from "next/headers";
 import { Suspense } from "react";
 import HomePage from "./homePage";
 import LoadingScreen from "@/components/game/LoadingScreen";
 import type { Metadata } from "next";
-import i18n from "@/lib/i18n-server"; // Use server-side i18n
+import i18n from "@/lib/i18n-server"; // server-side i18n instance
 
-export async function generateMetadata({ params, searchParams }: { params: any; searchParams: any }): Promise<Metadata> {
-  // Get language from query parameter or default to 'en'
-  const lng = searchParams?.lng || "en";
+export async function generateMetadata(): Promise<Metadata> {
+  // Get full request headers
+  const headersList = headers();
+
+  // Extract the full URL from the request headers
+  const referer = (await headersList).get("referer") || "";
+  const host = (await headersList).get("host") || "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+
+  const url = new URL(referer || `${protocol}://${host}`);
+  const lng = url.searchParams.get("lng") || "en";
+
   await i18n.changeLanguage(lng);
 
   return {

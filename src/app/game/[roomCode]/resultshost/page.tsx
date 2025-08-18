@@ -6,7 +6,8 @@ import { supabase } from "@/lib/supabase"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import Confetti from "react-confetti"
-import { Skull, Bone, Trophy, Clock, Heart, Target } from "lucide-react"
+import { Trophy, Clock, Ghost } from "lucide-react"
+import { t } from "i18next"
 
 interface Player {
   id: string
@@ -27,7 +28,9 @@ interface GameCompletion {
   is_eliminated: boolean
   completion_type: string
   completed_at: string
-  survival_duration: number // Added survival_duration field
+  survival_duration: number
+  game_start_time: string
+  player_join_time: string
 }
 
 interface PlayerHealthState {
@@ -62,7 +65,7 @@ interface PlayerResult {
   finalScore: number
   finalHealth: number
   completionTime: string
-  survivalSeconds: number // Added for accurate sorting
+  survivalSeconds: number
 }
 
 const characterGifs = [
@@ -89,6 +92,7 @@ export default function ResultsHostPage() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
   const [showContent, setShowContent] = useState(false)
+  const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([])
 
   const getCharacterByType = (type: string) => {
     return characterGifs.find((char) => char.type === type) || characterGifs[0]
@@ -100,34 +104,35 @@ export default function ResultsHostPage() {
     return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
-  const calculateFallbackDuration = (start: string | null, end: string, joined: string) => {
-    if (!start) return 0
-    const startTime = new Date(start).getTime()
-    const endTime = new Date(end).getTime()
-    const joinTime = new Date(joined).getTime()
+  const calculateAccurateDuration = (
+    gameStartTime: string | null,
+    completedAt: string,
+    joinedAt: string,
+    survivalDuration?: number,
+  ) => {
+    if (survivalDuration !== undefined && survivalDuration > 0) {
+      return survivalDuration
+    }
+
+    if (!gameStartTime) return 0
+
+    const startTime = new Date(gameStartTime).getTime()
+    const endTime = new Date(completedAt).getTime()
+    const joinTime = new Date(joinedAt).getTime()
+
     const effectiveStart = Math.max(startTime, joinTime)
     const durationMs = Math.max(0, endTime - effectiveStart)
     return Math.floor(durationMs / 1000)
   }
 
-  const getColumnsLayout = (players: PlayerResult[]) => {
-    const playersPerColumn = 8
-    const columns: PlayerResult[][] = []
-
-    for (let i = 0; i < players.length; i += playersPerColumn) {
-      columns.push(players.slice(i, i + playersPerColumn))
-    }
-
-    return columns
+  const calculateFallbackDuration = (start: string | null, end: string, joined: string) => {
+    return calculateAccurateDuration(start, end, joined)
   }
 
-  const getGridCols = (playerCount: number) => {
-    if (playerCount <= 8) return "grid-cols-1"
-    if (playerCount <= 16) return "grid-cols-2"
-    if (playerCount <= 24) return "grid-cols-3"
-    if (playerCount <= 32) return "grid-cols-4"
-    if (playerCount <= 40) return "grid-cols-5"
-    return "grid-cols-6"
+  const getColumnsLayout = (players: PlayerResult[]) => {
+    const leftColumn = players.slice(0, 4)
+    const rightColumn = players.slice(4, 8)
+    return [leftColumn, rightColumn].filter((column) => column.length > 0)
   }
 
   useEffect(() => {
@@ -140,7 +145,6 @@ export default function ResultsHostPage() {
 
       try {
         setIsLoading(true)
-
         const { data: room, error: roomError } = await supabase
           .from("game_rooms")
           .select("*, questions")
@@ -150,6 +154,7 @@ export default function ResultsHostPage() {
         if (roomError || !room) {
           throw new Error("Ruangan tidak ditemukan")
         }
+
         setGameRoom(room)
 
         const { data: playersData, error: playersError } = await supabase
@@ -163,7 +168,7 @@ export default function ResultsHostPage() {
 
         const { data: completionData, error: completionError } = await supabase
           .from("game_completions")
-          .select("*, survival_duration")
+          .select("*, survival_duration, game_start_time, player_join_time")
           .eq("room_id", room.id)
           .order("completed_at", { ascending: false })
 
@@ -202,9 +207,12 @@ export default function ResultsHostPage() {
           if (completion) {
             finalHealth = completion.final_health
             isEliminated = completion.is_eliminated
-            survivalSeconds =
-              completion.survival_duration ||
-              calculateFallbackDuration(room.game_start_time, completion.completed_at, player.joined_at)
+            survivalSeconds = calculateAccurateDuration(
+              room.game_start_time,
+              completion.completed_at,
+              player.joined_at,
+              completion.survival_duration,
+            )
           } else if (healthState) {
             finalHealth = healthState.health
             isEliminated = finalHealth <= 0
@@ -217,15 +225,12 @@ export default function ResultsHostPage() {
 
           const actuallyEliminated = isEliminated || finalHealth <= 0
           const isLolos = !actuallyEliminated && finalHealth > 0
-
           const completionTime = completion ? completion.completed_at : gameEndTime
           const duration = formatDuration(survivalSeconds)
           const correctAnswers = completion ? completion.correct_answers : 0
           const finalScore = correctAnswers * 100 + finalHealth * 50
 
-          console.log(
-            `[v0] Player ${player.nickname}: health=${finalHealth}, eliminated=${actuallyEliminated}, duration=${survivalSeconds}s`,
-          )
+          console.log(`[v0] Player ${player.nickname} timing - Duration: ${survivalSeconds}s, Formatted: ${duration}`)
 
           return {
             id: player.id,
@@ -239,28 +244,23 @@ export default function ResultsHostPage() {
             finalScore,
             finalHealth,
             completionTime,
-            survivalSeconds, // Store for accurate sorting
+            survivalSeconds,
           }
         })
 
         const rankedResults = processedResults
           .sort((a, b) => {
-            // First priority: survivors vs eliminated
             if (a.isLolos !== b.isLolos) {
               return a.isLolos ? -1 : 1
             }
 
-            // Second priority: score (higher is better)
             if (a.finalScore !== b.finalScore) {
               return b.finalScore - a.finalScore
             }
 
-            // Third priority: survival time (longer is better for survivors, shorter is better for eliminated)
             if (a.isLolos) {
-              // For survivors, longer survival time is better
-              return b.survivalSeconds - a.survivalSeconds
+              return a.survivalSeconds - b.survivalSeconds
             } else {
-              // For eliminated players, longer survival time is still better
               return b.survivalSeconds - a.survivalSeconds
             }
           })
@@ -269,24 +269,16 @@ export default function ResultsHostPage() {
             rank: index + 1,
           }))
 
-        console.log(
-          `[v0] Final rankings:`,
-          rankedResults.map(
-            (r) =>
-              `${r.rank}. ${r.nickname} - ${r.isLolos ? "LOLOS" : "ELIMINATED"} - ${r.duration} - Score: ${r.finalScore}`,
-          ),
-        )
-
         setPlayerResults(rankedResults)
 
         if (rankedResults.some((r) => r.isLolos)) {
           setShowConfetti(true)
-          setTimeout(() => setShowConfetti(false), 5000)
+          setTimeout(() => setShowConfetti(false), 8000)
         }
 
         setTimeout(() => {
           setShowContent(true)
-        }, 1000)
+        }, 1500)
       } catch (error) {
         console.error("Gagal mengambil data:", error)
         setLoadingError("Gagal memuat hasil permainan. Silakan coba lagi.")
@@ -302,16 +294,41 @@ export default function ResultsHostPage() {
     const handleResize = () => {
       setWindowSize({ width: window.innerWidth, height: window.innerHeight })
     }
+
     handleResize()
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
+  useEffect(() => {
+    const generateBlood = () => {
+      const newBlood = Array.from({ length: 15 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        speed: 0.5 + Math.random() * 2,
+        delay: Math.random() * 5,
+      }))
+      setBloodDrips(newBlood)
+    }
+
+    generateBlood()
+    const bloodInterval = setInterval(() => {
+      generateBlood()
+    }, 8000)
+
+    return () => clearInterval(bloodInterval)
+  }, [])
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 text-2xl font-mono">
-          Memuat Hasil Permainan...
+      <div className="min-h-screen bg-black relative overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, ease: "easeInOut" }}
+          className="text-red-500 text-3xl font-bold font-mono flex items-center justify-center h-full space-x-4"
+        >
+          <span>Loading...</span>
         </motion.div>
       </div>
     )
@@ -319,20 +336,23 @@ export default function ResultsHostPage() {
 
   if (loadingError) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black relative overflow-hidden">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-red-500 text-2xl font-mono text-center"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: "easeInOut" }}
+          className="text-center flex items-center justify-center h-full"
         >
-          <Skull className="w-16 h-16 mx-auto mb-4" />
-          {loadingError}
-          <button
+          <p className="text-red-500 text-2xl font-mono mb-6">{loadingError}</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => window.location.reload()}
-            className="block mx-auto mt-4 bg-red-600 hover:bg-red-500 text-white font-mono py-2 px-4 rounded"
+            className="bg-red-900 text-white font-mono py-3 px-6 border-2 border-red-700"
+            style={{ boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
           >
             Coba Lagi
-          </button>
+          </motion.button>
         </motion.div>
       </div>
     )
@@ -341,342 +361,353 @@ export default function ResultsHostPage() {
   const columnsData = getColumnsLayout(playerResults)
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden select-none">
-      <div className="absolute inset-0 bg-gradient-to-br from-red-900/20 via-black to-purple-900/20">
-        <div className="absolute inset-0 opacity-40">
-          {Array.from({ length: 12 }).map((_, i) => (
+    <div className="min-h-screen bg-black relative overflow-hidden select-none font-mono">
+      {showConfetti && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={500}
+          colors={["#8B0000", "#FF0000", "#4B0082", "#2E8B57"]}
+          gravity={0.3}
+          wind={0.02}
+        />
+      )}
+
+      {/* Blood-stained background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-black to-purple-900/10">
+        <div className="absolute inset-0 opacity-20">
+          {[...Array(10)].map((_, i) => (
             <div
               key={i}
-              className="absolute bg-gradient-to-r from-red-900/50 to-orange-900/50 rounded-full mix-blend-multiply blur-3xl animate-pulse"
+              className="absolute w-64 h-64 bg-red-900 rounded-full mix-blend-multiply blur-xl"
               style={{
-                width: `${80 + i * 20}px`,
-                height: `${80 + i * 20}px`,
-                left: `${i * 8 + 2}%`,
-                top: `${i * 8 + 2}%`,
-                animationDelay: `${i * 0.3}s`,
-                animationDuration: `${2 + i * 0.3}s`,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: 0.3 + Math.random() * 0.4,
               }}
             />
           ))}
         </div>
       </div>
 
-      {Array.from({ length: 20 }).map((_, i) => (
+      {/* Blood drips */}
+      {bloodDrips.map((drip) => (
         <div
-          key={i}
-          className="absolute top-0 animate-fall"
+          key={drip.id}
+          className="absolute top-0 w-0.5 h-20 bg-red-600/80 animate-fall"
           style={{
-            left: `${Math.random() * 100}%`,
-            animation: `fall ${2 + Math.random() * 4}s linear ${Math.random() * 10}s infinite`,
-            opacity: 0.4 + Math.random() * 0.4,
+            left: `${drip.left}%`,
+            animation: `fall ${drip.speed}s linear ${drip.delay}s infinite`,
+            opacity: 0.7 + Math.random() * 0.3,
           }}
-        >
-          {i % 4 === 0 ? (
-            <div className="w-1 h-8 bg-gradient-to-b from-red-500 to-transparent" />
-          ) : i % 4 === 1 ? (
-            <div className="w-2 h-2 bg-yellow-500 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.8)]" />
-          ) : i % 4 === 2 ? (
-            <Trophy className="w-4 h-4 text-yellow-400" />
-          ) : (
-            <Skull className="w-3 h-3 text-red-400" />
-          )}
-        </div>
+        />
       ))}
 
+      {/* Floating skulls */}
       <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 15 }).map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <div
             key={i}
             className="absolute text-red-900/20 animate-float"
             style={{
-              left: `${i * 6 + 5}%`,
-              top: `${i * 6 + 5}%`,
-              fontSize: `${1 + (i % 3) * 0.3}rem`,
-              animationDelay: `${i * 0.5}s`,
-              animationDuration: `${8 + (i % 4) * 2}s`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              fontSize: `${2 + Math.random() * 3}rem`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${15 + Math.random() * 20}s`,
             }}
           >
-            {i % 4 === 0 ? (
-              <Skull aria-hidden="true" />
-            ) : i % 4 === 1 ? (
-              <Bone aria-hidden="true" />
-            ) : i % 4 === 2 ? (
-              <Trophy aria-hidden="true" />
-            ) : (
-              <Heart aria-hidden="true" />
-            )}
+            <Ghost />
           </div>
         ))}
       </div>
 
-      {showConfetti && (
-        <Confetti
-          width={windowSize.width}
-          height={windowSize.height}
-          recycle={false}
-          numberOfPieces={300}
-          colors={["#ff0000", "#8b0000", "#ff4500", "#dc143c", "#ffd700"]}
-        />
-      )}
+      {/* Scratch overlay */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwTDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBMNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
 
-      <audio src="/musics/victory.mp3" autoPlay />
+      {/* Blood stains in corners */}
+      <div className="absolute top-0 left-0 w-64 h-64 opacity-20">
+        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
+      </div>
+      <div className="absolute top-0 right-0 w-64 h-64 opacity-20">
+        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
+      </div>
+      <div className="absolute bottom-0 left-0 w-64 h-64 opacity-20">
+        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
+      </div>
+      <div className="absolute bottom-0 right-0 w-64 h-64 opacity-20">
+        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
+      </div>
 
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showContent ? 1 : 0 }}
-        transition={{ duration: 1.5, ease: "easeInOut" }}
-        className="relative z-10 container mx-auto px-2 py-4"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: showContent ? 1 : 0, scale: showContent ? 1 : 0.8 }}
+        transition={{ duration: 1.8, ease: "easeInOut" }}
+        className="relative z-10 container mx-auto px-4 py-8"
       >
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, delay: 0.5 }}
-          className="text-2xl md:text-4xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-orange-500 drop-shadow-[0_0_15px_rgba(255,0,0,0.6)] font-mono relative"
+        <motion.header
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.5, delay: 0.5, type: "spring", stiffness: 100 }}
+          className="text-center mb-8"
         >
-          <div className="absolute inset-0 text-red-500/20 blur-sm">Hasil Permainan - {gameRoom?.title}</div>
-          Hasil Permainan - {gameRoom?.title}
-        </motion.h1>
-
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, delay: 0.8 }}
-          className="mb-4"
-        >
-          <motion.h2
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.5, delay: 1.0 }}
-            className="text-xl md:text-2xl font-bold text-center mb-4 font-mono flex items-center justify-center"
+          <h1
+            className="text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+            style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
           >
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-            >
-              <Trophy className="w-6 h-6 mr-3 text-yellow-500 drop-shadow-[0_0_8px_rgba(255,215,0,0.6)]" />
-            </motion.div>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-orange-500">
-              Leaderboard Final
-            </span>
-            <motion.div
-              animate={{ rotate: [360, 0] }}
-              transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-            >
-              <Trophy className="w-6 h-6 ml-3 text-yellow-500 drop-shadow-[0_0_8px_rgba(255,215,0,0.6)]" />
-            </motion.div>
-          </motion.h2>
+            {t("title")}
+          </h1>
+        </motion.header>
 
-          <div className={`grid ${getGridCols(playerResults.length)} gap-2 max-w-7xl mx-auto`}>
-            {columnsData.map((column, columnIndex) => (
-              <div key={columnIndex} className="space-y-2">
-                {column.map((player, playerIndex) => {
-                  const character = getCharacterByType(player.character_type)
-                  const statusColor = player.isLolos
-                    ? "bg-gradient-to-r from-green-600 to-green-500"
-                    : "bg-gradient-to-r from-red-600 to-red-500"
-                  const statusText = player.isLolos ? "LOLOS" : "TIDAK LOLOS"
-                  const rankColor =
-                    player.rank === 1
-                      ? "bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-600"
-                      : player.rank === 2
-                        ? "bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500"
-                        : player.rank === 3
-                          ? "bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600"
-                          : "bg-gradient-to-r from-red-600 via-red-500 to-red-700"
-
-                  const animationDelay = 1.5 + (player.rank - 1) * 0.15
-
-                  return (
-                    <motion.div
-                      key={player.id}
-                      initial={{ opacity: 0, x: -50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        duration: 0.6,
-                        delay: animationDelay,
-                        ease: "easeOut",
-                      }}
-                      whileHover={{
-                        scale: 1.02,
-                        transition: { duration: 0.2 },
-                      }}
-                      className="bg-gradient-to-r from-gray-900/95 via-gray-800/95 to-gray-900/95 border border-red-500/40 rounded-lg overflow-hidden shadow-[0_0_15px_rgba(255,0,0,0.25)] hover:shadow-[0_0_25px_rgba(255,0,0,0.5)] transition-all duration-300 backdrop-blur-sm"
-                    >
-                      <div className="flex items-center h-14 relative">
-                        <div
-                          className={`${rankColor} h-full flex items-center justify-center px-3 min-w-[50px] relative overflow-hidden`}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-                          <div className="text-white font-bold text-sm font-mono flex items-center relative z-10 drop-shadow-lg">
-                            {player.rank === 1 && (
-                              <motion.div
-                                animate={{ scale: [1, 1.1, 1] }}
-                                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                              >
-                                <Trophy className="w-3 h-3 mr-1 text-yellow-200" />
-                              </motion.div>
-                            )}
-                            <span className="text-shadow-lg">{player.rank.toString().padStart(2, "0")}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex-1 flex items-center px-2 py-2 bg-gradient-to-r from-transparent to-gray-800/20 min-w-0">
-                          <div className="flex items-center space-x-2 flex-1 min-w-0">
-                            <motion.div
-                              whileHover={{ scale: 1.05 }}
-                              transition={{ duration: 0.2 }}
-                              className="relative flex-shrink-0"
-                            >
-                              <div
-                                className={`absolute inset-0 rounded-full ${player.isLolos ? "bg-green-500/30" : "bg-red-500/30"} blur-sm`}
-                              />
-                              <Image
-                                src={character.src || "/placeholder.svg"}
-                                alt={character.alt}
-                                width={32}
-                                height={32}
-                                className={`object-contain rounded-full relative z-10 border ${player.isLolos ? "border-green-400/50" : "border-red-400/50"} ${!player.isLolos ? "opacity-70 grayscale" : ""}`}
-                              />
-                            </motion.div>
-
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-xs font-bold text-white truncate mb-1 drop-shadow-md max-w-full">
-                                {player.nickname}
-                              </h3>
-                              <div className="flex items-center space-x-1 text-xs text-gray-300">
-                                <span className="flex items-center bg-blue-900/30 px-1 py-0.5 rounded text-xs">
-                                  <Clock className="w-2 h-2 mr-1 text-blue-400" />
-                                  <span className="font-mono text-xs">{player.duration}</span>
-                                </span>
-                                <span className="flex items-center bg-purple-900/30 px-1 py-0.5 rounded text-xs">
-                                  <Target className="w-2 h-2 mr-1 text-purple-400" />
-                                  <span className="font-mono text-xs">
-                                    {player.correctAnswers}/{player.totalQuestions}
-                                  </span>
-                                </span>
-                                <span className="flex items-center bg-pink-900/30 px-1 py-0.5 rounded text-xs">
-                                  <Heart className="w-2 h-2 mr-1 text-pink-400" />
-                                  <span className="font-mono text-xs">{player.finalHealth}</span>
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          className={`${statusColor} h-full flex items-center justify-center px-2 min-w-[80px] relative overflow-hidden`}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
-                          <motion.span
-                            className="text-white font-bold text-xs font-mono relative z-10 drop-shadow-lg text-center leading-tight"
-                            animate={player.isLolos ? { scale: [1, 1.05, 1] } : {}}
-                            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                          >
-                            {statusText}
-                          </motion.span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-        </motion.section>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, delay: 2.0 }}
-          className="mb-4 bg-gradient-to-r from-gray-800/90 via-gray-900/90 to-gray-800/90 border border-red-500/60 rounded-lg p-3 backdrop-blur-sm shadow-[0_0_20px_rgba(255,0,0,0.2)]"
-        >
-          <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400 mb-2 text-center">
-            Ringkasan Permainan
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
-            {[
-              {
-                value: playerResults.filter((p) => p.isLolos).length,
-                label: "Lolos",
-                color: "text-green-400",
-                bg: "bg-green-900/30",
-              },
-              {
-                value: playerResults.filter((p) => !p.isLolos).length,
-                label: "Gugur",
-                color: "text-red-400",
-                bg: "bg-red-900/30",
-              },
-              {
-                value: gameRoom?.questions?.length || 0,
-                label: "Total Soal",
-                color: "text-yellow-400",
-                bg: "bg-yellow-900/30",
-              },
-              { value: playerResults.length, label: "Total Pemain", color: "text-blue-400", bg: "bg-blue-900/30" },
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.5, delay: 2.2 + index * 0.1 }}
-                className={`${stat.bg} rounded-lg p-2 border border-gray-600/50`}
-              >
                 <motion.div
-                  className={`text-lg font-bold ${stat.color} font-mono`}
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, delay: index * 0.2 }}
-                >
-                  {stat.value}
-                </motion.div>
-                <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.5, delay: 2.0, type: "spring" }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-7xl mx-auto mt-8 mb-8"
+        >
+          {[
+            {
+              value: playerResults.filter((p) => p.isLolos).length,
+              label: "Selamat",
+              color: "#2ED84A",
+              icon: <Trophy className="w-6 h-6 mx-auto mb-2" />,
+            },
+            {
+              value: playerResults.filter((p) => !p.isLolos).length,
+              label: "Gagal",
+              color: "#FF0000",
+              icon: <Trophy className="w-6 h-6 mx-auto mb-2" />,
+            },
+            {
+              value: gameRoom?.questions?.length || 0,
+              label: "Total Soal",
+              color: "#FFFFFF",
+              icon: <Trophy className="w-6 h-6 mx-auto mb-2" />,
+            },
+            {
+              value: playerResults.length,
+              label: "Total Pemain",
+              color: "#FFFFFF",
+              icon: <Trophy className="w-6 h-6 mx-auto mb-2" />,
+            },
+          ].map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.5, delay: 2.2 + index * 0.2, type: "spring" }}
+              className="bg-red-900/50 p-4 text-center border border-red-700/50 rounded-lg"
+              style={{ boxShadow: "0 0 10px rgba(239, 68, 68, 0.5)" }}
+            >
+              <div className="text-lg font-bold text-white">
+                {stat.icon}
+                {stat.value}
+              </div>
+              <div className="text-xs text-red-400 mt-2 uppercase">{stat.label}</div>
+            </motion.div>
+          ))}
         </motion.div>
 
+        <motion.section
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.5, delay: 0.8 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto"
+        >
+          {columnsData.map((column, columnIndex) => (
+            <div key={columnIndex} className="space-y-6">
+              {column.map((player, playerIndex) => {
+                const character = getCharacterByType(player.character_type)
+                const animationDelay = 1.5 + (player.rank - 1) * 0.2
+
+                return (
+                  <motion.div
+                    key={player.id}
+                    initial={{ opacity: 0, x: player.rank % 2 === 0 ? 100 : -100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.8,
+                      delay: animationDelay,
+                      type: "spring",
+                      stiffness: 120,
+                    }}
+                    whileHover={{
+                      scale: 1.03,
+                      transition: { duration: 0.3 },
+                    }}
+                    className="relative bg-gradient-to-br from-black via-red-950/80 to-black border-2 border-red-600/70 rounded-2xl p-6 hover:border-red-400 hover:shadow-[0_0_30px_rgba(220,38,38,0.8),inset_0_0_20px_rgba(220,38,38,0.1)] transition-all duration-500 backdrop-blur-sm overflow-hidden"
+                    style={{
+                      minHeight: "200px",
+                      background: `
+                        radial-gradient(circle at 20% 80%, rgba(139, 0, 0, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(75, 0, 130, 0.2) 0%, transparent 50%),
+                        linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 5, 5, 0.95) 30%, rgba(40, 0, 0, 0.95) 70%, rgba(0, 0, 0, 0.95) 100%)
+                      `,
+                      boxShadow: `
+                        0 0 20px rgba(220, 38, 38, 0.4),
+                        inset 0 0 30px rgba(0, 0, 0, 0.8),
+                        inset 0 1px 0 rgba(220, 38, 38, 0.2)
+                      `,
+                    }}
+                  >
+                    {/* Blood splatter decorations */}
+                    <div className="absolute top-2 right-4 w-3 h-3 bg-red-600 rounded-full opacity-60" />
+                    <div className="absolute top-6 right-2 w-2 h-2 bg-red-700 rounded-full opacity-40" />
+                    <div className="absolute bottom-4 left-2 w-4 h-4 bg-red-800 rounded-full opacity-30" />
+
+                    {/* Scratch marks overlay */}
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute top-4 left-8 w-16 h-0.5 bg-red-400 rotate-12" />
+                      <div className="absolute top-6 left-10 w-12 h-0.5 bg-red-400 rotate-12" />
+                      <div className="absolute bottom-8 right-6 w-20 h-0.5 bg-red-400 -rotate-45" />
+                    </div>
+
+                    {/* Rank number - horror style with blood drip effect */}
+                    <div className="absolute -top-4 -left-4 w-16 h-16 bg-gradient-to-br from-red-700 to-red-900 rounded-full flex items-center justify-center text-white font-bold text-2xl border-4 border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.8)]">
+                      <div className="relative">
+                        {player.rank}
+                        {/* Blood drip effect */}
+                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-3 bg-red-600 rounded-b-full opacity-70" />
+                      </div>
+                      {player.rank === 1 && (
+                        <motion.div
+                          animate={{ scale: [1, 1.3, 1], rotate: [0, 15, -15, 0] }}
+                          transition={{ duration: 2.5, repeat: Number.POSITIVE_INFINITY }}
+                          className="absolute -top-3 -right-3"
+                        >
+                          <Trophy className="w-6 h-6 text-yellow-400 drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]" />
+                        </motion.div>
+                      )}
+                    </div>
+
+                    {/* Main content layout */}
+                    <div className="flex items-center gap-8 h-full pt-4">
+                      {/* Character GIF - larger with horror frame */}
+                      <div className="flex-shrink-0">
+                        <div className="relative">
+                          <div className="w-28 h-28 rounded-xl overflow-hidden border-4 border-red-500/80 shadow-[0_0_20px_rgba(220,38,38,0.6)] bg-gradient-to-br from-red-950/50 to-black/50">
+                            <Image
+                              src={character.src || "/placeholder.svg"}
+                              alt={character.alt}
+                              width={112}
+                              height={112}
+                              className="w-full h-full object-cover"
+                              style={{
+                                filter: !player.isLolos
+                                  ? "grayscale(100%) brightness(0.4) contrast(1.2) sepia(20%) hue-rotate(320deg)"
+                                  : "brightness(1.2) contrast(1.3) saturate(1.1) drop-shadow(0 0 8px rgba(220,38,38,0.4))",
+                              }}
+                            />
+                          </div>
+                          {/* Character name badge with horror styling */}
+                          <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-800 to-purple-900 text-white text-sm px-3 py-1 rounded-full border-2 border-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.6)]">
+                            {character.name}
+                          </div>
+                          {/* Glow effect for character */}
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-red-500/20 via-transparent to-red-500/20 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* Player info section with horror styling */}
+                      <div className="flex-grow space-y-4">
+                        {/* Player name with blood-stained effect */}
+                        <div className="relative bg-gradient-to-r from-red-800/90 to-red-900/90 text-white px-6 py-3 rounded-lg border-2 border-red-600/70 shadow-[0_0_15px_rgba(220,38,38,0.4)]">
+                          <h3 className="font-bold text-xl truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                            {player.nickname}
+                          </h3>
+                          {/* Blood stain decoration */}
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full opacity-70" />
+                        </div>
+
+                        {/* Time and status row with enhanced horror theme */}
+                        <div className="flex gap-4">
+                          {/* Time with dark theme */}
+                          <div className="flex-1 bg-gradient-to-r from-gray-900 to-black text-red-300 px-4 py-3 rounded-lg border-2 border-red-700/50 flex items-center gap-3 shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
+                            <Clock className="w-5 h-5 text-red-400" />
+                            <span className="font-mono text-lg font-bold">{player.duration}</span>
+                          </div>
+
+                          {/* Status with intense colors */}
+                          <div
+                            className={`flex-1 px-4 py-3 rounded-lg border-2 text-center font-bold text-lg shadow-[0_0_15px_rgba(0,0,0,0.8)] ${
+                              player.isLolos
+                                ? "bg-gradient-to-r from-green-700 to-green-800 text-white border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.6)]"
+                                : "bg-gradient-to-r from-red-700 to-red-800 text-white border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)]"
+                            }`}
+                          >
+                            {player.isLolos ? "LOLOS" : "TIDAK LOLOS"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Floating ghost decoration */}
+                    <motion.div
+                      animate={{
+                        y: [-2, 2, -2],
+                        opacity: [0.3, 0.6, 0.3],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "easeInOut",
+                      }}
+                      className="absolute top-4 right-4 text-red-400/40"
+                    >
+                      <Ghost className="w-6 h-6" />
+                    </motion.div>
+
+                    {/* Enhanced glow effect for winners */}
+                    {player.isLolos && (
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-green-500/10 via-transparent to-green-500/10 pointer-events-none animate-pulse" />
+                    )}
+
+                    {/* Failure overlay for eliminated players */}
+                    {!player.isLolos && (
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-red-900/20 via-transparent to-red-900/20 pointer-events-none" />
+                    )}
+                  </motion.div>
+                )
+              })}
+            </div>
+          ))}
+        </motion.section>
+
+
+
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, delay: 2.5 }}
-          className="text-center"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.5, delay: 2.5, type: "spring" }}
+          className="text-center mt-8"
         >
           <motion.button
             onClick={() => router.push("/")}
-            whileHover={{ scale: 1.03, boxShadow: "0 0 25px rgba(255,0,0,0.5)" }}
-            whileTap={{ scale: 0.97 }}
-            className="bg-gradient-to-r from-red-600 via-red-500 to-red-600 hover:from-red-500 hover:via-red-400 hover:to-red-500 text-white font-mono py-3 px-8 rounded-lg text-base transition-all duration-300 shadow-[0_0_15px_rgba(255,0,0,0.3)] border border-red-400/50 backdrop-blur-sm"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-red-900 text-white font-mono py-4 px-10 text-lg uppercase border-2 border-red-700 shadow-[0_0_10px_rgba(239,68,68,0.7)] hover:bg-red-800"
           >
-            Kembali ke Menu Utama
+            Beranda
           </motion.button>
         </motion.div>
       </motion.div>
 
       <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
         @keyframes fall {
-          to {
-            transform: translateY(100vh) rotate(360deg);
-          }
+          to { transform: translateY(100vh); }
         }
         @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg) scale(1);
-          }
-          33% {
-            transform: translateY(-10px) rotate(120deg) scale(1.05);
-          }
-          66% {
-            transform: translateY(-5px) rotate(240deg) scale(0.95);
-          }
-        }
-        .animate-fall {
-          animation: fall var(--animation-duration) linear infinite;
-        }
-        .animate-float {
-          animation: float var(--animation-duration) ease-in-out infinite;
-        }
-        .text-shadow-lg {
-          text-shadow: 0 3px 6px rgba(0,0,0,0.8);
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
         }
       `}</style>
     </div>
