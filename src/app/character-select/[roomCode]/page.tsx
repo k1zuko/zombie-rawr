@@ -367,7 +367,7 @@ export default function CharacterSelectPage() {
                   min="1"
                   value={gameDuration}
                   onChange={handleDurationChange}
-                  className="bg-black/50 border-red-900/50 text-red-200 font-mono focus:border-red-400/50 focus:ring-red-400/20"
+                  className="bg-black/50 border-red-900/50 text-red-400 font-mono focus:border-red-400/50 focus:ring-red-400/20"
                   placeholder={t("gameDurationPlaceholder")}
                 />
               </div>

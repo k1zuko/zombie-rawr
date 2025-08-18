@@ -421,7 +421,7 @@ export default function QuizSelectPage() {
 
           {/* Quiz Grid or Loading State */}
           {isLoading ? (
-            <div className="justify-center items-center h-64">
+            <div className="flex justify-center items-center h-64">
               <Loader2 className="h-12 w-12 text-red-500 animate-spin" />
             </div>
           ) : !isSearchOpen || !searchTerm ? (

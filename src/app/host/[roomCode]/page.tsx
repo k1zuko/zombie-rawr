@@ -215,7 +215,7 @@ export default function HostPage() {
     }
 
     const updateCountdown = () => {
-      const remaining = calculateCountdown(room.countdown_start, 3000)
+      const remaining = calculateCountdown(room.countdown_start, 10000)
       console.log("⏰ HostPage: Server-synced countdown:", remaining)
       setCountdown(remaining)
 
