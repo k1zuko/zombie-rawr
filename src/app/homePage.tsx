@@ -265,7 +265,7 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      )}      
+      )}
 
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         <Button
@@ -281,13 +281,20 @@ export default function HomePage() {
         {/* Tombol pemilihan bahasa */}
         <div className="absolute top-4 right-4 space-x-2">
           <Select value={i18n.language} onValueChange={handleLanguageChange}>
-            <SelectTrigger className="bg-black/50 border-red-500/50 text-red-400">
+            <SelectTrigger
+              className="bg-black/50 border-red-500/50 text-red-400 
+               focus:ring-0 focus:outline-none 
+               data-[state=open]:bg-black/80 data-[state=open]:border-red-500"
+            >
               <SelectValue placeholder={t("selectLanguage")} />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="id">Indonesia</SelectItem>
-              {/* Tambahkan bahasa lain jika diperlukan */}
+            <SelectContent className="bg-black/90 border border-red-500/50 text-red-400">
+              <SelectItem value="en" className="focus:bg-red-500/20 focus:text-red-300">
+                English
+              </SelectItem>
+              <SelectItem value="id" className="focus:bg-red-500/20 focus:text-red-300">
+                Indonesia
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

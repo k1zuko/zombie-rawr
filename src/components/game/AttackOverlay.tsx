@@ -1,11 +1,13 @@
 // components/game/AttackOverlay.tsx
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface AttackOverlayProps {
   isVisible: boolean;
 }
 
 export default function AttackOverlay({ isVisible }: AttackOverlayProps) {
+  const {t} = useTranslation()
   if (!isVisible) return null;
 
   return (
@@ -34,7 +36,7 @@ export default function AttackOverlay({ isVisible }: AttackOverlayProps) {
       {/* Main Text */}
       <div className="relative flex flex-col items-center animate-fade-in">
         <div className="text-2xl sm:text-3xl md:text-4xl font-horror text-red-500 text-shadow-[0_2px_4px_rgba(0,0,0,0.8)] animate-tremble">
-          Anda Diserang
+          {t("youAreAttacked")}
         </div>
       </div>
 

@@ -115,5 +115,16 @@
   ],
   "cursedSouls": "CURSED SOULS",
   "selectCharacter": "SELECT CHARACTER",
-  "me": "Me"
+  "me": "Me",
+  "correct": "Correct",
+  "speed": "Speed",
+  "health": "Health",
+  "questionCounter": "Question {{current}} of {{total}}",
+  "examTitle": "DARKNESS EXAM",
+  "processing": "Processing...",
+  "speedDecreases": "Speed decreases in {{seconds}}s",
+  "loadingQuestion": "Loading question...",
+  "youAreAttacked": "You Are Attacked",
+  "youAreSafe": "YOU ARE SAFE!",
+  "zombieApproaching": "ZOMBIE APPROACHING!"
 }

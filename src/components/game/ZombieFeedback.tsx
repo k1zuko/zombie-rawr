@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Skull, Zap } from "lucide-react";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 interface ZombieFeedbackProps {
   isCorrect: boolean | null;
@@ -10,6 +11,7 @@ interface ZombieFeedbackProps {
 }
 
 export default function ZombieFeedback({ isCorrect, isVisible }: ZombieFeedbackProps) {
+  const {t} = useTranslation()
   const [animationKey, setAnimationKey] = useState(0);
   const [showEffects, setShowEffects] = useState(false);
 
@@ -98,7 +100,7 @@ export default function ZombieFeedback({ isCorrect, isVisible }: ZombieFeedbackP
                     <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping" />
                   </div>
                   <div className="text-right">
-                    <span className="font-mono text-sm font-bold tracking-wider block">KAMU AMAN!</span>
+                    <span className="font-mono text-sm font-bold tracking-wider block">{t("youAreSafe")}</span>
                   </div>
                 </>
               ) : (
@@ -108,7 +110,7 @@ export default function ZombieFeedback({ isCorrect, isVisible }: ZombieFeedbackP
                     <div className="absolute inset-0 rounded-full bg-red-400/20 animate-ping" />
                   </div>
                   <div className="text-right">
-                    <span className="font-mono text-sm font-bold tracking-wider block">ZOMBI MENDEKAT!</span>
+                    <span className="font-mono text-sm font-bold tracking-wider block">{t("zombieApproaching")}</span>
                   </div>
                 </>
               )}

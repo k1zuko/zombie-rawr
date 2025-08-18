@@ -9,6 +9,7 @@ import { Progress } from "../ui/progress"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import ZombieFeedback from "./ZombieFeedback"
+import { useTranslation } from "react-i18next"
 
 interface QuizPhaseProps {
   room: any
@@ -41,6 +42,7 @@ export default function QuizPhase({
   onGameComplete,
   onProgressUpdate,
 }: QuizPhaseProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const params = useParams()
   const roomCode = params.roomCode as string
@@ -528,7 +530,7 @@ export default function QuizPhase({
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <Skull className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
-          <p className="text-white font-mono text-xl">Memuat pertanyaan...</p>
+          <p className="text-white font-mono text-xl">{t("loadingQustion")}</p>
         </div>
       </div>
     )
@@ -537,13 +539,12 @@ export default function QuizPhase({
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       <div
-        className={`absolute inset-0 transition-all duration-1000 ${
-          dangerLevel === 3
+        className={`absolute inset-0 transition-all duration-1000 ${dangerLevel === 3
             ? "bg-gradient-to-br from-red-900/40 via-black to-red-950/40"
             : dangerLevel === 2
               ? "bg-gradient-to-br from-red-950/25 via-black to-purple-950/25"
               : "bg-gradient-to-br from-red-950/15 via-black to-purple-950/15"
-        }`}
+          }`}
         style={{
           opacity: 0.3 + pulseIntensity * 0.4,
           filter: `hue-rotate(${pulseIntensity * 30}deg)`,
@@ -578,7 +579,7 @@ export default function QuizPhase({
           >
             <div className="flex items-center space-x-3">
               <AlertTriangle className="w-6 h-6 text-yellow-300 animate-bounce" />
-              <span>Speed decreases in {inactivityCountdown}s</span>
+              <span>{t("speedDecreases", { seconds: inactivityCountdown })}</span>
             </div>
           </motion.div>
         )}
@@ -588,14 +589,17 @@ export default function QuizPhase({
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
             <Skull className="w-8 h-8 text-red-500 mr-3 animate-pulse" />
-            <h1 className="text-3xl font-bold text-white font-mono tracking-wider">UJIAN KEGELAPAN</h1>
+            <h1 className="text-3xl font-bold text-white font-mono tracking-wider">{t("examTitle")}</h1>
             <Skull className="w-8 h-8 text-red-500 ml-3 animate-pulse" />
           </div>
 
           <div className="max-w-md mx-auto mb-4">
             <div className="flex items-center justify-center space-x-4 mb-2">
               <span className="text-white font-mono text-lg">
-                Pertanyaan {currentQuestionIndex + 1} dari {totalQuestions}
+                {t("questionCounter", {
+                  current: currentQuestionIndex + 1,
+                  total: totalQuestions,
+                })}
               </span>
             </div>
             <Progress value={((currentQuestionIndex + 1) / totalQuestions) * 100} className="h-2 bg-gray-800" />
@@ -615,25 +619,24 @@ export default function QuizPhase({
           </div>
 
           <div className="flex items-center justify-center space-x-4 mb-4">
-            <span className="text-white font-mono">Nyawa:</span>
+            <span className="text-white font-mono">{t("health")}:</span>
             <div className="flex space-x-1">
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className={`w-6 h-6 rounded-full border-2 transition-all duration-300 ${
-                    i < playerHealth
+                  className={`w-6 h-6 rounded-full border-2 transition-all duration-300 ${i < playerHealth
                       ? playerHealth <= 1
                         ? "bg-red-500 border-red-400 animate-pulse"
                         : "bg-green-500 border-green-400"
                       : "bg-gray-600 border-gray-500"
-                  }`}
+                    }`}
                 />
               ))}
             </div>
-            <span className="text-white font-mono">Kecepatan: {playerSpeed}</span>
-            <span className="text-gray-400 font-mono text-sm">Benar: {correctAnswers}</span>
+            <span className="text-white font-mono">{t("speed")}: {playerSpeed}</span>
+            <span className="text-gray-400 font-mono text-sm">{t("correct")}: {correctAnswers}</span>
             {isProcessingAnswer && (
-              <span className="text-yellow-400 font-mono text-xs animate-pulse">Memproses...</span>
+              <span className="text-yellow-400 font-mono text-xs animate-pulse">{t("processing")}</span>
             )}
           </div>
         </div>
@@ -663,9 +666,8 @@ export default function QuizPhase({
                     key={index}
                     onClick={() => handleAnswerSelect(option)}
                     disabled={isAnswered || isProcessingAnswer}
-                    className={`${getAnswerButtonClass(option)} p-6 text-left justify-start font-mono text-lg border-2 transition-all duration-300 relative overflow-hidden group ${
-                      isProcessingAnswer ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                    className={`${getAnswerButtonClass(option)} p-6 text-left justify-start font-mono text-lg border-2 transition-all duration-300 relative overflow-hidden group ${isProcessingAnswer ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     <div className="flex items-center space-x-3 relative z-10">

@@ -115,5 +115,16 @@
   ],
   "cursedSouls": "JIWA TERKUTUK",
   "selectCharacter": "PILIH KARAKTER",
-  "me": "Saya"
+  "me": "Saya",
+  "correct": "Benar",
+  "speed": "Kecepatan",
+  "health": "Nyawa",
+  "questionCounter": "Pertanyaan {{current}} dari {{total}}",
+  "examTitle": "UJIAN KEGELAPAN",
+  "processing": "Memproses...",
+  "speedDecreases": "Kecepatan berkurang dalam {{seconds}} detik",
+  "loadingQuestion": "Memuat pertanyaan...",
+  "youAreAttacked": "Anda Diserang",
+  "youAreSafe": "KAMU AMAN!",
+  "zombieApproaching": "ZOMBI MENDEKAT!"
 }
