@@ -282,7 +282,7 @@ export default function QuizSelectPage() {
         </Button>
 
         {/* Language Switcher Buttons */}
-        <div className="fixed top-2 right-2 space-x-2 z-30">
+        {/* <div className="fixed top-2 right-2 space-x-2 z-30">
           <Button
             variant="ghost"
             onClick={() => changeLanguage("en")}
@@ -297,7 +297,7 @@ export default function QuizSelectPage() {
           >
             ID
           </Button>
-        </div>
+        </div> */}
 
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 px-2 md:px-3">
           <motion.div

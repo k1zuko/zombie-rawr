@@ -87,5 +87,33 @@
   "login": "Masuk dengan Supabase",
   "loading": "Memuat...",
   "selectQuizDescription": "Pilih kuis untuk memulai petualanganmu!",
-  "characterSelectDescription": "Pilih pengejar dan atur pengaturan permainanmu!"
+  "characterSelectDescription": "Pilih pengejar dan atur pengaturan permainanmu!",
+  "roomCode": "Kode Ruangan",
+  "scanOrCopy": "Pindai atau salin kode",
+  "players": "Pemain",
+  "duration": "Durasi",
+  "question": "Soal",
+  "online": "Aktif",
+  "waitingHost": "Menunggu pemain bergabung...",
+  "shareCode": "Bagikan kode ruangan untuk mengundang teman!",
+  "startGame": {
+    "start?": "MULAI...",
+    "start": "MULAI GAME"
+  },
+  "lobby": "RUANG TUNGGU",
+  "atmosphereTexts": [
+    "Dinding-dinding berbisik tentang dosa-dosamu...",
+    "Darah menetes dari langit-langit...",
+    "Mereka mengawasimu...",
+    "Udara berbau besi dan penyesalan...",
+    "Detak jantungmu terdengar terlalu keras...",
+    "Jangan menoleh ke belakang...",
+    "Bayangan-bayangan lapar malam ini...",
+    "Mereka hampir tiba...",
+    "Kau bisa merasakannya merayap di kulitmu?",
+    "Jiwamu sudah hilang..."
+  ],
+  "cursedSouls": "JIWA TERKUTUK",
+  "selectCharacter": "PILIH KARAKTER",
+  "me": "Saya"
 }

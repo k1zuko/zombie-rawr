@@ -11,6 +11,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { syncServerTime, calculateCountdown } from "@/lib/server-time"
+import { useTranslation } from "react-i18next";
 
 // Mendefinisikan tipe data untuk Player
 interface Player {
@@ -56,9 +57,13 @@ export default function LobbyPhase({
   wrongAnswers = 0,
 }: LobbyPhaseProps) {
   // State untuk mengelola efek UI dan data permainan
+  const { t } = useTranslation()
   const [flickerText, setFlickerText] = useState(true)
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([])
-  const [atmosphereText, setAtmosphereText] = useState("Dinding-dinding berbisik tentang dosa-dosamu...")
+  const [atmosphereText, setAtmosphereText] = useState(() => {
+  const texts = t("atmosphereTexts", { returnObjects: true }) as string[];
+  return texts[0];
+});
   const [countdown, setCountdown] = useState<number | null>(null)
   const [room, setRoom] = useState<any>(null)
   const [isCharacterDialogOpen, setIsCharacterDialogOpen] = useState(false)
@@ -66,18 +71,7 @@ export default function LobbyPhase({
   const router = useRouter()
 
   // Teks atmosfer untuk menciptakan suasana
-  const atmosphereTexts = [
-    "Dinding-dinding berbisik tentang dosa-dosamu...",
-    "Darah menetes dari langit-langit...",
-    "Mereka mengawasimu...",
-    "Udara berbau besi dan penyesalan...",
-    "Detek jantungmu terdengar terlalu keras...",
-    "Jangan menoleh ke belakang...",
-    "Bayangan-bayangan lapar malam ini...",
-    "Mereka hampir tiba...",
-    "Kau bisa merasakannya merayap di kulitmu?",
-    "Jiwamu sudah hilang...",
-  ]
+  const atmosphereTexts = t("atmosphereTexts", { returnObjects: true }) as string[];
 
   useEffect(() => {
     syncServerTime()
@@ -229,7 +223,7 @@ export default function LobbyPhase({
       clearInterval(flickerInterval)
       clearInterval(textInterval)
     }
-  }, [])
+  }, [atmosphereTexts])
 
   // Menangani pemilihan karakter dengan auto-save dan menutup dialog
   const handleCharacterSelect = async (characterValue: string) => {
@@ -388,7 +382,7 @@ export default function LobbyPhase({
               } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
-              RUANG TUNGGU
+              {t("lobby")}
             </h1>
             <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
           </div>
@@ -435,38 +429,9 @@ export default function LobbyPhase({
         <div className="text-center space-y-6">
           <div className="flex items-center justify-center space-x-4 text-red-400 font-mono text-lg">
             <Users className="w-6 h-6" />
-            <span className="tracking-wider">{players.length} JIWA TERKUTUK</span>
+            <span className="tracking-wider">{players.length} {t("cursedSouls")}</span>
             <Zap className="w-6 h-6 animate-pulse" />
-          </div>
-
-          <div className="space-y-4">
-            {currentPlayer.isHost && (
-              <Button
-                onClick={handleStartGame}
-                disabled={(players.length < 2 && !isSoloMode) || countdown !== null}
-                className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-xl px-10 py-6 rounded-lg border-2 border-red-700 shadow-[0_0_30px_rgba(239,68,68,0.5)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
-              >
-                <span className="relative z-10 flex items-center">
-                  <Play className="w-6 h-6 mr-3" />
-                  MULAI PENYIKSAAN
-                </span>
-                <span className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-                <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 animate-pulse" />
-              </Button>
-            )}
-
-            {players.length < 2 && !isSoloMode && currentPlayer.isHost && (
-              <p className="text-red-400 text-sm font-mono animate-pulse tracking-wider">
-                RITUAL MEMBUTUHKAN LEBIH BANYAK KORBAN...
-              </p>
-            )}
-
-            {!currentPlayer.isHost && (
-              <p className="text-red-400/80 text-sm font-mono tracking-wider animate-pulse">
-                MENUNGGU PERINTAH KEJAM DARI TUAN RUMAH...
-              </p>
-            )}
-          </div>
+          </div>  
         </div>
 
         {/* Tombol Pilih Karakter */}
@@ -478,7 +443,7 @@ export default function LobbyPhase({
                 onClick={() => setIsCharacterDialogOpen(true)}
                 className="w-full relative overflow-hidden bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-mono text-base px-4 py-3 rounded-lg border-2 border-gray-700 shadow-[0_0_20px_rgba(107,114,128,0.3)] transition-all duration-300 group"
               >
-                <span className="relative z-10">PILIH KARAKTER</span>
+                <span className="relative z-10">{t("selectCharacter")}</span>
                 <span className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-white" />
               </Button>
             </div>
@@ -488,7 +453,7 @@ export default function LobbyPhase({
                 onClick={() => setIsCharacterDialogOpen(true)}
                 className="w-full relative overflow-hidden bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-mono text-xl px-10 py-6 rounded-lg border-2 border-gray-700 shadow-[0_0_20px_rgba(107,114,128,0.3)] transition-all duration-300 group"
               >
-                <span className="relative z-10">PILIH KARAKTER</span>
+                <span className="relative z-10">{t("selectCharacter")}</span>
                 <span className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-white" />
               </Button>
             </div>
@@ -500,7 +465,7 @@ export default function LobbyPhase({
           <DialogContent className="bg-black/95 text-white border-red-500/50 max-w-lg rounded-xl p-4 sm:p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
             <DialogHeader>
               <DialogTitle className="text-2xl sm:text-3xl font-bold text-red-400 font-mono tracking-wide">
-                Pilih Karakter
+                {t("selectCharacter")}
               </DialogTitle>
             </DialogHeader>
             <div className="py-4 sm:py-6">

@@ -87,5 +87,33 @@
   "login": "Login with Supabase",
   "loading": "Loading...",
   "selectQuizDescription": "Choose a quiz to start your adventure!",
-  "characterSelectDescription": "Select your chaser and configure your game settings!"
+  "characterSelectDescription": "Select your chaser and configure your game settings!",
+  "roomCode": "Room Code",
+  "scanOrCopy": "Scan or Copy Code",
+  "players": "Players",
+  "duration": "Duration",
+  "question": "Questions",
+  "online": "Online",
+  "waitingHost": "Waiting for players to join...",
+  "shareCode": "Share game code to invite friends!",
+  "startGame": {
+    "start?": "START...",
+    "start": "START GAME"
+  },
+  "lobby": "WAITING ROOM",
+  "atmosphereTexts": [
+    "The walls whisper your sins...",
+    "Blood drips from the ceiling...",
+    "They are watching you...",
+    "The air smells of iron and regret...",
+    "Your heartbeat sounds too loud...",
+    "Don't look behind...",
+    "Shadows are hungry tonight...",
+    "They are almost here...",
+    "Can you feel it crawling on your skin?",
+    "Your soul is already lost..."
+  ],
+  "cursedSouls": "CURSED SOULS",
+  "selectCharacter": "SELECT CHARACTER",
+  "me": "Me"
 }

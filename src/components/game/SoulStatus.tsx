@@ -3,6 +3,7 @@
 import { Heart, Skull, Zap, Shield, Crown, Eye } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 interface Player {
   id: string
@@ -33,6 +34,7 @@ export default function SoulStatus({
   variant = "compact",
   className,
 }: SoulStatusProps) {
+  const { t } = useTranslation()
   const isDead = player.health <= 0 || player.status === "dead"
   const isLowHealth = player.health <= 1 && player.health > 0
   const healthPercentage = (player.health / player.maxHealth) * 100
@@ -246,7 +248,7 @@ export default function SoulStatus({
               </div>
                 {isCurrentPlayer && (
                   <p className="text-xs bg-red-800 text-white px-5 py-1 rounded font-mono font-bold tracking-wider w-fit">
-                    Saya
+                    {t("me")}
                   </p>
                 )}
             </div>

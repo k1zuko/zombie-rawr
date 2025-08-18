@@ -12,6 +12,7 @@ import Image from "next/image";
 import QRCode from "react-qr-code";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { syncServerTime, calculateCountdown } from "@/lib/server-time"
+import { useTranslation } from "react-i18next";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const
 type ChaserType = (typeof validChaserTypes)[number]
@@ -30,10 +31,11 @@ interface GameRoom {
   created_at: string
   updated_at: string
   chaser_type: ChaserType
-  countdown_start: string 
+  countdown_start: string
 }
 
 export default function HostPage() {
+  const { t } = useTranslation()
   const params = useParams()
   const router = useRouter()
   const roomCode = params.roomCode as string
@@ -48,22 +50,6 @@ export default function HostPage() {
   const [flickerText, setFlickerText] = useState(true)
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([])
   const [isQrDialogOpen, setIsQrDialogOpen] = useState(false)
-  // const [atmosphereText, setAtmosphereText] = useState("Dinding-dinding berbisik tentang dosa-dosamu...");
-
-  const TOTAL_QUESTIONS_AVAILABLE = 50
-
-  // const atmosphereTexts = [
-  //   "Dinding-dinding berbisik tentang dosa-dosamu...",
-  //   "Darah menetes dari langit-langit...",
-  //   "Mereka mengawasimu...",
-  //   "Udara berbau besi dan penyesalan...",
-  //   "Detak jantungmu terdengar terlalu keras...",
-  //   "Jangan menoleh ke belakang...",
-  //   "Bayangan-bayangan lapar malam ini...",
-  //   "Mereka hampir tiba...",
-  //   "Kau bisa merasakannya merayap di kulitmu?",
-  //   "Jiwamu sudah hilang...",
-  // ];
 
   const fetchRoom = useCallback(async () => {
     if (!roomCode) return
@@ -454,7 +440,7 @@ export default function HostPage() {
         ))}
       </div>
 
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwLDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBMNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwLDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBMNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
 
       <div className="absolute top-0 left-0 w-64 h-64 opacity-20">
         <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
@@ -533,7 +519,7 @@ export default function HostPage() {
               <DialogContent className="bg-black/95 text-white border-red-500/50 max-w-sm rounded-xl p-6 shadow-[0_0_15px_rgba(255,0,0,0.5)]">
                 <DialogHeader className="mb-4">
                   <DialogTitle className="text-2xl text-center font-bold text-red-400 font-mono tracking-wider">
-                    Pindai atau Salin Kode
+                    {t("scanOrCopy")}
                   </DialogTitle>
                 </DialogHeader>
 
@@ -550,7 +536,7 @@ export default function HostPage() {
                 {/* Tampilan Kode Game & Tombol Copy */}
                 <div className="mt-6 flex items-center justify-center bg-black/40 p-3 rounded-lg border border-red-500/20">
                   <div className="text-center flex-grow">
-                    <div className="text-red-400 text-sm font-mono">Kode Game</div>
+                    <div className="text-red-400 text-sm font-mono">{t("roomCode")}</div>
                     <div className="text-3xl font-mono font-bold text-red-500 tracking-wider">
                       {roomCode}
                     </div>
@@ -575,7 +561,7 @@ export default function HostPage() {
             </Dialog>
 
             <div className="text-center">
-              <div className="text-red-400 text-sm font-mono">Kode Game</div>
+              <div className="text-red-400 text-sm font-mono">{t("roomCode")}</div>
               <div className="text-2xl md:text-3xl font-mono font-bold text-red-500 tracking-wider">{roomCode}</div>
             </div>
             <Button
@@ -623,7 +609,7 @@ export default function HostPage() {
               >
                 {players.length}/{room.max_players}
               </motion.div>
-              <div className="text-red-400 text-sm font-mono">Pemain</div>
+              <div className="text-red-400 text-sm font-mono">{t("players")}</div>
             </CardContent>
           </Card>
           <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
@@ -632,14 +618,14 @@ export default function HostPage() {
               <div className="text-xl font-bold text-red-500 mb-1 font-mono">
                 {Math.floor((room.duration || 600) / 60)}:{((room.duration || 600) % 60).toString().padStart(2, "0")}
               </div>
-              <div className="text-red-400 text-sm font-mono">Durasi</div>
+              <div className="text-red-400 text-sm font-mono">{t("duration")}</div>
             </CardContent>
           </Card>
           <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
             <CardContent className="text-center">
               <Trophy className="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2" />
               <div className="text-xl font-bold text-red-500 mb-1 font-mono">{room.question_count || 20}</div>
-              <div className="text-red-400 text-sm font-mono">Soal</div>
+              <div className="text-red-400 text-sm font-mono">{t("question")}</div>
             </CardContent>
           </Card>
           {/* <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
@@ -663,9 +649,9 @@ export default function HostPage() {
             <CardHeader>
               <CardTitle className="text-red-500 text-xl md:text-2xl font-mono flex items-center gap-3">
                 <Users className="w-5 h-5 md:w-6 md:h-6" />
-                Pemain
+                {t("players")}
                 <Badge variant="secondary" className="bg-red-900/50 text-red-400 font-mono">
-                  {players.length} online
+                  {players.length} {t("online")}
                 </Badge>
                 {connectionStatus === "connected" && (
                   <motion.div
@@ -699,8 +685,8 @@ export default function HostPage() {
                     >
                       <Users className="w-12 h-12 md:w-16 md:h-16 text-red-900/50 mx-auto mb-4" />
                     </motion.div>
-                    <p className="text-red-400 text-lg font-mono">Menunggu pemain bergabung...</p>
-                    <p className="text-red-400/80 text-sm font-mono">Bagikan kode game untuk mengundang teman!</p>
+                    <p className="text-red-400 text-lg font-mono">{t("waitingHost")}</p>
+                    <p className="text-red-400/80 text-sm font-mono">{t("shareCode")}</p>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -796,7 +782,12 @@ export default function HostPage() {
               ) : (
                 <Play className="w-5 h-5 mr-2" />
               )}
-              {countdown !== null ? "MEMULAI..." : isStarting ? "MEMULAI..." : "MULAI PERMAINAN"}
+              {countdown !== null
+                ? t("startGame.start?")
+                : isStarting
+                  ? t("startGame.start?")
+                  : t("startGame.start")}
+
             </span>
             <span className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
             <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 animate-pulse" />
