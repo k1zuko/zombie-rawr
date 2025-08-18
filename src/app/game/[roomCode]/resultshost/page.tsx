@@ -351,7 +351,7 @@ export default function ResultsHostPage() {
             className="bg-red-900 text-white font-mono py-3 px-6 border-2 border-red-700"
             style={{ boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
           >
-            Coba Lagi
+            Try Again...
           </motion.button>
         </motion.div>
       </div>
@@ -469,25 +469,25 @@ export default function ResultsHostPage() {
           {[
             {
               value: playerResults.filter((p) => p.isLolos).length,
-              label: "Selamat",
+              label: t("labels.success"),
               color: "#2ED84A",
               icon: <Trophy className="w-6 h-6 mx-auto mb-2" />,
             },
             {
               value: playerResults.filter((p) => !p.isLolos).length,
-              label: "Gagal",
+              label: t("labels.fail"),
               color: "#FF0000",
               icon: <Trophy className="w-6 h-6 mx-auto mb-2" />,
             },
             {
               value: gameRoom?.questions?.length || 0,
-              label: "Total Soal",
+              label: t("labels.totalQuestions"),
               color: "#FFFFFF",
               icon: <Trophy className="w-6 h-6 mx-auto mb-2" />,
             },
             {
               value: playerResults.length,
-              label: "Total Pemain",
+              label: t("labels.totalPlayers"),
               color: "#FFFFFF",
               icon: <Trophy className="w-6 h-6 mx-auto mb-2" />,
             },
@@ -636,7 +636,7 @@ export default function ResultsHostPage() {
                                 : "bg-gradient-to-r from-red-700 to-red-800 text-white border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)]"
                             }`}
                           >
-                            {player.isLolos ? "LOLOS" : "TIDAK LOLOS"}
+                            {player.isLolos ? t("pass") : t("fail")}
                           </div>
                         </div>
                       </div>
@@ -688,7 +688,7 @@ export default function ResultsHostPage() {
             whileTap={{ scale: 0.95 }}
             className="bg-red-900 text-white font-mono py-4 px-10 text-lg uppercase border-2 border-red-700 shadow-[0_0_10px_rgba(239,68,68,0.7)] hover:bg-red-800"
           >
-            Beranda
+            {t("homeButton")}
           </motion.button>
         </motion.div>
       </motion.div>

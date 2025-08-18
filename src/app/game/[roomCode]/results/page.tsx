@@ -9,6 +9,7 @@ import { motion, AnimatePresence, type Transition } from "framer-motion"
 import { HorrorCard } from "@/components/ui/horror-card"
 import type { GameRoom } from "@/lib/supabase"
 import Image from "next/image"
+import { useTranslation } from "react-i18next"
 
 // Interface tidak berubah
 interface GameCompletion {
@@ -87,6 +88,7 @@ const characterGifs = [
 ]
 
 export default function ResultsPage() {
+  const { t } = useTranslation()
   const params = useParams()
   const roomCode = params.roomCode as string
 
@@ -313,7 +315,7 @@ export default function ResultsPage() {
 
   const setupRealtimeSubscriptions = useCallback(() => {
     // ... (Fungsi ini tidak perlu diubah, tetap sama seperti di kode asli Anda)
-    if (!room || !isMountedRef.current) return () => {}
+    if (!room || !isMountedRef.current) return () => { }
 
     console.log("Setting up realtime subscriptions for room:", room.id)
     const completionsChannel = supabase
@@ -517,31 +519,37 @@ export default function ResultsPage() {
   }
 
   const getPerformanceTitle = () => {
-    if (!playerData) return "PENJELAJAH YANG TERSERAP KABUT"
-    const accuracy = playerData.total > 0 ? (playerData.correct / playerData.total) * 100 : 0
+    if (!playerData) return t("performanceTitle.noData");
 
-    if (playerData.perfect) return "LEGEND OF THE NIGHT"
-    if (accuracy >= 90) return "Seorang Master"
-    if (accuracy >= 80) return "Penjaga Ketenangan"
-    if (accuracy >= 70) return "Jiwa Yang Bijak"
-    if (accuracy >= 60) return "Sang Pencari Ilmu"
-    if (accuracy >= 50) return "Sang Pencari Ilmu"
-    if (accuracy >= 40) return "Sang Pencari Ilmu"
-    if (accuracy >= 30) return "Sang Pencari Ilmu"
-    if (accuracy >= 20) return "Sang Pencari Ilmu"
-    return "Siswa Haus Ilmu"
-  }
+    const accuracy =
+      playerData.total > 0 ? (playerData.correct / playerData.total) * 100 : 0;
+
+    if (playerData.perfect) return t("performanceTitle.perfect");
+    if (accuracy >= 90) return t("performanceTitle.accuracy90");
+    if (accuracy >= 80) return t("performanceTitle.accuracy80");
+    if (accuracy >= 70) return t("performanceTitle.accuracy70");
+    if (accuracy >= 60) return t("performanceTitle.accuracy60");
+    if (accuracy >= 50) return t("performanceTitle.accuracy50");
+    if (accuracy >= 40) return t("performanceTitle.accuracy40");
+    if (accuracy >= 30) return t("performanceTitle.accuracy30");
+    if (accuracy >= 20) return t("performanceTitle.accuracy20");
+
+    return t("performanceTitle.default");
+  };
 
   const getPerformanceMessage = () => {
-    if (!playerData) return "Jejakmu masih tersembunyi di kabut... bangkit dan coba lagi!"
-    const accuracy = playerData.total > 0 ? (playerData.correct / playerData.total) * 100 : 0
-    if (playerData.perfect) return "Keren! Kamu menaklukkan malam dengan sempurna! Jadi legenda sejati!"
-    if (playerData.eliminated)
-      return "Kegelapan menantangmu kali ini, tapi semangatmu masih menyala! Coba lagi, pahlawan!"
-    if (accuracy >= 90) return "Luar biasa! Kamu hampir tak terhentikan di medan horor ini!"
-    if (accuracy >= 70) return "Hebat! Kamu berjuang dengan gagah berani melawan kegelapan!"
-    if (accuracy >= 50) return "Bagus sekali! Teruslah berjuang, kamu semakin kuat!"
-    return "Setiap langkah adalah awal baru! Bangkit dan hadapi horor berikutnya!"
+    if (!playerData) return t("performance.noData");
+
+    const accuracy =
+      playerData.total > 0 ? (playerData.correct / playerData.total) * 100 : 0;
+
+    if (playerData.perfect) return t("performance.perfect");
+    if (playerData.eliminated) return t("performance.eliminated");
+    if (accuracy >= 90) return t("performance.accuracy90");
+    if (accuracy >= 70) return t("performance.accuracy70");
+    if (accuracy >= 50) return t("performance.accuracy50");
+
+    return t("performance.default");
   }
 
   const getActivityMessage = (activity: GameActivity) => {
@@ -576,8 +584,8 @@ export default function ResultsPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
         <div className="text-center z-10">
           <Skull className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
-          <p className="text-white font-mono text-xl mb-4 tracking-widest">MEMANGGIL KISAH KEHEBATANMU...</p>
-          <p className="text-gray-400 font-mono text-sm">Sebentar lagi, hasil petualanganmu akan terungkap!</p>
+          <p className="text-white font-mono text-xl mb-4 tracking-widest">{t("result.loadingTitle")}</p>
+          <p className="text-gray-400 font-mono text-sm">{t("result.loadingSubtitle")}</p>
         </div>
       </div>
     )
@@ -591,10 +599,9 @@ export default function ResultsPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
         <div className="text-center z-10 p-4">
           <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-          <p className="text-white font-mono text-xl mb-4 tracking-widest">KABUT MENYELIMUTI JEJAKMU</p>
+          <p className="text-white font-mono text-xl mb-4 tracking-widest">{t("result.errorTitle")}</p>
           <p className="text-yellow-400 font-mono text-sm mb-6 max-w-md mx-auto">
-            {error ||
-              "Kami tidak dapat menemukan hasil spesifik petualanganmu. Ini bisa terjadi jika kamu langsung membuka halaman ini. Tapi jangan khawatir, kamu masih bisa melihat statistik ruangan."}
+            {error || t("result.errorMessage")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -602,14 +609,14 @@ export default function ResultsPage() {
               className="bg-gray-900 hover:bg-gray-800 text-white font-mono border border-gray-700"
             >
               <Home className="w-4 h-4 mr-2" />
-              Halaman Utama
+              {t("common.home")}
             </Button>
             <Button
               onClick={fetchInitialData}
               className="bg-red-900 hover:bg-red-800 text-white font-mono border border-red-700"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Coba Lagi
+              {t("common.retry")}
             </Button>
           </div>
         </div>
@@ -679,7 +686,7 @@ export default function ResultsPage() {
           <div className="flex items-center justify-center mb-6">
             <Skull className="w-8 h-8 text-red-500 mr-3 animate-pulse" />
             <h1 className="text-5xl font-bold text-white font-horror tracking-wider text-red-600 drop-shadow-[0_0_8px_rgba(255,0,0,0.7)]">
-              Hasil
+              {t("result.title")}
             </h1>
             <Skull className="w-8 h-8 text-red-500 ml-3 animate-pulse" />
           </div>
@@ -726,13 +733,13 @@ export default function ResultsPage() {
                   <div className="bg-gray-900/70 rounded-lg p-4 border border-red-900/50">
                     <Target className="w-6 h-6 text-green-400 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-white font-mono">{playerData.correct}</div>
-                    <div className="text-xs text-gray-400 tracking-widest">Benar</div>
+                    <div className="text-xs text-gray-400 tracking-widest">{t("correct")}</div>
                   </div>
 
                   <div className="bg-gray-900/70 rounded-lg p-4 border border-red-900/50">
                     <Heart className="w-6 h-6 text-red-500 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-white font-mono">{playerData.health}</div>
-                    <div className="text-xs text-gray-400 tracking-widest">Nyawa</div>
+                    <div className="text-xs text-gray-400 tracking-widest">{t("health")}</div>
                   </div>
 
                   {/* <div className="bg-gray-900/70 rounded-lg p-4 border border-red-900/50">
@@ -746,7 +753,7 @@ export default function ResultsPage() {
                     <div className="text-2xl font-bold text-white font-mono">
                       {playerData.total > 0 ? Math.round((playerData.correct / playerData.total) * 100) : 0}%
                     </div>
-                    <div className="text-xs text-gray-400 tracking-widest">Akurasi</div>
+                    <div className="text-xs text-gray-400 tracking-widest">{t("accuracy")}</div>
                   </div>
                 </div>
               </div>
@@ -764,7 +771,7 @@ export default function ResultsPage() {
               <div className="p-6">
                 <h3 className="text-xl font-bold text-white mb-4 font-horror tracking-wider flex items-center">
                   <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-                  Urutan Pemain
+                  {t("result.playerRanking")}
                 </h3>
 
                 <div className="space-y-2">
@@ -776,19 +783,17 @@ export default function ResultsPage() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 50 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className={`flex items-center justify-between p-3 rounded-lg border ${
-                          player.nickname === playerData.nickname
-                            ? "bg-purple-900/30 border-purple-700 ring-2 ring-purple-500"
-                            : index === 0
-                              ? "bg-yellow-900/20 border-yellow-800"
-                              : "bg-gray-900/50 border-gray-800"
-                        }`}
+                        className={`flex items-center justify-between p-3 rounded-lg border ${player.nickname === playerData.nickname
+                          ? "bg-purple-900/30 border-purple-700 ring-2 ring-purple-500"
+                          : index === 0
+                            ? "bg-yellow-900/20 border-yellow-800"
+                            : "bg-gray-900/50 border-gray-800"
+                          }`}
                       >
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                              index === 0 ? "bg-yellow-600 text-white" : "bg-gray-700 text-gray-300"
-                            }`}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${index === 0 ? "bg-yellow-600 text-white" : "bg-gray-700 text-gray-300"
+                              }`}
                           >
                             {player.rank}
                           </div>
@@ -796,14 +801,14 @@ export default function ResultsPage() {
                           <div>
                             <div className="text-white font-mono tracking-wider">{player.nickname}</div>
                             <div className="text-xs text-gray-400">
-                              {player.correct_answers} benar • {player.is_alive ? "🩸 BERJUANG" : "💀 ISTIRAHAT"}
+                              {t("result.correct", { count: player.correct_answers })} •{" "} {player.is_alive ? t("result.alive") : t("result.dead")}
                             </div>
                           </div>
                         </div>
 
                         <div className="text-right">
                           <div className="text-lg font-bold text-white font-mono">{player.score}</div>
-                          <div className="text-xs text-gray-400 tracking-widest">POIN KEHEBATAN</div>
+                          <div className="text-xs text-gray-400 tracking-widest">{t("result.points")}</div>
                         </div>
                       </motion.div>
                     ))}
@@ -825,7 +830,7 @@ export default function ResultsPage() {
             className="bg-gray-900 hover:bg-gray-800 text-white font-mono tracking-wider flex items-center justify-center border border-gray-700"
           >
             <Home className="w-4 h-4 mr-2" />
-            Halaman Utama
+            {t("common.home")}
           </Button>
 
           {/* <Button
@@ -845,8 +850,8 @@ export default function ResultsPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.2 }}
         >
-          <p>PETUALANGAN MALAM SELALU MENANTI...</p>
-          <p className="mt-1">KEBERANIANMU AKAN DIKENANG!</p>
+          <p>{t("result.adventureAwait")}</p>
+          <p className="mt-1">{t("result.braveryRemembered")}</p>
         </motion.div>
       </div>
     </div>

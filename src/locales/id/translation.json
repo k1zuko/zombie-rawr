@@ -119,6 +119,7 @@
   "correct": "Benar",
   "speed": "Kecepatan",
   "health": "Nyawa",
+  "accuracy": "Akurasi",
   "questionCounter": "Pertanyaan {{current}} dari {{total}}",
   "examTitle": "UJIAN KEGELAPAN",
   "processing": "Memproses...",
@@ -126,5 +127,54 @@
   "loadingQuestion": "Memuat pertanyaan...",
   "youAreAttacked": "Anda Diserang",
   "youAreSafe": "KAMU AMAN!",
-  "zombieApproaching": "ZOMBI MENDEKAT!"
+  "zombieApproaching": "ZOMBI MENDEKAT!",
+  "homeButton": "Beranda",
+  "pass": "LOLOS",
+  "fail": "TIDAK LOLOS",
+  "labels": {
+    "success": "Selamat",
+    "fail": "Gagal",
+    "totalQuestions": "Total Soal",
+    "totalPlayers": "Total Pemain"
+  },
+  "performance": {
+    "noData": "Jejakmu masih tersembunyi di kabut... bangkit dan coba lagi!",
+    "perfect": "Keren! Kamu menaklukkan malam dengan sempurna! Jadi legenda sejati!",
+    "eliminated": "Kegelapan menantangmu kali ini, tapi semangatmu masih menyala! Coba lagi, pahlawan!",
+    "accuracy90": "Luar biasa! Kamu hampir tak terhentikan di medan horor ini!",
+    "accuracy70": "Hebat! Kamu berjuang dengan gagah berani melawan kegelapan!",
+    "accuracy50": "Bagus sekali! Teruslah berjuang, kamu semakin kuat!",
+    "default": "Setiap langkah adalah awal baru! Bangkit dan hadapi horor berikutnya!"
+  },
+  "performanceTitle": {
+    "noData": "PENJELAJAH YANG TERSERAP KABUT",
+    "perfect": "LEGEND OF THE NIGHT",
+    "accuracy90": "Seorang Master",
+    "accuracy80": "Penjaga Ketenangan",
+    "accuracy70": "Jiwa Yang Bijak",
+    "accuracy60": "Sang Pencari Ilmu",
+    "accuracy50": "Sang Pencari Ilmu",
+    "accuracy40": "Sang Pencari Ilmu",
+    "accuracy30": "Sang Pencari Ilmu",
+    "accuracy20": "Sang Pencari Ilmu",
+    "default": "Siswa Haus Ilmu"
+  },
+  "result": {
+    "loadingTitle": "MEMANGGIL KISAH KEHEBATANMU...",
+    "loadingSubtitle": "Sebentar lagi, hasil petualanganmu akan terungkap!",
+        "errorTitle": "KABUT MENYELIMUTI JEJAKMU",
+    "errorMessage": "Kami tidak dapat menemukan hasil spesifik petualanganmu. Ini bisa terjadi jika kamu langsung membuka halaman ini. Tapi jangan khawatir, kamu masih bisa melihat statistik ruangan.",
+    "title": "Hasil",
+    "playerRanking": "Urutan Pemain",
+    "correct": "{{count}} benar",
+    "alive": "🩸 BERJUANG",
+    "dead": "💀 ISTIRAHAT",
+    "points": "POIN KEHEBATAN",
+    "adventureAwait": "PETUALANGAN MALAM SELALU MENANTI...",
+    "braveryRemembered": "KEBERANIANMU AKAN DIKENANG!"
+  },
+  "common": {
+    "home": "Halaman Utama",
+    "retry": "Coba Lagi"
+  }
 }

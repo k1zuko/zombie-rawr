@@ -119,6 +119,7 @@
   "correct": "Correct",
   "speed": "Speed",
   "health": "Health",
+  "accuracy": "Accuracy",
   "questionCounter": "Question {{current}} of {{total}}",
   "examTitle": "DARKNESS EXAM",
   "processing": "Processing...",
@@ -126,5 +127,54 @@
   "loadingQuestion": "Loading question...",
   "youAreAttacked": "You Are Attacked",
   "youAreSafe": "YOU ARE SAFE!",
-  "zombieApproaching": "ZOMBIE APPROACHING!"
+  "zombieApproaching": "ZOMBIE APPROACHING!",
+  "homeButton": "Home",
+  "pass": "PASSED",
+  "fail": "FAILED",
+  "labels": {
+    "success": "Success",
+    "fail": "Fail",
+    "totalQuestions": "Total Questions",
+    "totalPlayers": "Total Players"
+  },
+  "performance": {
+    "noData": "Your trace is still hidden in the mist... rise and try again!",
+    "perfect": "Awesome! You conquered the night perfectly! A true legend!",
+    "eliminated": "Darkness challenged you this time, but your spirit still burns! Try again, hero!",
+    "accuracy90": "Incredible! You're almost unstoppable in this horror battlefield!",
+    "accuracy70": "Great! You fought bravely against the darkness!",
+    "accuracy50": "Well done! Keep fighting, you're getting stronger!",
+    "default": "Every step is a new beginning! Rise and face the next horror!"
+  },
+  "performanceTitle": {
+    "noData": "WANDERER LOST IN THE MIST",
+    "perfect": "LEGEND OF THE NIGHT",
+    "accuracy90": "A Master",
+    "accuracy80": "Guardian of Serenity",
+    "accuracy70": "Wise Soul",
+    "accuracy60": "Seeker of Knowledge",
+    "accuracy50": "Seeker of Knowledge",
+    "accuracy40": "Seeker of Knowledge",
+    "accuracy30": "Seeker of Knowledge",
+    "accuracy20": "Seeker of Knowledge",
+    "default": "Knowledge-Hungry Student"
+  },
+  "result": {
+    "loadingTitle": "SUMMONING YOUR LEGEND...",
+    "loadingSubtitle": "Soon, the outcome of your adventure will be revealed!",
+        "errorTitle": "THE MIST VEILS YOUR PATH",
+    "errorMessage": "We couldn’t find the specific results of your adventure. This might happen if you accessed this page directly. But don’t worry, you can still view the room statistics.",
+    "title": "Results",
+    "playerRanking": "Player Ranking",
+    "correct": "{{count}} correct",
+    "alive": "🩸 FIGHTING",
+    "dead": "💀 RESTING",
+    "points": "Power Points",
+    "adventureAwait": "The night adventure always awaits...",
+    "braveryRemembered": "Your bravery will be remembered!"
+  },
+  "common": {
+    "home": "Home",
+    "retry": "Try Again"
+  }
 }
