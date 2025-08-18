@@ -20,6 +20,14 @@ const geistMono = Geist_Mono({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
 
+  // Load bahasa dari localStorage saat app load
+  useEffect(() => {
+    const savedLang = localStorage.getItem("language");
+    if (savedLang && i18n.language !== savedLang) {
+      i18n.changeLanguage(savedLang);
+    }
+  }, [i18n]);
+
   // Update HTML lang attribute when language changes
   useEffect(() => {
     document.documentElement.lang = i18n.language;

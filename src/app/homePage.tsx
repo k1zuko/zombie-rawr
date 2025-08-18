@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
 import { useTranslation } from "react-i18next"; // Impor hook untuk terjemahan
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Types for TypeScript
 interface BloodDrip {
@@ -118,6 +119,12 @@ export default function HomePage() {
     []
   );
 
+  // Handle bahasa change
+  const handleLanguageChange = (value: string) => {
+    i18n.changeLanguage(value);
+    localStorage.setItem("language", value); // Simpan preferensi bahasa di localStorage
+  };
+
   // Handle URL code
   useEffect(() => {
     const codeFromUrl = searchParams.get("code");
@@ -125,7 +132,12 @@ export default function HomePage() {
       setGameCode(codeFromUrl.toUpperCase());
       window.history.replaceState(null, "", "/");
     }
-  }, [searchParams]);
+
+    const langFromUrl = searchParams.get("lng");
+    if (langFromUrl && i18n.language !== langFromUrl) {
+      handleLanguageChange(langFromUrl);
+    }
+  }, [searchParams, i18n.language]);
 
   // Set client-side flag
   useEffect(() => {
@@ -253,7 +265,7 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      )}
+      )}      
 
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         <Button
@@ -268,20 +280,16 @@ export default function HomePage() {
 
         {/* Tombol pemilihan bahasa */}
         <div className="absolute top-4 right-4 space-x-2">
-          <Button
-            variant="ghost"
-            onClick={() => changeLanguage("en")}
-            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "en" ? "bg-red-900/30" : ""}`}
-          >
-            EN
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => changeLanguage("id")}
-            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "id" ? "bg-red-900/30" : ""}`}
-          >
-            ID
-          </Button>
+          <Select value={i18n.language} onValueChange={handleLanguageChange}>
+            <SelectTrigger className="bg-black/50 border-red-500/50 text-red-400">
+              <SelectValue placeholder={t("selectLanguage")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="id">Indonesia</SelectItem>
+              {/* Tambahkan bahasa lain jika diperlukan */}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="w-full max-w-6xl">
@@ -289,7 +297,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12"
+            className="text-center mb-12 pt-12"
           >
             <h1
               className="text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -36,7 +36,9 @@ export default function CharacterSelectPage() {
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [gameDuration, setGameDuration] = useState<string>("10");
-  const [questionCount, setQuestionCount] = useState<number>(20); // Changed to number
+  const [questionCount, setQuestionCount] = useState<number>(20);
+  const [totalQuestions, setTotalQuestions] = useState<number>(0);
+  const [userSetQuestionCount, setUserSetQuestionCount] = useState(false);
   const [chaserType, setChaserType] = useState<ChaserType>("zombie");
   const [flickerText, setFlickerText] = useState(true);
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([]);
@@ -84,6 +86,19 @@ export default function CharacterSelectPage() {
     },
   ];
 
+  const handleQuestionCountChange = (value: string) => {
+    setQuestionCount(Number(value));
+    setUserSetQuestionCount(true); // tandai user udah pilih manual
+  };
+
+  const questionOptions = useMemo(() => {
+    const opts: number[] = [];
+    for (let i = 5; i <= totalQuestions; i += 5) {
+      opts.push(i);
+    }
+    return opts;
+  }, [totalQuestions]);
+
   useEffect(() => {
     setSounds({
       whisper: new Audio("/sounds/whisper.mp3"),
@@ -101,7 +116,7 @@ export default function CharacterSelectPage() {
       try {
         const { data, error } = await supabase
           .from("game_rooms")
-          .select("*, chaser_type")
+          .select("*, chaser_type, quiz_id")
           .eq("room_code", roomCode)
           .single();
 
@@ -117,6 +132,26 @@ export default function CharacterSelectPage() {
         setGameDuration((data.duration ? data.duration / 60 : 10).toString());
         setQuestionCount(data.question_count ?? 20);
         setChaserType(fetchedChaserType);
+
+        const { count: questionsCount, error: questionsError } = await supabase
+          .from("quiz_questions")
+          .select("*", { count: "exact", head: true })
+          .eq("quiz_id", data.quiz_id);
+
+        if (questionsError) {
+          console.error("Error fetching questions count:", questionsError);
+          setTotalQuestions(20); // Fallback
+        } else {
+          const total = questionsCount || 20;
+          setTotalQuestions(total);
+          if (!userSetQuestionCount) {
+            if (data.question_count) {
+              setQuestionCount(data.question_count);
+            } else {
+              setQuestionCount(total <= 15 ? total : 15);
+            }
+          }
+        }
         setIsLoading(false);
       } catch (error) {
         console.error(t("errorMessages.fetchRoomFailedLog"), error);
@@ -303,7 +338,7 @@ export default function CharacterSelectPage() {
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwTDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBMNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
 
       <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
-        <div className="fixed top-2 right-2 space-x-2 z-30">
+        {/* <div className="fixed top-2 right-2 space-x-2 z-30">
           <Button
             variant="ghost"
             onClick={() => changeLanguage("en")}
@@ -318,7 +353,7 @@ export default function CharacterSelectPage() {
           >
             ID
           </Button>
-        </div>
+        </div> */}
 
         <motion.div
           initial={{ opacity: 0, y: -50 }}
@@ -329,9 +364,8 @@ export default function CharacterSelectPage() {
           <div className="flex items-center justify-center mb-6">
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-5xl md:text-6xl font-bold font-mono tracking-widest transition-all duration-150 ${
-                flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
-              } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-5xl md:text-6xl font-bold font-mono tracking-widest transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
+                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("settingsTitle")}
@@ -355,7 +389,7 @@ export default function CharacterSelectPage() {
                 <Clock className="w-5 h-5 text-red-500 mr-2" />
                 <h2 className="text-xl font-mono text-red-400">{t("gameSettingsTitle")}</h2>
               </div>
-              
+
               <div className="mb-6">
                 <Label htmlFor="duration" className="text-red-300 mb-2 block font-medium text-sm font-mono">
                   {t("gameDurationLabel")}
@@ -376,16 +410,16 @@ export default function CharacterSelectPage() {
                 <Label htmlFor="questionCount" className="text-red-300 mb-2 block font-medium text-sm font-mono">
                   {t("questionCountLabel")}
                 </Label>
-                <Select value={questionCount.toString()} onValueChange={(value) => setQuestionCount(Number(value))}>
+                <Select value={questionCount.toString()} onValueChange={handleQuestionCountChange}>
                   <SelectTrigger className="w-full bg-black/70 border-red-800/70 text-red-400 rounded-lg hover:bg-red-900/30 transition-colors font-mono">
                     <SelectValue placeholder={t("selectQuestionCount")} />
                   </SelectTrigger>
                   <SelectContent className="bg-black/95 text-red-400 border-red-800/50 rounded-lg font-mono backdrop-blur-sm">
-                    <SelectItem value="10">{t("questionCountOptions.10")}</SelectItem>
-                    <SelectItem value="20">{t("questionCountOptions.20")}</SelectItem>
-                    <SelectItem value="30">{t("questionCountOptions.30")}</SelectItem>
-                    <SelectItem value="40">{t("questionCountOptions.40")}</SelectItem>
-                    <SelectItem value="50">{t("questionCountOptions.50")}</SelectItem>
+                    {questionOptions.map((opt) => (
+                      <SelectItem key={opt} value={opt.toString()}>
+                        {opt} {opt === totalQuestions ? `(${t("allLabel")})` : ""}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -452,11 +486,10 @@ export default function CharacterSelectPage() {
                       tabIndex={0}
                       onClick={() => handleChaserSelect(chaser)}
                       onKeyDown={(e) => e.key === "Enter" && handleChaserSelect(chaser)}
-                      className={`relative flex flex-col items-center p-4 rounded-lg cursor-pointer transition-all duration-300 border ${
-                        chaserType === chaser.value
-                          ? "border-red-500 shadow-[0_0_15px_rgba(255,0,0,0.7)] bg-red-900/40"
-                          : "border-red-500/30 bg-black/40 hover:bg-red-900/20 hover:shadow-[0_0_10px_rgba(255,0,0,0.5)]"
-                      } h-full`}
+                      className={`relative flex flex-col items-center p-4 rounded-lg cursor-pointer transition-all duration-300 border ${chaserType === chaser.value
+                        ? "border-red-500 shadow-[0_0_15px_rgba(255,0,0,0.7)] bg-red-900/40"
+                        : "border-red-500/30 bg-black/40 hover:bg-red-900/20 hover:shadow-[0_0_10px_rgba(255,0,0,0.5)]"
+                        } h-full`}
                     >
                       <div className="relative w-24 h-24 mb-3">
                         <Image
