@@ -359,7 +359,7 @@ export default function HostPage() {
           setIsStarting(false)
           setCountdown(null)
         }
-      }, 3000)
+      }, 10000)
     } catch (error) {
       console.error("Error memulai countdown:", error)
       alert("Gagal memulai countdown: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"))

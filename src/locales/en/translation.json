@@ -37,13 +37,7 @@
   "gameDurationValue": "{{minutes}} Minutes",
   "questionCountLabel": "Number of Questions",
   "selectQuestionCount": "Select number of questions",
-  "questionCountOptions": {
-    "10": "10 Questions - Quick Finish",
-    "20": "20 Questions - Standard",
-    "30": "30 Questions - Many",
-    "40": "40 Questions - Very Many",
-    "50": "50 Questions - Extreme"
-  },
+  "allLabel": "All",
   "questionCountValue": "{{count}} Questions",
   "summaryTitle": "Summary",
   "chaserLabel": "Chaser",

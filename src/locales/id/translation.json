@@ -37,13 +37,7 @@
   "gameDurationValue": "{{minutes}} Menit",
   "questionCountLabel": "Jumlah Soal",
   "selectQuestionCount": "Pilih jumlah soal",
-  "questionCountOptions": {
-    "10": "10 Soal - Cepat Selesai",
-    "20": "20 Soal - Standar",
-    "30": "30 Soal - Banyak",
-    "40": "40 Soal - Sangat Banyak",
-    "50": "50 Soal - Ekstrem"
-  },
+  "allLabel": "Semua",
   "questionCountValue": "{{count}} Soal",
   "summaryTitle": "Kesimpulan",
   "chaserLabel": "Pengejar",

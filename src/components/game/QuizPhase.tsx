@@ -509,7 +509,7 @@ export default function QuizPhase({
 
   const getAnswerButtonClass = (option: string) => {
     if (!isAnswered) {
-      return "bg-gray-800 hover:bg-gray-700 border-gray-600 hover:border-red-500 text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+      return "bg-gray-800 hover:bg-gray-700 border-gray-600 text-white"
     }
 
     if (option === currentQuestion?.correct_answer) {
