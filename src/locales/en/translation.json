@@ -176,5 +176,7 @@
   "common": {
     "home": "Home",
     "retry": "Try Again"
-  }
+  },
+  "playAgain": "Play Again",
+  "creatingSession": "Creating Session..."
 }

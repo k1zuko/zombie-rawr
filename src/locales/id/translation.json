@@ -176,5 +176,7 @@
   "common": {
     "home": "Halaman Utama",
     "retry": "Coba Lagi"
-  }
+  },
+  "playAgain": "Main Lagi",
+  "creatingSession": "Membuat Sesi..."
 }
