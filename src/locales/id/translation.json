@@ -162,7 +162,7 @@
   "result": {
     "loadingTitle": "MEMANGGIL KISAH KEHEBATANMU...",
     "loadingSubtitle": "Sebentar lagi, hasil petualanganmu akan terungkap!",
-        "errorTitle": "KABUT MENYELIMUTI JEJAKMU",
+    "errorTitle": "KABUT MENYELIMUTI JEJAKMU",
     "errorMessage": "Kami tidak dapat menemukan hasil spesifik petualanganmu. Ini bisa terjadi jika kamu langsung membuka halaman ini. Tapi jangan khawatir, kamu masih bisa melihat statistik ruangan.",
     "title": "Hasil",
     "playerRanking": "Urutan Pemain",

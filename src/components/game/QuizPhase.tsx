@@ -638,7 +638,9 @@ export default function QuizPhase({
           >
             <div className="flex items-center space-x-3">
               <AlertTriangle className="w-6 h-6 text-red-300 animate-bounce" />
-              <span>Penalty countdown: {penaltyCountdown}s</span>
+              <span>{t("speedDecreases", {
+                seconds: penaltyCountdown
+              })}</span>
             </div>
           </motion.div>
         )}

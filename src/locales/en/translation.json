@@ -162,7 +162,7 @@
   "result": {
     "loadingTitle": "SUMMONING YOUR LEGEND...",
     "loadingSubtitle": "Soon, the outcome of your adventure will be revealed!",
-        "errorTitle": "THE MIST VEILS YOUR PATH",
+    "errorTitle": "THE MIST VEILS YOUR PATH",
     "errorMessage": "We couldn’t find the specific results of your adventure. This might happen if you accessed this page directly. But don’t worry, you can still view the room statistics.",
     "title": "Results",
     "playerRanking": "Player Ranking",
