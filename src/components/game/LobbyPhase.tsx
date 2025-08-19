@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import SoulStatus from "./SoulStatus";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { syncServerTime, calculateCountdown } from "@/lib/server-time"
 import { useTranslation } from "react-i18next";
@@ -359,17 +359,24 @@ export default function LobbyPhase({
         <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
       </div>
 
-      {countdown !== null && countdown > 0 && (
+      <AnimatePresence>
+        {countdown !== null && (
           <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black flex items-center justify-center z-50"
           >
-            <div className="text-9xl font-mono font-bold text-red-500 animate-pulse">
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+              className="text-[20rem] md:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
+            >
               {countdown}
-            </div>
+            </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Header */}
