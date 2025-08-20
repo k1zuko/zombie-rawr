@@ -245,44 +245,44 @@ export default function GamePage() {
     }
   }, [room, currentPlayer, handleHealthStateUpdate, handleAttackEvent])
 
-  const handleGameEnd = useCallback(async () => {
-    if (!isMountedRef.current || !currentPlayer || !room) return
+  // const handleGameEnd = useCallback(async () => {
+  //   if (!isMountedRef.current || !currentPlayer || !room) return
 
-    console.log("🚀 [page.tsx] Menangani akhir permainan untuk:", currentPlayer.nickname)
+  //   console.log("🚀 [page.tsx] Menangani akhir permainan untuk:", currentPlayer.nickname)
 
-    const latestHealth = playerHealthStates[currentPlayer.id]?.health ?? quizState.health
-    const isActuallyEliminated = latestHealth <= 0
+  //   const latestHealth = playerHealthStates[currentPlayer.id]?.health ?? quizState.health
+  //   const isActuallyEliminated = latestHealth <= 0
 
-    isMountedRef.current = false
+  //   isMountedRef.current = false
 
-    await saveGameCompletion()
+  //   await saveGameCompletion()
 
-    const lastResult = {
-      playerId: currentPlayer.id,
-      nickname: currentPlayer.nickname,
-      health: Math.max(0, latestHealth),
-      correct: quizState.correctAnswers,
-      total: room.questions?.length ?? quizState.currentIndex + 1,
-      eliminated: isActuallyEliminated,
-      roomCode: roomCode,
-    }
+  //   const lastResult = {
+  //     playerId: currentPlayer.id,
+  //     nickname: currentPlayer.nickname,
+  //     health: Math.max(0, latestHealth),
+  //     correct: quizState.correctAnswers,
+  //     total: room.questions?.length ?? quizState.currentIndex + 1,
+  //     eliminated: isActuallyEliminated,
+  //     roomCode: roomCode,
+  //   }
 
-    try {
-      localStorage.setItem("lastGameResult", JSON.stringify(lastResult))
-      console.log("💾 [page.tsx] Hasil disimpan ke localStorage:", lastResult)
-    } catch (error) {
-      console.error("Gagal menyimpan hasil ke localStorage:", error)
-    }
+  //   try {
+  //     localStorage.setItem("lastGameResult", JSON.stringify(lastResult))
+  //     console.log("💾 [page.tsx] Hasil disimpan ke localStorage:", lastResult)
+  //   } catch (error) {
+  //     console.error("Gagal menyimpan hasil ke localStorage:", error)
+  //   }
 
-    router.push(`/game/${roomCode}/results`)
-  }, [currentPlayer, room, quizState, saveGameCompletion, router, roomCode, playerHealthStates])
+  //   router.push(`/game/${roomCode}/results`)
+  // }, [currentPlayer, room, quizState, saveGameCompletion, router, roomCode, playerHealthStates])
 
-  useEffect(() => {
-    if (gameState?.phase === "finished" || gameState?.phase === "completed") {
-      console.log(`🏆 [page.tsx] Permainan berakhir dengan fase: ${gameState.phase}. Mengarahkan...`)
-      handleGameEnd()
-    }
-  }, [gameState?.phase, handleGameEnd])
+  // useEffect(() => {
+  //   if (gameState?.phase === "finished" || gameState?.phase === "completed") {
+  //     console.log(`🏆 [page.tsx] Permainan berakhir dengan fase: ${gameState.phase}. Mengarahkan...`)
+  //     handleGameEnd()
+  //   }
+  // }, [gameState?.phase, handleGameEnd])
 
   useEffect(() => {
     return () => {

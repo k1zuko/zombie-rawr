@@ -214,9 +214,7 @@ export default function QuizPhase({
         is_eliminated: actuallyEliminated,
         completion_type: actuallyEliminated ? "eliminated" : "completed" ,
         completed_at: completionTime,
-        survival_duration: survivalDuration,
-        game_start_time: gameStartTime ? new Date(gameStartTime).toISOString() : null,
-        player_join_time: playerJoinTime ? new Date(playerJoinTime).toISOString() : null,
+        survival_duration: survivalDuration
       })
 
       if (error) {
@@ -556,7 +554,7 @@ export default function QuizPhase({
 
   const getAnswerButtonClass = (option: string) => {
     if (!isAnswered) {
-      return "bg-gray-800 border-gray-600  text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+      return "bg-gray-800 border-gray-600 text-white"
     }
 
     if (option === currentQuestion?.correct_answer) {

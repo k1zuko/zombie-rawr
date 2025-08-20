@@ -447,115 +447,132 @@ export default function HostGamePage() {
   );
 
   // Manage player status and inactivity penalties
-  const managePlayerStatus = useCallback(() => {
-    if (!gameRoom) {
-      console.log("⚠️ Tidak ada gameRoom, lewati manajemen status pemain");
-      return;
+const managePlayerStatus = useCallback(() => {
+  if (!gameRoom) {
+    console.log("⚠️ Tidak ada gameRoom, lewati manajemen status pemain");
+    return;
+  }
+
+  setPlayerStates((prev) => {
+    const updatedStates = { ...prev };
+    const newAttackQueue: string[] = [];
+    let activePlayers = 0;
+    let eligiblePlayer: string | null = null;
+
+    Object.entries(updatedStates).forEach(([playerId, state]) => {
+      const player = players.find((p) => p.id === playerId);
+      const isCompleted = completedPlayers.some((cp) => cp.id === playerId); // Cek apakah pemain sudah lolos
+      if (player && state.health > 0 && player.is_alive && !isCompleted) {
+        activePlayers++;
+        if (state.speed <= 30 && !state.isBeingAttacked) {
+          eligiblePlayer = playerId;
+          if (!newAttackQueue.includes(playerId)) {
+            newAttackQueue.push(playerId);
+          }
+        }
+      }
+    });
+
+    console.log(`🧟 Pemain aktif: ${activePlayers}, attackQueue:`, newAttackQueue);
+
+    // Jika tidak ada pemain aktif lagi, set phase ke completed dan redirect
+    if (activePlayers === 0 && players.length > 0) {
+      console.log("Semua pemain selesai atau tereliminasi, mengatur phase ke completed dan redirect");
+      supabase
+        .from("game_rooms")
+        .update({ current_phase: "completed" })
+        .eq("id", gameRoom.id)
+        .then(() => {
+          router.push(`/game/${roomCode}/resultshost`);
+        });
+      return updatedStates;
     }
 
-    setPlayerStates((prev) => {
-      const updatedStates = { ...prev };
-      const newAttackQueue: string[] = [];
-      let activePlayers = 0;
-      let eligiblePlayer: string | null = null;
+    Object.entries(updatedStates).forEach(async ([playerId, state]) => {
+      const player = players.find((p) => p.id === playerId);
+      const isCompleted = completedPlayers.some((cp) => cp.id === playerId);
+      if (!player || state.health <= 0 || !player.is_alive || isCompleted) {
+        updatedStates[playerId] = { ...state, countdown: undefined };
+        return;
+      }
 
-      Object.entries(updatedStates).forEach(([playerId, state]) => {
-        const player = players.find((p) => p.id === playerId);
-        if (player && state.health > 0 && player.is_alive) {
-          activePlayers++;
-          if (state.speed <= 30 && !state.isBeingAttacked) {
-            eligiblePlayer = playerId;
-            if (!newAttackQueue.includes(playerId)) {
-              newAttackQueue.push(playerId);
-            }
-          }
+      const healthState = playerHealthStates[playerId];
+      if (healthState) {
+        const timeSinceLastAnswer = (Date.now() - new Date(healthState.last_answer_time).getTime()) / 1000;
+        if (timeSinceLastAnswer >= 20 && state.speed > 20) {
+          const newSpeed = Math.max(20, state.speed - 10);
+          console.log(`⚠️ Pemain ${playerId} tidak aktif, kecepatan dikurangi ke ${newSpeed}`);
+          await updatePlayerState(
+            playerId,
+            {
+              speed: newSpeed,
+              last_answer_time: new Date().toISOString(),
+            },
+            { speed: newSpeed },
+          );
         }
-      });
+      }
 
-      console.log(`🧟 Pemain aktif: ${activePlayers}, attackQueue:`, newAttackQueue);
-
-      Object.entries(updatedStates).forEach(async ([playerId, state]) => {
-        const player = players.find((p) => p.id === playerId);
-        if (!player || state.health <= 0 || !player.is_alive) {
-          updatedStates[playerId] = { ...state, countdown: undefined };
-          return;
-        }
-
-        const healthState = playerHealthStates[playerId];
-        if (healthState) {
-          const timeSinceLastAnswer = (Date.now() - new Date(healthState.last_answer_time).getTime()) / 1000;
-          if (timeSinceLastAnswer >= 20 && state.speed > 20) {
-            const newSpeed = Math.max(20, state.speed - 10);
-            console.log(`⚠️ Pemain ${playerId} tidak aktif, kecepatan dikurangi ke ${newSpeed}`);
-            await updatePlayerState(
-              playerId,
-              {
-                speed: newSpeed,
-                last_answer_time: new Date().toISOString(),
-              },
-              { speed: newSpeed },
-            );
-          }
-        }
-
-        if (state.speed <= 30 && !state.isBeingAttacked && state.health > 0) {
-          if (state.countdown === undefined) {
-            console.log(`⏲️ Menambahkan countdown untuk ${playerId}`);
-            updatedStates[playerId] = { ...state, countdown: 10 };
-          } else if (state.countdown > 0) {
-            const newCountdown = state.countdown - 1;
-            console.log(`⏲️ Countdown untuk ${playerId}: ${newCountdown}s`);
-            updatedStates[playerId] = { ...state, countdown: newCountdown };
-            if (newCountdown <= 0) {
-              if (!zombieState.isAttacking || activePlayers === 1) {
-                console.log(`🧟 Memulai serangan pada ${playerId}, health=${state.health}`);
-                await updatePlayerState(
-                  playerId,
-                  {
-                    health: state.health - 1,
-                    is_being_attacked: true,
-                  },
-                  { countdown: undefined },
-                );
-                handleZombieAttack(playerId, state.health - 1, state.speed);
-              } else {
-                // Jika sedang menyerang pemain lain, pertahankan countdown
-                updatedStates[playerId] = { ...state, countdown: state.countdown };
-              }
+      if (state.speed <= 30 && !state.isBeingAttacked && state.health > 0) {
+        if (state.countdown === undefined) {
+          console.log(`⏲️ Menambahkan countdown untuk ${playerId}`);
+          updatedStates[playerId] = { ...state, countdown: 10 };
+        } else if (state.countdown > 0) {
+          const newCountdown = state.countdown - 1;
+          console.log(`⏲️ Countdown untuk ${playerId}: ${newCountdown}s`);
+          updatedStates[playerId] = { ...state, countdown: newCountdown };
+          if (newCountdown <= 0) {
+            if (!zombieState.isAttacking || activePlayers === 1) {
+              console.log(`🧟 Memulai serangan pada ${playerId}, health=${state.health}`);
+              await updatePlayerState(
+                playerId,
+                {
+                  health: state.health - 1,
+                  is_being_attacked: true,
+                },
+                { countdown: undefined },
+              );
+              handleZombieAttack(playerId, state.health - 1, state.speed);
+            } else {
+              updatedStates[playerId] = { ...state, countdown: state.countdown };
             }
           }
         } else {
           updatedStates[playerId] = { ...state, countdown: undefined };
         }
-      });
-
-      setAttackQueue(
-        newAttackQueue.filter((id) => {
-          const state = updatedStates[id];
-          const player = players.find((p) => p.id === id);
-          return state && state.speed <= 30 && state.health > 0 && player?.is_alive && !state.isBeingAttacked;
-        }),
-      );
-
-      if (activePlayers === 1 && !zombieState.isAttacking && eligiblePlayer) {
-        console.log(`🧟 Hanya satu pemain tersisa (${eligiblePlayer}), memulai serangan`);
-        const state = updatedStates[eligiblePlayer];
-        if (state && state.countdown !== undefined && state.countdown <= 0) {
-          updatePlayerState(
-            eligiblePlayer,
-            {
-              health: state.health - 1,
-              is_being_attacked: true,
-            },
-            { countdown: undefined },
-          );
-          handleZombieAttack(eligiblePlayer, state.health - 1, state.speed);
-        }
+      } else {
+        updatedStates[playerId] = { ...state, countdown: undefined };
       }
-
-      return updatedStates;
     });
-  }, [gameRoom, playerStates, playerHealthStates, zombieState, handleZombieAttack, updatePlayerState, players]);
+
+    setAttackQueue(
+      newAttackQueue.filter((id) => {
+        const state = updatedStates[id];
+        const player = players.find((p) => p.id === id);
+        const isCompleted = completedPlayers.some((cp) => cp.id === id);
+        return state && state.speed <= 30 && state.health > 0 && player?.is_alive && !state.isBeingAttacked && !isCompleted;
+      }),
+    );
+
+    if (activePlayers === 1 && !zombieState.isAttacking && eligiblePlayer) {
+      console.log(`🧟 Hanya satu pemain tersisa (${eligiblePlayer}), memulai serangan`);
+      const state = updatedStates[eligiblePlayer];
+      if (state && state.countdown !== undefined && state.countdown <= 0) {
+        updatePlayerState(
+          eligiblePlayer,
+          {
+            health: state.health - 1,
+            is_being_attacked: true,
+          },
+          { countdown: undefined },
+        );
+        handleZombieAttack(eligiblePlayer, state.health - 1, state.speed);
+      }
+    }
+
+    return updatedStates;
+  });
+}, [gameRoom, playerStates, playerHealthStates, zombieState, handleZombieAttack, updatePlayerState, players, completedPlayers, router, roomCode]);
 
   // Fetch game data
   const fetchGameData = useCallback(async () => {
@@ -887,6 +904,10 @@ export default function HostGamePage() {
     return characterGifs.find((char) => char.type === type) || characterGifs[0];
   };
 
+  const activePlayers = players.filter(
+    p => !completedPlayers.some(c => c.id === p.id)
+  );
+
   if (!isClient || isLoading) {
     return (
       <div className="relative w-full h-screen bg-black flex items-center justify-center">
@@ -905,9 +926,8 @@ export default function HostGamePage() {
     <div
       className="relative w-full h-screen bg-black overflow-hidden"
       style={{
-        transform: `translate(${Math.sin(animationTime * 0.1) * (gameMode === "panic" ? 5 : 2)}px, ${
-          Math.cos(animationTime * 0.1) * (gameMode === "panic" ? 3 : 1)
-        }px)`,
+        transform: `translate(${Math.sin(animationTime * 0.1) * (gameMode === "panic" ? 5 : 2)}px, ${Math.cos(animationTime * 0.1) * (gameMode === "panic" ? 3 : 1)
+          }px)`,
       }}
     >
       <audio src="/musics/zombies.mp3" autoPlay />
@@ -951,7 +971,7 @@ export default function HostGamePage() {
         getLoopPosition={getLoopPosition}
       />
       <PlayersPanel
-        players={players}
+        players={activePlayers}
         gameRoom={gameRoom}
         roomCode={roomCode}
         playerStates={playerStates}
@@ -961,28 +981,29 @@ export default function HostGamePage() {
         getWorkingImagePath={getWorkingImagePath}
         isConnected={isConnected}
       />
-      <RunningCharacters
-        players={players}
-        playerStates={playerStates}
-        playerHealthStates={playerHealthStates}
-        zombieState={zombieState}
-        animationTime={animationTime}
-        gameMode={gameMode}
-        centerX={centerX}
-        getCharacterByType={getCharacterByType}
-        getWorkingImagePath={getWorkingImagePath}
-      />
+<RunningCharacters
+  players={activePlayers}
+  playerStates={playerStates}
+  playerHealthStates={playerHealthStates}
+  zombieState={zombieState}
+  animationTime={animationTime}
+  gameMode={gameMode}
+  centerX={centerX}
+  getCharacterByType={getCharacterByType}
+  getWorkingImagePath={getWorkingImagePath}
+  completedPlayers={completedPlayers} // Tambahkan prop ini
+/>
       <ZombieCharacter
         zombieState={zombieState}
         animationTime={animationTime}
         gameMode={gameMode}
         centerX={centerX}
         chaserType={chaserType}
-        players={players}
+        players={activePlayers}
       />
       <GameUI roomCode={roomCode} />
 
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {showCompletionPopup && completedPlayers.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1036,7 +1057,7 @@ export default function HostGamePage() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
 
       <style jsx>{`
         .custom-scrollbar {
