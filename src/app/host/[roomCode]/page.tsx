@@ -5,14 +5,16 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse } from "lucide-react";
+import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse, Trash2 } from "lucide-react";
 import { supabase, type Player } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import QRCode from "react-qr-code";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { syncServerTime, calculateCountdown } from "@/lib/server-time"
 import { useTranslation } from "react-i18next";
+import { Toaster, toast } from "react-hot-toast";
+import { useHostGuard } from "@/lib/host-guard";
 
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const
@@ -51,6 +53,53 @@ export default function HostPage() {
   const [flickerText, setFlickerText] = useState(true)
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([])
   const [isQrDialogOpen, setIsQrDialogOpen] = useState(false)
+  const [kickDialogOpen, setKickDialogOpen] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; nickname: string } | null>(null);
+
+  useHostGuard(roomCode)
+
+  const kickPlayer = async (playerId: string, nickname: string) => {
+    console.log("Kick player called for:", playerId, nickname);
+    setSelectedPlayer({ id: playerId, nickname });
+    setKickDialogOpen(true);
+    console.log("kickDialogOpen set to:", true);
+  };
+
+  const confirmKickPlayer = async () => {
+    if (!selectedPlayer || !selectedPlayer.id) {
+      toast.error(t("kickPlayerError"));
+      setKickDialogOpen(false);
+      setSelectedPlayer(null);
+      return;
+    }
+    try {
+      console.log("Attempting to kick player:", selectedPlayer);
+      const { error } = await supabase
+        .from("players")
+        .delete()
+        .eq("id", selectedPlayer.id);
+      if (error) {
+        console.error("Supabase error:", error);
+        toast.error(t("kickPlayerError"));
+      } else {
+        toast.success(t("kickPlayerSuccess", { nickname: selectedPlayer.nickname }));
+        // Panggil fetchPlayers secara manual setelah kick berhasil
+        if (room?.id) {
+          await fetchPlayers(room.id);
+        }
+        // Tunggu sebentar untuk memastikan real-time sync
+        setTimeout(() => {
+          if (room?.id) fetchPlayers(room.id);
+        }, 500);
+      }
+    } catch (error) {
+      console.error("Kick player error:", error);
+      toast.error(t("kickPlayerError"));
+    } finally {
+      setKickDialogOpen(false);
+      setSelectedPlayer(null);
+    }
+  };
 
   const fetchRoom = useCallback(async () => {
     if (!roomCode) return
@@ -185,13 +234,8 @@ export default function HostPage() {
       100 + Math.random() * 150,
     )
 
-    // const textInterval = setInterval(() => {
-    //   setAtmosphereText(atmosphereTexts[Math.floor(Math.random() * atmosphereTexts.length)]);
-    // }, 2500);
-
     return () => {
       clearInterval(flickerInterval)
-      // clearInterval(textInterval);
     }
   }, [])
 
@@ -237,6 +281,19 @@ export default function HostPage() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+  const copyRoomCode1 = async () => {
+    if (typeof window === "undefined") return;
+
+    const joinLink = `${window.location.origin}/?code=${roomCode}`;
+    const inviteMessage = t("inviteMessage", {
+      roomCode: roomCode,
+      joinLink: joinLink,
+    });
+
+    await navigator.clipboard.writeText(inviteMessage);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const copyRoomCode1 = async () => {
   if (typeof window === "undefined") return;
@@ -503,13 +560,10 @@ export default function HostPage() {
                 } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
-              QuizRush
+              {t("title")}
             </h1>
             <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
           </div>
-          {/* <p className="text-red-400/80 text-lg md:text-xl font-mono animate-pulse tracking-wider mb-6">
-            {atmosphereText}
-          </p> */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -517,7 +571,7 @@ export default function HostPage() {
             className="inline-flex items-center gap-4 bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
 
           >
-
+            
 <Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
   <DialogTrigger asChild>
     <motion.div
@@ -586,7 +640,7 @@ export default function HostPage() {
 
 
 </Dialog>
-
+            
             <div className="text-center">
               <div className="text-red-400 text-sm font-mono">{t("roomCode")}</div>
               <div className="text-2xl md:text-3xl font-mono font-bold text-red-500 tracking-wider">{roomCode}</div>
@@ -655,15 +709,6 @@ export default function HostPage() {
               <div className="text-red-400 text-sm font-mono">{t("question")}</div>
             </CardContent>
           </Card>
-          {/* <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-            <CardContent className="p-4 md:p-6 text-center">
-              <Zap className="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2" />
-              <div className="text-2xl md:text-3xl font-bold text-red-500 mb-1 font-mono">
-                {countdown !== null ? "Hitung Mundur" : room.status === "waiting" ? "Siap" : "Aktif"}
-              </div>
-              <div className="text-red-400 text-sm font-mono">Status</div>
-            </CardContent>
-          </Card> */}
         </motion.div>
 
         <motion.div
@@ -720,6 +765,7 @@ export default function HostPage() {
                     key="players"
                     className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
                     layout
+                    transition={{ layout: { duration: 0.3, type: "spring", stiffness: 100, damping: 20 } }}
                   >
                     <AnimatePresence>
                       {players.map((player, index) => {
@@ -731,9 +777,15 @@ export default function HostPage() {
                           <motion.div
                             key={player.id}
                             layout
-                            initial={{ opacity: 0, scale: 0, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0, y: -20 }}
+                            exit={{
+                              opacity: 0,
+                              scale: 0.5,
+                              x: Math.random() > 0.5 ? 200 : -200,
+                              rotate: Math.random() * 360,
+                              transition: { duration: 0.5, ease: "easeIn" },
+                            }}
                             transition={{
                               type: "spring",
                               stiffness: 500,
@@ -743,9 +795,8 @@ export default function HostPage() {
                             whileHover={{ scale: 1.05 }}
                             className="bg-black/40 border border-red-900/50 rounded-lg p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
                           >
-                            {/* --- GANTI DENGAN TAG IMG DAN AMBIL GIFNYA --- */}
                             <motion.div
-                              className="text-2xl md:text-3xl mb-2"
+                              className="mb-2"
                               animate={{
                                 rotate: [0, 10, -10, 0],
                               }}
@@ -755,26 +806,36 @@ export default function HostPage() {
                                 delay: index * 0.2,
                               }}
                             >
-                              {/* Tampilkan GIF jika karakter ditemukan, jika tidak, tampilkan teks default */}
                               {selectedCharacter ? (
                                 <img
                                   src={selectedCharacter.gif}
                                   alt={selectedCharacter.alt}
-                                  className="w-15 mx-auto" // Sesuaikan ukuran sesuai kebutuhan
+                                  className="w-15 mx-auto"
                                 />
                               ) : (
-                                player.character_type // Tampilkan teks robot jika GIF tidak ditemukan
+                                player.character_type
                               )}
                             </motion.div>
                             <div className="text-red-500 font-medium text-sm truncate mb-1 font-mono">{player.nickname}</div>
-                            {player.is_host && (
+                            {player.is_host ? (
                               <Badge variant="secondary" className="text-xs bg-red-900 text-red-400 font-mono">
-                                Tuan Rumah
+                                {t("host")}
                               </Badge>
+                            ) : (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => kickPlayer(player.id, player.nickname)}
+                                className="mt-2 bg-red-900/80 hover:bg-red-700 text-white"
+                                aria-label={t("kickPlayer", { nickname: player.nickname })}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                {t("kick")}
+                              </Button>
                             )}
-                            <div className="text-red-400/80 text-xs mt-1 font-mono">
+                            {/* <div className="text-red-400/80 text-xs mt-1 font-mono">
                               {new Date(player.joined_at).toLocaleTimeString()}
-                            </div>
+                            </div> */}
                           </motion.div>
                         );
                       })}
@@ -821,6 +882,24 @@ export default function HostPage() {
           </Button>
         </motion.div>
       </div>
+      <Dialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
+        <DialogContent className="bg-black/95 border border-red-500/50 text-red-400">
+          <DialogHeader>
+            <DialogTitle>{t("kickPlayerConfirmTitle")}</DialogTitle>
+          </DialogHeader>
+          <p>{t("kickPlayerConfirm", { nickname: selectedPlayer?.nickname })}</p>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setKickDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" onClick={confirmKickPlayer}>
+              {t("confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Toaster position="top-right" toastOptions={{ style: { background: "#1a0000", color: "#ff4444", border: "1px solid #ff0000" } }} />
 
       <style jsx global>{`
         @keyframes fall {

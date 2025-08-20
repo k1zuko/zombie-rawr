@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
+import { useHostGuard } from "@/lib/host-guard";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
 type ChaserType = typeof validChaserTypes[number];
@@ -47,6 +48,8 @@ export default function CharacterSelectPage() {
     heartbeat: null,
   });
   const [selectedChaser, setSelectedChaser] = useState<typeof chaserOptions[number] | null>(null);
+
+  useHostGuard(roomCode)
 
   const chaserOptions = [
     {

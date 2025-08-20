@@ -484,8 +484,8 @@ export default function QuizPhase({
           redirectToResults(0, correctAnswers, currentQuestionIndex + 1, true)
         } else if (currentQuestionIndex + 1 >= totalQuestions) {
           console.log("Semua pertanyaan dijawab, menyimpan penyelesaian dan mengalihkan ke hasil")
-          const finalCorrect = correctAnswers + (isCorrect ? 1 : 0);
-          redirectToResults(playerHealth, finalCorrect, totalQuestions, false, finalCorrect === totalQuestions)
+          // const finalCorrect = correctAnswers + (isCorrect ? 1 : 0);
+          redirectToResults(playerHealth, correctAnswers, totalQuestions, false, correctAnswers === totalQuestions)
         } else {
           nextQuestion()
         }

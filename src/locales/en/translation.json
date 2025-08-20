@@ -168,6 +168,7 @@
     "errorTitle": "THE MIST VEILS YOUR PATH",
     "errorMessage": "We couldn’t find the specific results of your adventure. This might happen if you accessed this page directly. But don’t worry, you can still view the room statistics.",
     "title": "Results",
+    "titleLeaderboard": "Leaderboard",
     "playerRanking": "Player Ranking",
     "correct": "{{count}} correct",
     "alive": "🩸 FIGHTING",
@@ -182,6 +183,7 @@
   },
   "playAgain": "Play Again",
   "creatingSession": "Creating Session...",
+  "youWereKicked": "You have been kicked from the room."
   "inviteMessage": "Join the thrilling QuizRush game! Use code: {{roomCode}} or click here: {{joinLink}}",
 
 
@@ -195,5 +197,4 @@
   "kickPlayerConfirm": "Are you sure you want to kick {{nickname}}?",
   "kickPlayerSuccess": "{{nickname}} has been kicked",
   "kickPlayerError": "Failed to kick player"
-
 }

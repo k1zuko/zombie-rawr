@@ -12,6 +12,7 @@ import ZombieCharacter from "@/components/game/host/ZombieCharacter";
 import RunningCharacters from "@/components/game/host/RunningCharacters";
 import GameUI from "@/components/game/host/GameUI";
 import BackgroundEffects from "@/components/game/host/BackgroundEffects";
+import { useHostGuard } from "@/lib/host-guard";
 
 interface Player {
   id: string;
@@ -122,6 +123,8 @@ export default function HostGamePage() {
   const attackIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isStarting, setIsStarting] = useState<boolean>(false);
+
+  useHostGuard(roomCode)
 
   // Initialize player states
   const initializePlayerStates = useCallback((playersData: Player[], healthData: PlayerHealthState[]) => {

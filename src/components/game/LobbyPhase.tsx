@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { syncServerTime, calculateCountdown } from "@/lib/server-time"
 
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 
 // Mendefinisikan tipe data untuk Player
 interface Player {
@@ -142,44 +143,38 @@ export default function LobbyPhase({
 
   // Langganan real-time untuk pembaruan ruangan
   useEffect(() => {
-    if (!currentPlayer.room_id) {
-      console.warn("⚠️ LobbyPhase: Tidak ada room_id untuk langganan real-time")
-      return
-    }
+  if (!currentPlayer.room_id) return;
 
-    console.log("🔗 LobbyPhase: Menyiapkan langganan real-time untuk room_id:", currentPlayer.room_id)
+  const channel = supabase
+    .channel(`lobby_${currentPlayer.room_id}`)
+    // listener UPDATE ruangan (sudah ada)
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "game_rooms", filter: `id=eq.${currentPlayer.room_id}` },
+      (payload) => {
+        setRoom(payload.new);
+      }
+    )
+    // listener DELETE untuk diri sendiri (baru)
+    .on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: "players", filter: `id=eq.${currentPlayer.id}` },
+      () => {
+        router.replace("/?kicked=1");
+      }
+    )
+    .subscribe((status, err) => {
+      if (status === "SUBSCRIBED") {
+        console.log("Lobby subscribed");
+      } else if (status === "CHANNEL_ERROR") {
+        console.error("Lobby channel error:", err);
+      }
+    });
 
-    const channel = supabase
-      .channel(`lobby_${currentPlayer.room_id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "game_rooms",
-          filter: `id=eq.${currentPlayer.room_id}`,
-        },
-        (payload) => {
-          console.log("📡 LobbyPhase: Pembaruan ruangan diterima:", payload)
-          console.log("📡 LobbyPhase: Data ruangan baru:", payload.new)
-          console.log("📡 LobbyPhase: countdown_start baru:", payload.new.countdown_start)
-          setRoom(payload.new)
-        },
-      )
-      .subscribe((status, err) => {
-        console.log("📡 LobbyPhase: Status langganan:", status, err ? err.message : "")
-        if (status === "SUBSCRIBED") {
-          console.log("📡 LobbyPhase: Berlangganan berhasil")
-        } else if (status === "CHANNEL_ERROR") {
-          console.error("📡 LobbyPhase: Error langganan:", err?.message)
-        }
-      })
-
-    return () => {
-      console.log("🔌 LobbyPhase: Membersihkan langganan")
-      supabase.removeChannel(channel)
-    }
-  }, [currentPlayer.room_id])
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [currentPlayer.room_id, currentPlayer.id, router]);
 
   // Langganan real-time untuk mendeteksi kick pada pemain
   useEffect(() => {
