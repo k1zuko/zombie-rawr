@@ -949,7 +949,7 @@ export default function HostGamePage() {
   }
 
   if (gameRoom?.current_phase === "completed") {
-    return <p>ini halaman hasil untuk host</p>;
+    return <p></p>;
   }
 
   const centerX = screenWidth / 2;
