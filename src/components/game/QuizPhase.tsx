@@ -205,7 +205,7 @@ export default function QuizPhase({
         `[v0] Saving game completion - Health: ${finalHealth}, Eliminated: ${actuallyEliminated}, Duration: ${survivalDuration}s`,
       )
 
-      const { error } = await supabase.from("game_completions").upsert({
+      const { data, error } = await supabase.from("game_completions").upsert({
         player_id: currentPlayer.id,
         room_id: room.id,
         final_health: Math.max(0, finalHealth),
@@ -484,18 +484,6 @@ export default function QuizPhase({
         } else if (currentQuestionIndex + 1 >= totalQuestions) {
           console.log("Semua pertanyaan dijawab, mengalihkan ke hasil")
           const finalCorrect = correctAnswers
-          supabase
-            .from("game_rooms")
-            .update({
-              current_phase: "completed",
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", room.id)
-            .then(({ error }) => {
-              if (error) {
-                console.error("Gagal update fase game:", error)
-              }
-            })
           redirectToResults(playerHealth, finalCorrect, totalQuestions, false, finalCorrect === totalQuestions)
         } else {
           nextQuestion()
