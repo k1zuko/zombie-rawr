@@ -492,7 +492,7 @@ export default function QuizPhase({
   }, [showFeedback, playerHealth, correctAnswers, currentQuestionIndex, isCorrect, totalQuestions])
 
   const nextQuestion = () => {
-    setCurrentQuestionIndex(currentQuestionIndex + 1)
+    setCurrentQuestionIndex(prevIndex => prevIndex + 1)
     setSelectedAnswer(null)
     setIsAnswered(false)
     setIsCorrect(null)
@@ -529,8 +529,7 @@ export default function QuizPhase({
   const handleCorrectAnswer = async () => {
     if (isProcessingAnswer) return
 
-    const newCorrectAnswers = correctAnswers + 1
-    setCorrectAnswers(newCorrectAnswers)
+    setCorrectAnswers(prevCorrectAnswers => prevCorrectAnswers + 1)
     setIsCorrect(true)
     setShowFeedback(true)
 
