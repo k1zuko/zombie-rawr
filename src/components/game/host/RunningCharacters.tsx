@@ -1,7 +1,7 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -54,6 +54,7 @@ interface RunningCharactersProps {
   centerX: number;
   getCharacterByType: (type: string) => any;
   getWorkingImagePath: (character: any) => string;
+  completedPlayers: Player[];
 }
 
 export default function RunningCharacters({
@@ -66,34 +67,39 @@ export default function RunningCharacters({
   centerX,
   getCharacterByType,
   getWorkingImagePath,
+  completedPlayers,
 }: RunningCharactersProps) {
-  const [eliminatedPlayers, setEliminatedPlayers] = useState<Set<string>>(new Set());
   const router = useRouter();
-  const params = useParams()
-    const roomCode = params.roomCode as string
+  const params = useParams();
+  const roomCode = params.roomCode as string;
 
-  useEffect(() => {
-    const newEliminated = new Set<string>();
-    const allPlayersEliminated = players.every((player) => {
+  // Gunakan useMemo untuk menghitung pemain aktif dan menghindari perhitungan berulang
+  const activePlayers = useMemo(() => {
+    return players.filter((player) => {
       const playerState = playerStates[player.id];
       const healthState = playerHealthStates[player.id];
       const health = playerState?.health ?? healthState?.health ?? 3;
+      const isCompleted = completedPlayers.some((cp) => cp.id === player.id);
       const isEliminated = !player.is_alive || health <= 0;
-      if (isEliminated) {
-        newEliminated.add(player.id);
-      }
-      return isEliminated;
+      return !isCompleted && !isEliminated;
     });
+  }, [players, playerStates, playerHealthStates, completedPlayers]);
 
-    setEliminatedPlayers(newEliminated);
+  useEffect(() => {
+    // Log untuk debugging
+    console.log("Active players:", activePlayers.map((p) => p.nickname));
+    console.log("Completed players:", completedPlayers.map((p) => p.nickname));
+    console.log("Total players:", players.length);
 
-    if (allPlayersEliminated && players.length > 0) {
+    // Redirect jika tidak ada pemain aktif dan ada pemain di room
+    if (activePlayers.length === 0 && players.length > 0) {
+      console.log("Tidak ada pemain aktif tersisa, redirect ke resultshost");
       const redirectTimeout = setTimeout(() => {
         router.push(`/game/${roomCode}/resultshost`);
       }, 1000);
       return () => clearTimeout(redirectTimeout);
     }
-  }, [players, playerStates, playerHealthStates, router]);
+  }, [activePlayers, players, router, roomCode]);
 
   return (
     <div className="absolute bottom-20 z-30">
@@ -107,9 +113,12 @@ export default function RunningCharacters({
         const speed = playerState?.speed ?? healthState?.speed ?? 20;
         const attackIntensity = playerState?.attackIntensity ?? 0;
         const isZombieTarget = zombieState.targetPlayerId === player.id;
+        const isCompleted = completedPlayers.some((cp) => cp.id === player.id);
         const isEliminated = !player.is_alive || health <= 0;
 
-        if (isEliminated && !eliminatedPlayers.has(player.id)) {
+        // Jangan render pemain yang sudah lolos atau tereliminasi
+        if (isEliminated || isCompleted) {
+          console.log(`Skipping render for ${player.nickname} - Eliminated: ${isEliminated}, Completed: ${isCompleted}`);
           return null;
         }
 
@@ -119,14 +128,15 @@ export default function RunningCharacters({
           130 +
           i * 120 +
           speedOffset +
-          Math.sin(animationTime * (gameMode === "panic" ? 1.2 : 0.4) + i) * (gameMode === "panic" ? 60 : 15);
+          Math.sin(animationTime * (gameMode === "panic" ? 1.2 : 0.4) + i) *
+            (gameMode === "panic" ? 60 : 15);
         const charY =
           -77 +
           Math.abs(Math.sin(animationTime * (gameMode === "panic" ? 2 : 0.6) + i * 0.5)) *
-          (gameMode === "panic" ? 25 : 8);
+            (gameMode === "panic" ? 25 : 8);
 
-        const attackShakeIntensity = isBeingAttacked ? attackIntensity * 8 : 0; // Meningkatkan intensitas getaran
-        const attackShakeX = isBeingAttacked ? Math.sin(animationTime * 10) * attackShakeIntensity : 0; // Frekuensi lebih rendah
+        const attackShakeIntensity = isBeingAttacked ? attackIntensity * 8 : 0;
+        const attackShakeX = isBeingAttacked ? Math.sin(animationTime * 10) * attackShakeIntensity : 0;
         const attackShakeY = isBeingAttacked ? Math.sin(animationTime * 8) * attackShakeIntensity : 0;
 
         return (
@@ -135,34 +145,24 @@ export default function RunningCharacters({
             className="absolute"
             initial={{ opacity: 1, scale: 1 }}
             animate={{
-              opacity: isEliminated ? 0 : 1,
-              scale: isEliminated ? 0 : isBeingAttacked ? 1.2 : gameMode === "panic" ? 1.8 : 1.6,
+              opacity: 1,
+              scale: isBeingAttacked ? 1.2 : gameMode === "panic" ? 1.8 : 1.6,
               x: charX + attackShakeX,
               y: charY + attackShakeY,
             }}
-            exit={{ opacity: 0, scale: 0, transition: { duration: 0.5 } }}
             transition={{
-              opacity: { duration: isEliminated ? 0.5 : 0.1 },
+              opacity: { duration: 0.1 },
               scale: { duration: isBeingAttacked ? 0.1 : 0.2 },
               x: { duration: 0.1 },
               y: { duration: 0.1 },
             }}
             style={{
-              zIndex: isEliminated ? 25 : isZombieTarget ? 40 : 35,
-            }}
-            onAnimationComplete={() => {
-              if (isEliminated) {
-                setEliminatedPlayers((prev) => {
-                  const newSet = new Set(prev);
-                  newSet.delete(player.id);
-                  return newSet;
-                });
-              }
+              zIndex: isZombieTarget ? 40 : 35,
             }}
           >
             <div className="relative flex flex-col items-center">
               {/* Efek aura saat diserang */}
-              {isZombieTarget && !isEliminated && (
+              {isZombieTarget && (
                 <motion.div
                   className="absolute -inset-3 rounded-full bg-red-600 opacity-30 blur-lg"
                   animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
@@ -171,7 +171,7 @@ export default function RunningCharacters({
               )}
 
               {/* Efek partikel saat diserang */}
-              {isZombieTarget && !isEliminated &&
+              {isZombieTarget &&
                 [...Array(3)].map((_, i) => (
                   <motion.div
                     key={`particle-${i}`}
@@ -189,13 +189,11 @@ export default function RunningCharacters({
               <motion.div
                 animate={{
                   scale: isBeingAttacked ? [1, 1.1, 1] : 1,
-                  filter: isEliminated
-                    ? "grayscale(100%) brightness(0.3) contrast(1.2)"
-                    : isZombieTarget
-                      ? "brightness(2) contrast(2.2) saturate(2) hue-rotate(15deg) drop-shadow(0 0 10px rgba(255,50,50,0.8))"
-                      : gameMode === "panic"
-                        ? "brightness(1.2) contrast(1.4) saturate(1.2)"
-                        : "brightness(1.1) contrast(1.2)",
+                  filter: isZombieTarget
+                    ? "brightness(2) contrast(2.2) saturate(2) hue-rotate(15deg) drop-shadow(0 0 10px rgba(255,50,50,0.8))"
+                    : gameMode === "panic"
+                      ? "brightness(1.2) contrast(1.4) saturate(1.2)"
+                      : "brightness(1.1) contrast(1.2)",
                 }}
                 transition={{ duration: isBeingAttacked ? 0.3 : 0.2 }}
               >
@@ -229,17 +227,6 @@ export default function RunningCharacters({
 
               <p className="text-white font-mono text-xs mt-1 text-center">{player.nickname}</p>
               <p className="text-gray-400 font-mono text-xs">kecepatan:{speed}</p>
-
-              {isEliminated && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: -14 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="absolute -top-14 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-gray-300 text-xs font-bold rounded"
-                >
-                  TERELIMINASI
-                </motion.div>
-              )}
 
               {/* Bayangan dinamis */}
               <div
