@@ -304,7 +304,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12 pt-12"
+            className="text-center mb-12 mt-5 pt-12 lg:mt-0 lg:pt-0"
           >
             <h1
               className="text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
