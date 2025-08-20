@@ -10,6 +10,7 @@ import { HorrorCard } from "@/components/ui/horror-card"
 import type { GameRoom } from "@/lib/supabase"
 import Image from "next/image"
 import { useTranslation } from "react-i18next"
+import { debounce } from "lodash"
 
 // Interface tidak berubah
 interface GameCompletion {
@@ -314,10 +315,27 @@ export default function ResultsPage() {
   }, [roomCode, initializePlayerData])
 
   const setupRealtimeSubscriptions = useCallback(() => {
-    // ... (Fungsi ini tidak perlu diubah, tetap sama seperti di kode asli Anda)
-    if (!room || !isMountedRef.current) return () => { }
+    if (!room || !isMountedRef.current) return () => { };
 
-    console.log("Setting up realtime subscriptions for room:", room.id)
+    console.log("Setting up realtime subscriptions for room:", room.id);
+
+    // Debounce the leaderboard update to prevent excessive calls
+    const updateLeaderboard = debounce(async () => {
+      if (!isMountedRef.current) return;
+      const { data: leaderboardData, error } = await supabase.rpc(
+        "get_room_leaderboard",
+        { p_room_id: room.id }
+      );
+
+      if (!error && leaderboardData && isMountedRef.current) {
+        setPlayerStats(leaderboardData);
+        console.log("Realtime update: player stats", leaderboardData);
+      } else if (error) {
+        console.warn("Realtime leaderboard error:", error.message);
+      }
+    }, 500); // Debounce for 500ms to group rapid updates
+
+    // Subscription for game_completions
     const completionsChannel = supabase
       .channel(`completions-${room.id}`)
       .on(
@@ -329,15 +347,15 @@ export default function ResultsPage() {
           filter: `room_id=eq.${room.id}`,
         },
         async () => {
-          if (!isMountedRef.current) return
+          if (!isMountedRef.current) return;
           const { data: completionsData, error } = await supabase
             .from("game_completions")
             .select(`
-              *,
-              players!inner(nickname, character_type)
-            `)
+            *,
+            players!inner(nickname, character_type)
+          `)
             .eq("room_id", room.id)
-            .order("completed_at", { ascending: false })
+            .order("completed_at", { ascending: false });
 
           if (!error && completionsData && isMountedRef.current) {
             const formattedCompletions = completionsData.map((completion: any) => ({
@@ -346,16 +364,19 @@ export default function ResultsPage() {
                 nickname: completion.players?.nickname || "Tidak Dikenal",
                 character_type: completion.players?.character_type || "default",
               },
-            }))
-            setGameCompletions(formattedCompletions)
-            console.log("Realtime update: game completions", formattedCompletions)
+            }));
+            setGameCompletions(formattedCompletions);
+            console.log("Realtime update: game completions", formattedCompletions);
+            // Trigger leaderboard update since game completion affects scores
+            updateLeaderboard();
           } else if (error) {
-            console.warn("Realtime completions error:", error.message)
+            console.warn("Realtime completions error:", error.message);
           }
-        },
+        }
       )
-      .subscribe()
+      .subscribe();
 
+    // Subscription for players
     const playersChannel = supabase
       .channel(`players-${room.id}`)
       .on(
@@ -366,22 +387,11 @@ export default function ResultsPage() {
           table: "players",
           filter: `room_id=eq.${room.id}`,
         },
-        async () => {
-          if (!isMountedRef.current) return
-          const { data: leaderboardData, error } = await supabase.rpc("get_room_leaderboard", {
-            p_room_id: room.id,
-          })
-
-          if (!error && leaderboardData && isMountedRef.current) {
-            setPlayerStats(leaderboardData)
-            console.log("Realtime update: player stats", leaderboardData)
-          } else if (error) {
-            console.warn("Realtime leaderboard error:", error.message)
-          }
-        },
+        updateLeaderboard // Directly call debounced leaderboard update
       )
-      .subscribe()
+      .subscribe();
 
+    // Subscription for player_health_states
     const healthChannel = supabase
       .channel(`health-${room.id}`)
       .on(
@@ -393,21 +403,25 @@ export default function ResultsPage() {
           filter: `room_id=eq.${room.id}`,
         },
         async () => {
-          if (!isMountedRef.current) return
-          const { data: battleStatsData, error } = await supabase.rpc("get_room_battle_stats", {
-            p_room_id: room.id,
-          })
+          if (!isMountedRef.current) return;
+          const { data: battleStatsData, error } = await supabase.rpc(
+            "get_room_battle_stats",
+            { p_room_id: room.id }
+          );
 
           if (!error && battleStatsData && isMountedRef.current) {
-            setRoomStats(battleStatsData[0] || null)
-            console.log("Realtime update: room stats", battleStatsData[0])
+            setRoomStats(battleStatsData[0] || null);
+            console.log("Realtime update: room stats", battleStatsData[0]);
+            // Trigger leaderboard update since health changes may affect scores
+            updateLeaderboard();
           } else if (error) {
-            console.warn("Realtime battle stats error:", error.message)
+            console.warn("Realtime battle stats error:", error.message);
           }
-        },
+        }
       )
-      .subscribe()
+      .subscribe();
 
+    // Subscription for player_answers
     const answersChannel = supabase
       .channel(`answers-${room.id}`)
       .on(
@@ -419,22 +433,25 @@ export default function ResultsPage() {
           filter: `room_id=eq.${room.id}`,
         },
         async () => {
-          if (!isMountedRef.current) return
-          const { data: activityData, error } = await supabase.rpc("get_recent_game_activity", {
-            p_room_id: room.id,
-            p_limit: 10,
-          })
+          if (!isMountedRef.current) return;
+          const { data: activityData, error } = await supabase.rpc(
+            "get_recent_game_activity",
+            { p_room_id: room.id, p_limit: 10 }
+          );
 
           if (!error && activityData && isMountedRef.current) {
-            setRecentActivities(activityData)
-            console.log("Realtime update: recent activities", activityData)
+            setRecentActivities(activityData);
+            console.log("Realtime update: recent activities", activityData);
+            // Trigger leaderboard update since answers affect scores
+            updateLeaderboard();
           } else if (error) {
-            console.warn("Realtime activities error:", error.message)
+            console.warn("Realtime activities error:", error.message);
           }
-        },
+        }
       )
-      .subscribe()
+      .subscribe();
 
+    // Subscription for player_attacks
     const attacksChannel = supabase
       .channel(`attacks-${room.id}`)
       .on(
@@ -446,32 +463,41 @@ export default function ResultsPage() {
           filter: `room_id=eq.${room.id}`,
         },
         async () => {
-          if (!isMountedRef.current) return
-          const { data: activityData, error } = await supabase.rpc("get_recent_game_activity", {
-            p_room_id: room.id,
-            p_limit: 10,
-          })
+          if (!isMountedRef.current) return;
+          const { data: activityData, error } = await supabase.rpc(
+            "get_recent_game_activity",
+            { p_room_id: room.id, p_limit: 10 }
+          );
 
           if (!error && activityData && isMountedRef.current) {
-            setRecentActivities(activityData)
-            console.log("Realtime update: recent attacks", activityData)
+            setRecentActivities(activityData);
+            console.log("Realtime update: recent attacks", activityData);
+            // Trigger leaderboard update since attacks may affect scores
+            updateLeaderboard();
           } else if (error) {
-            console.warn("Realtime attacks error:", error.message)
+            console.warn("Realtime attacks error:", error.message);
           }
-        },
+        }
       )
-      .subscribe()
+      .subscribe();
 
-    channelsRef.current = [completionsChannel, playersChannel, healthChannel, answersChannel, attacksChannel]
+    channelsRef.current = [
+      completionsChannel,
+      playersChannel,
+      healthChannel,
+      answersChannel,
+      attacksChannel,
+    ];
 
     return () => {
-      console.log("Cleaning up realtime subscriptions")
+      console.log("Cleaning up realtime subscriptions");
       channelsRef.current.forEach((channel) => {
-        supabase.removeChannel(channel)
-      })
-      channelsRef.current = []
-    }
-  }, [room])
+        supabase.removeChannel(channel);
+      });
+      channelsRef.current = [];
+      updateLeaderboard.cancel(); // Cancel any pending debounced calls
+    };
+  }, [room]);
 
   useEffect(() => {
     isMountedRef.current = true
@@ -801,7 +827,7 @@ export default function ResultsPage() {
                           <div>
                             <div className="text-white font-mono tracking-wider">{player.nickname}</div>
                             <div className="text-xs text-gray-400">
-                              {t("result.correct", { count: player.correct_answers })} •{" "} {player.is_alive ? t("result.alive") : t("result.dead")}
+                              {t("result.correct", { count: player.correct_answers })}
                             </div>
                           </div>
                         </div>
