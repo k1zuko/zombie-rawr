@@ -147,17 +147,21 @@
     "default": "Setiap langkah adalah awal baru! Bangkit dan hadapi horor berikutnya!"
   },
   "performanceTitle": {
-    "noData": "PENJELAJAH YANG TERSERAP KABUT",
-    "perfect": "LEGEND OF THE NIGHT",
-    "accuracy90": "Seorang Master",
-    "accuracy80": "Penjaga Ketenangan",
-    "accuracy70": "Jiwa Yang Bijak",
-    "accuracy60": "Sang Pencari Ilmu",
-    "accuracy50": "Sang Pencari Ilmu",
-    "accuracy40": "Sang Pencari Ilmu",
-    "accuracy30": "Sang Pencari Ilmu",
-    "accuracy20": "Sang Pencari Ilmu",
-    "default": "Siswa Haus Ilmu"
+
+    
+  "noData": "Penjelajah yang Tersesat Kabut",
+  "perfect": "Legenda Malam",
+  "accuracy90": "Sang Master",
+  "accuracy80": "Penjaga Kedamaian",
+  "accuracy70": "Jiwa Bijak",
+  "accuracy60": "Pemburu Ilmu",
+  "accuracy50": "Pencari Jawaban",
+  "accuracy40": "Pejalan Ragu",
+  "accuracy30": "Pengamat Sunyi",
+  "accuracy20": "Pemula Berani",
+  "default": "Siswa Haus Ilmu"
+
+
   },
   "result": {
     "loadingTitle": "MEMANGGIL KISAH KEHEBATANMU...",
@@ -178,7 +182,12 @@
     "home": "Halaman Utama",
     "retry": "Coba Lagi"
   },
-  "playAgain": "Mulai ulang",
+  "playAgain": "Main Lagi",
   "creatingSession": "Membuat Sesi...",
   "youWereKicked": "Anda telah dikeluarkan dari ruangan."
+  "inviteMessage": "Bergabunglah dengan keseruan QuizRush! Gunakan kode: {{roomCode}} atau klik di sini: {{joinLink}}",
+
+
+  "inviteToPlay": "Undang untuk Bermain",
+  "joinLink": "Tautan Bergabung"
 }

@@ -10,6 +10,9 @@ import { Trophy, Clock, Ghost, Zap, HeartPulse } from "lucide-react";
 import { t } from "i18next";
 import { useHostGuard } from "@/lib/host-guard";
 
+const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
+type ChaserType = typeof validChaserTypes[number];
+
 interface Player {
   id: string;
   nickname: string;
@@ -41,6 +44,10 @@ interface GameRoom {
   current_phase: string;
   game_start_time: string | null;
   questions: any[];
+  quiz_id: string; // Ditambahkan
+  duration: number | null; // Ditambahkan
+  question_count: number | null; // Ditambahkan
+  chaser_type: ChaserType; // Ditambahkan
 }
 
 interface PlayerResult {
@@ -146,45 +153,57 @@ export default function ResultsHostPage() {
       .join("");
   }, []);
 
-  const handlePlayAgain = useCallback(async () => {
-    if (!gameRoom) return;
-    setIsCreatingNewSession(true);
-    try {
-      await Promise.all([
-        supabase.from("game_completions").delete().eq("room_id", gameRoom.id),
-        supabase.from("player_health_states").delete().eq("room_id", gameRoom.id),
-        supabase.from("game_states").delete().eq("room_id", gameRoom.id),
-        supabase.from("players").delete().eq("room_id", gameRoom.id),
-        supabase.from("game_rooms").delete().eq("id", gameRoom.id),
-      ]);
+const handlePlayAgain = useCallback(async () => {
+  if (!gameRoom) return;
+  setIsCreatingNewSession(true);
+  try {
+    // Hapus data terkait ruangan lama
+    await Promise.all([
+      supabase.from("game_completions").delete().eq("room_id", gameRoom.id),
+      supabase.from("player_health_states").delete().eq("room_id", gameRoom.id),
+      supabase.from("game_states").delete().eq("room_id", gameRoom.id),
+      supabase.from("players").delete().eq("room_id", gameRoom.id),
+      supabase.from("game_rooms").delete().eq("id", gameRoom.id),
+    ]);
 
-      const newRoomCode = generateRoomCode();
-      const { data: newRoom, error: newRoomError } = await supabase
-        .from("game_rooms")
-        .insert({
-          room_code: newRoomCode,
-          title: gameRoom.title,
-          status: "waiting",
-          max_players: gameRoom.max_players,
-          current_phase: "lobby",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+    const newRoomCode = generateRoomCode();
+    
+    // Validasi chaser_type
+    const validatedChaserType = validChaserTypes.includes(gameRoom.chaser_type) 
+      ? gameRoom.chaser_type 
+      : "zombie";
 
-      if (newRoomError || !newRoom) {
-        throw new Error(`Gagal membuat ruangan baru: ${newRoomError?.message || "Tidak ada data ruangan"}`);
-      }
+    // Buat ruangan baru dengan semua pengaturan dari ruangan sebelumnya
+    const { data: newRoom, error: newRoomError } = await supabase
+      .from("game_rooms")
+      .insert({
+        room_code: newRoomCode,
+        title: gameRoom.title,
+        quiz_id: gameRoom.quiz_id, // Menyimpan quiz_id dari ruangan sebelumnya
+        status: "waiting",
+        max_players: gameRoom.max_players,
+        duration: gameRoom.duration || 600, // Default ke 600 detik jika tidak ada
+        question_count: gameRoom.question_count || 20, // Default ke 20 jika tidak ada
+        chaser_type: validatedChaserType, // Menyimpan chaser_type
+        current_phase: "lobby",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
-      router.push(`/host/${newRoomCode}`);
-    } catch (error) {
-      console.error("Gagal membuat sesi baru:", error);
-      setLoadingError("Gagal membuat sesi baru. Silakan coba lagi.");
-    } finally {
-      setIsCreatingNewSession(false);
+    if (newRoomError || !newRoom) {
+      throw new Error(`Gagal membuat ruangan baru: ${newRoomError?.message || "Tidak ada data ruangan"}`);
     }
-  }, [gameRoom, router, generateRoomCode]);
+
+    router.push(`/host/${newRoomCode}`);
+  } catch (error) {
+    console.error("Gagal membuat sesi baru:", error);
+    setLoadingError("Gagal membuat sesi baru. Silakan coba lagi.");
+  } finally {
+    setIsCreatingNewSession(false);
+  }
+}, [gameRoom, router, generateRoomCode]);
 
   const fetchGameData = useCallback(async () => {
     if (!roomCode) {
@@ -610,10 +629,11 @@ export default function ResultsHostPage() {
                           </div>
 
                           <div
-                            className={`flex-1 px-3 py-2 rounded-lg border text-center font-bold text-base shadow-[0_0_12px_rgba(0,0,0,0.7)] ${player.isLolos
-                              ? "bg-gradient-to-r from-green-600 to-green-700 text-red-300 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]"
-                              : " from-gray-800 to-black text-red-300 px-3 py-2 rounded-lg border border-red-600/50 flex items-center gap-2 shadow-[inset_0_1px_6px_rgba(0,0,0,0.7)]"
-                              }`}
+                            className={`flex-1 px-3 py-2 rounded-lg border text-center font-bold text-base shadow-[0_0_12px_rgba(0,0,0,0.7)] ${
+                              player.isLolos
+                                ? "bg-gradient-to-r from-green-600 to-green-700 text-red-300 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]"
+                                : "bg-gradient-to-r from-red-600 to-red-700 text-white-300   border-red-500 shadow-[inset_0_1px_6px_rgba(0,0,0,0.7)]"
+                            }`}
                           >
                             {player.isLolos ? t("pass") : t("fail")}
                           </div>

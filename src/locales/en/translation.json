@@ -147,17 +147,20 @@
     "default": "Every step is a new beginning! Rise and face the next horror!"
   },
   "performanceTitle": {
-    "noData": "WANDERER LOST IN THE MIST",
-    "perfect": "LEGEND OF THE NIGHT",
-    "accuracy90": "A Master",
-    "accuracy80": "Guardian of Serenity",
-    "accuracy70": "Wise Soul",
-    "accuracy60": "Seeker of Knowledge",
-    "accuracy50": "Seeker of Knowledge",
-    "accuracy40": "Seeker of Knowledge",
-    "accuracy30": "Seeker of Knowledge",
-    "accuracy20": "Seeker of Knowledge",
-    "default": "Knowledge-Hungry Student"
+
+  "noData": "Wanderer Lost in Mist",
+  "perfect": "Legend of the Night",
+  "accuracy90": "The Master",
+  "accuracy80": "Guardian of Peace",
+  "accuracy70": "Wise Soul",
+  "accuracy60": "Seeker of Knowledge",
+  "accuracy50": "Hunter of Answers",
+  "accuracy40": "The Uncertain Walker",
+  "accuracy30": "Silent Observer",
+  "accuracy20": "Brave Beginner",
+  "default": "Knowledge Thirsty Student"
+
+
   },
   "result": {
     "loadingTitle": "SUMMONING YOUR LEGEND...",
@@ -178,7 +181,20 @@
     "home": "Home",
     "retry": "Try Again"
   },
-  "playAgain": "Restart",
+  "playAgain": "Play Again",
   "creatingSession": "Creating Session...",
   "youWereKicked": "You have been kicked from the room."
+  "inviteMessage": "Join the thrilling QuizRush game! Use code: {{roomCode}} or click here: {{joinLink}}",
+
+
+
+  "inviteToPlay": "Invite to Play",
+  "joinLink": "Join Link",
+
+
+
+
+  "kickPlayerConfirm": "Are you sure you want to kick {{nickname}}?",
+  "kickPlayerSuccess": "{{nickname}} has been kicked",
+  "kickPlayerError": "Failed to kick player"
 }

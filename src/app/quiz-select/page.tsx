@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
@@ -60,7 +59,8 @@ export default function QuizSelectPage() {
         setFilteredQuizzes(data || []);
       } catch (error) {
         console.error("Error fetching quizzes:", error);
-        alert(t("errorMessages.fetchQuizzesFailed"));
+        // Simulasi toast notification (ganti dengan react-hot-toast jika tersedia)
+        alert(t("errorMessages.fetchQuizzesFailed")); // Ganti dengan toast.error jika menggunakan react-hot-toast
       } finally {
         setIsLoading(false);
       }
@@ -69,7 +69,7 @@ export default function QuizSelectPage() {
     fetchQuizzes();
 
     const generateBlood = () => {
-      const newBlood = Array.from({ length: 15 }, (_, i) => ({
+      const newBlood = Array.from({ length: 8 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         speed: 0.5 + Math.random() * 2,
@@ -145,7 +145,8 @@ export default function QuizSelectPage() {
         router.push(`/character-select/${roomCode}`);
       } catch (error) {
         console.error("Error creating game:", error);
-        alert(t("errorMessages.createGameFailed"));
+        // Simulasi toast notification (ganti dengan react-hot-toast jika tersedia)
+        alert(t("errorMessages.createGameFailed")); // Ganti dengan toast.error jika menggunakan react-hot-toast
       } finally {
         setIsCreating(false);
       }
@@ -274,34 +275,34 @@ export default function QuizSelectPage() {
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen pt-2 pb-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed top-2 left-2 text-red-500 hover:bg-red-900/20 z-30"
-          onClick={handleBackClick}
-          disabled={isCreating}
-          aria-label={t("backButton")}
-        >
-          <HeartPulse className="h-6 w-6 animate-pulse" />
-        </Button>
-
-        {/* Language Switcher Buttons */}
-        {/* <div className="fixed top-2 right-2 space-x-2 z-30">
+        <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-sm py-4 px-6 flex justify-between items-center">
           <Button
             variant="ghost"
-            onClick={() => changeLanguage("en")}
-            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "en" ? "bg-red-900/30" : ""}`}
+            size="icon"
+            className="text-red-500 hover:bg-red-900/20"
+            onClick={handleBackClick}
+            disabled={isCreating}
+            aria-label={t("backButton")}
           >
-            EN
+            <HeartPulse className="h-6 w-6 animate-pulse" />
           </Button>
-          <Button
-            variant="ghost"
-            onClick={() => changeLanguage("id")}
-            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "id" ? "bg-red-900/30" : ""}`}
-          >
-            ID
-          </Button>
-        </div> */}
+          <div className="space-x-2">
+            {/* <Button
+              variant="ghost"
+              onClick={() => changeLanguage("en")}
+              className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "en" ? "bg-red-900/30" : ""}`}
+            >
+              EN
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => changeLanguage("id")}
+              className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "id" ? "bg-red-900/30" : ""}`}
+            >
+              ID
+            </Button> */}
+          </div>
+        </div>
 
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 px-2 md:px-3">
           <motion.div
@@ -387,17 +388,23 @@ export default function QuizSelectPage() {
                         className="w-full mb-2"
                       >
                         <Card
-                          className="bg-black/40 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+                          className="bg-black/40 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full flex flex-col"
+                          style={{ minHeight: "150px", maxHeight: "200px" }}
                           onClick={() => handleQuizSelect(quiz.id)}
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") handleQuizSelect(quiz.id);
+                          }}
+                          aria-label={t("selectQuiz", { theme: quiz.theme })}
                         >
-                          <CardHeader className="pb-1">
-                            <CardTitle className="text-red-400 font-mono text-base line-clamp-2">{quiz.theme}</CardTitle>
-                            <CardDescription className="text-red-400/80 text-xs line-clamp-3">
+                          <CardHeader className="pb-2 flex-shrink-0">
+                            <CardTitle className="text-red-400 font-mono text-lg line-clamp-2">{quiz.theme}</CardTitle>
+                            <CardDescription className="text-gray-300 text-sm line-clamp-3">
                               {quiz.description || t("defaultQuizDescription")}
                             </CardDescription>
                           </CardHeader>
-                          <CardContent>
-                            <div className="text-red-400 text-xs font-mono">
+                          <CardContent className="flex-grow flex items-end">
+                            <div className="text-gray-300 text-sm font-mono">
                               {t("durationLabel", { duration: quiz.duration })}
                             </div>
                           </CardContent>
@@ -424,8 +431,20 @@ export default function QuizSelectPage() {
 
           {/* Quiz Grid or Loading State */}
           {isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-12 w-12 text-red-500 animate-spin" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-full mx-auto min-h-[50vh]">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="w-full max-w-md mx-auto">
+                  <Card className="bg-black/40 border-red-500/20 h-[150px]">
+                    <CardHeader className="pb-2">
+                      <div className="h-6 bg-red-500/20 rounded animate-pulse" />
+                      <div className="h-12 bg-red-500/20 rounded mt-2 animate-pulse" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-4 bg-red-500/20 rounded animate-pulse" />
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
             </div>
           ) : !isSearchOpen || !searchTerm ? (
             filteredQuizzes.length === 0 ? (
@@ -434,12 +453,7 @@ export default function QuizSelectPage() {
               </div>
             ) : (
               <div className="flex flex-col flex-1">
-                <div
-                  className={`${filteredQuizzes.length <= 4
-                      ? "flex flex-wrap justify-center gap-4"
-                      : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
-                    } max-w-full mx-auto flex-1`}
-                >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-full mx-auto min-h-[50vh]">
                   {filteredQuizzes.map((quiz) => (
                     <motion.div
                       key={quiz.id}
@@ -447,20 +461,26 @@ export default function QuizSelectPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * (quiz.id % 4), duration: 0.5 }}
                       whileHover={{ scale: 1.02 }}
-                      className={`group ${filteredQuizzes.length <= 4 ? "w-full max-w-sm" : "w-full"}`}
+                      className="w-full max-w-md mx-auto"
                     >
                       <Card
-                        className="bg-black/40 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full"
+                        className="bg-black/50 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full flex flex-col"
+                        style={{ minHeight: "150px", maxHeight: "200px" }}
                         onClick={() => handleQuizSelect(quiz.id)}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") handleQuizSelect(quiz.id);
+                        }}
+                        aria-label={t("selectQuiz", { theme: quiz.theme })}
                       >
-                        <CardHeader className="pb-1">
-                          <CardTitle className="text-red-400 font-mono text-base line-clamp-2">{quiz.theme}</CardTitle>
-                          <CardDescription className="text-red-400/80 text-xs line-clamp-3">
+                        <CardHeader className="pb-2 flex-shrink-0">
+                          <CardTitle className="text-red-400 font-mono text-lg line-clamp-2">{quiz.theme}</CardTitle>
+                          <CardDescription className="text-gray-300 text-sm line-clamp-3">
                             {quiz.description || t("defaultQuizDescription")}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-red-400 text-xs font-mono">
+                        <CardContent className="flex-grow flex items-end">
+                          <div className="text-gray-300 text-sm font-mono">
                             {t("durationLabel", { duration: quiz.duration })}
                           </div>
                         </CardContent>

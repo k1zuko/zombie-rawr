@@ -1,3 +1,4 @@
+// Halaman Lobby Phase (LobbyPhase.js or similar)
 "use client";
 
 // Mengimpor dependensi yang diperlukan
@@ -175,13 +176,41 @@ export default function LobbyPhase({
   };
 }, [currentPlayer.room_id, currentPlayer.id, router]);
 
-  // Menangani transisi fase ke quiz
-  // useEffect(() => {
-  //   if (room?.current_phase === "quiz") {
-  //     console.log("🔄 LobbyPhase: Mengalihkan ke halaman quiz")
-  //     router.push(`/game/${room.id}/play`)
-  //   }
-  // }, [room?.current_phase, router])
+  // Langganan real-time untuk mendeteksi kick pada pemain
+  useEffect(() => {
+    if (!currentPlayer.room_id) {
+      console.warn("⚠️ LobbyPhase: Tidak ada room_id untuk langganan pemain real-time");
+      return;
+    }
+
+    console.log("🔗 LobbyPhase: Menyiapkan langganan real-time untuk pemain di room_id:", currentPlayer.room_id);
+
+    const channel = supabase
+      .channel(`players_${currentPlayer.room_id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "players",
+          filter: `id=eq.${currentPlayer.id}`,
+        },
+        (payload) => {
+          console.log("📡 LobbyPhase: Pemain dihapus:", payload);
+          // Arahkan pemain ke halaman utama jika mereka dikick
+          router.push("/");
+          alert(t("kickedFromRoom"));
+        }
+      )
+      .subscribe((status, err) => {
+        console.log("📡 LobbyPhase: Status langganan pemain:", status, err ? err.message : "");
+      });
+
+    return () => {
+      console.log("🔌 LobbyPhase: Membersihkan langganan pemain");
+      supabase.removeChannel(channel);
+    };
+  }, [currentPlayer.room_id, currentPlayer.id, router, t]);
 
   // Menghasilkan efek tetesan darah
   useEffect(() => {

@@ -33,7 +33,7 @@
     "react": "19.1.0",
     "react-confetti": "^6.4.0",
     "react-dom": "19.1.0",
-    "react-hot-toast": "^2.5.2",
+    "react-hot-toast": "^2.6.0",
     "react-i18next": "^15.6.1",
     "react-qr-code": "^2.0.18",
     "react-toastify": "^11.0.5",
