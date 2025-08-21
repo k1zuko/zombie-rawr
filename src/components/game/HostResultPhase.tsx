@@ -31,16 +31,16 @@ interface HostResultsPhaseProps {
 
 // Character GIF mapping
 const characterGifs = [
-  "/character/character.gif",
-  "/character/character1.gif",
-  "/character/character2.gif",
-  "/character/character3.gif",
-  "/character/character4.gif",
-  "/character/character5.gif",
-  "/character/character6.gif",
-  "/character/character7.gif",
-  "/character/character8.gif",
-  "/character/character9.gif",
+  "/character/player/character.gif",
+  "/character/player/character1.gif",
+  "/character/player/character2.gif",
+  "/character/player/character3.gif",
+  "/character/player/character4.gif",
+  "/character/player/character5.gif",
+  "/character/player/character6.gif",
+  "/character/player/character7.gif",
+  "/character/player/character8.gif",
+  "/character/player/character9.gif",
 ]
 
 export default function HostResultsPhase({ players, gameLogic, roomCode }: HostResultsPhaseProps) {

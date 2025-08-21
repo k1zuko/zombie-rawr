@@ -52,7 +52,7 @@ export default function ZombieFeedback({ isCorrect, isVisible }: ZombieFeedbackP
             }}
           >
             <Image
-              src="/character/character.gif"
+              src="/character/player/character.gif"
               alt="Karakter Pelari"
               width={70}
               height={70}

@@ -38,7 +38,7 @@ export default function GameBackground({
       {/* Full Moon */}
       <div className="absolute top-10 right-20 z-1">
         <Image
-          src="/images/full-moon.png"
+          src="/map1/full-moon.png"
           alt="Full Moon"
           width={120}
           height={120}
@@ -65,7 +65,7 @@ export default function GameBackground({
             }}
           >
             <Image
-              src="/images/dark-clouds.png"
+              src="/map1/dark-clouds.png"
               alt="Storm Cloud"
               width={300}
               height={200}
@@ -95,7 +95,7 @@ export default function GameBackground({
             }}
           >
             <Image
-              src={i === 1 ? "/images/church-silhouette.png" : "/images/old-house.png"}
+              src={i === 1 ? "/map1/church-silhouette.png" : "/map1/old-house.png"}
               alt="Building"
               width={i === 1 ? 120 : 150}
               height={i === 1 ? 120 : 180}
@@ -122,7 +122,7 @@ export default function GameBackground({
             }}
           >
             <Image
-              src="/images/spooky-tree-2.png"
+              src="/map1/spooky-tree-2.png"
               unoptimized
               alt="Spooky Tree"
               width={200}
@@ -149,7 +149,7 @@ export default function GameBackground({
             }}
           >
             <Image
-              src="/images/tombstone.png"
+              src="/map1/tombstone.png"
               alt="Tombstone"
               width={60}
               unoptimized
@@ -176,7 +176,7 @@ export default function GameBackground({
             }}
           >
             <Image
-              src="/images/dead-tree.png"
+              src="/map1/dead-tree.png"
               alt="Dead Tree"
               width={150}
               height={200}
@@ -203,7 +203,7 @@ export default function GameBackground({
             }}
           >
             <Image
-              src="/images/old-fence.png"
+              src="/map1/old-fence.png"
               alt="Old Fence"
               width={120}
               height={80}
@@ -230,7 +230,7 @@ export default function GameBackground({
             }}
           >
             <Image
-              src={i % 2 === 0 ? "/images/dead-tree.png" : "/images/spooky-tree-2.png"}
+              src={i % 2 === 0 ? "/map1/dead-tree.png" : "/map1/spooky-tree-2.png"}
               alt="Horror Tree"
               width={i % 2 === 0 ? 120 : 160}
               height={i % 2 === 0 ? 160 : 200}

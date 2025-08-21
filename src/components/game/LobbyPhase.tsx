@@ -40,16 +40,16 @@ interface LobbyPhaseProps {
 
 // Opsi karakter yang tersedia
 const characterOptions = [
-  { value: "robot1", name: "Hijau", gif: "/character/character.gif", alt: "Karakter Hijau" },
-  { value: "robot2", name: "Biru", gif: "/character/character1.gif", alt: "Karakter Biru" },
-  { value: "robot3", name: "Merah", gif: "/character/character2.gif", alt: "Karakter Merah" },
-  { value: "robot4", name: "Ungu", gif: "/character/character3.gif", alt: "Karakter Ungu" },
-  { value: "robot5", name: "Oranye", gif: "/character/character4.gif", alt: "Karakter Oranye" },
-  { value: "robot6", name: "Kuning", gif: "/character/character5.gif", alt: "Karakter Kuning" },
-  { value: "robot7", name: "Abu-abu", gif: "/character/character6.gif", alt: "Karakter Abu-abu" },
-  { value: "robot8", name: "Pink", gif: "/character/character7.gif", alt: "Karakter Pink" },
-  { value: "robot9", name: "Cokelat", gif: "/character/character8.gif", alt: "Karakter Cokelat" },
-  { value: "robot10", name: "Emas", gif: "/character/character9.gif", alt: "Karakter Emas" },
+  { value: "robot1", name: "Hijau", gif: "/character/player/character.gif", alt: "Karakter Hijau" },
+  { value: "robot2", name: "Biru", gif: "/character/player/character1.gif", alt: "Karakter Biru" },
+  { value: "robot3", name: "Merah", gif: "/character/player/character2.gif", alt: "Karakter Merah" },
+  { value: "robot4", name: "Ungu", gif: "/character/player/character3.gif", alt: "Karakter Ungu" },
+  { value: "robot5", name: "Oranye", gif: "/character/player/character4.gif", alt: "Karakter Oranye" },
+  { value: "robot6", name: "Kuning", gif: "/character/player/character5.gif", alt: "Karakter Kuning" },
+  { value: "robot7", name: "Abu-abu", gif: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
+  { value: "robot8", name: "Pink", gif: "/character//player/character7.gif", alt: "Karakter Pink" },
+  { value: "robot9", name: "Cokelat", gif: "/character/player/character8.gif", alt: "Karakter Cokelat" },
+  { value: "robot10", name: "Emas", gif: "/character/player/character9.gif", alt: "Karakter Emas" },
 ]
 
 export default function LobbyPhase({

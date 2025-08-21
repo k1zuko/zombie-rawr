@@ -88,7 +88,7 @@ export default function PlayersPanel({
             })
             .map((player) => {
               const character = getCharacterByType(player.character_type) || {
-                src: "/images/default-character.gif",
+                src: "/character/player/default-character.gif",
                 alt: "Karakter Default",
               };
               const playerState = playerStates[player.id] || {
@@ -113,7 +113,7 @@ export default function PlayersPanel({
                     alt={character.alt}
                     className="w-8 h-8 object-contain"
                     onError={(e) => {
-                      e.currentTarget.src = "/images/default-character.gif";
+                      e.currentTarget.src = "/character/player/default-character.gif";
                     }}
                   />
                   <div className="flex-1">

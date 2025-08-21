@@ -76,16 +76,16 @@ interface PlayerData {
 }
 
 const characterGifs = [
-  "/character.gif",
-  "/character1.gif",
-  "/character2.gif",
-  "/character3.gif",
-  "/character4.gif",
-  "/character5.gif",
-  "/character6.gif",
-  "/character7.gif",
-  "/character8.gif",
-  "/character9.gif",
+  "character/player/character.gif",
+  "character/player/character1.gif",
+  "character/player/character2.gif",
+  "character/player/character3.gif",
+  "character/player/character4.gif",
+  "character/player/character5.gif",
+  "character/player/character6.gif",
+  "character/player/character7.gif",
+  "character/player/character8.gif",
+  "character/player/character9.gif",
 ]
 
 export default function ResultsPage() {
@@ -192,7 +192,7 @@ export default function ResultsPage() {
 
           if (completionData.players?.character_type) {
             const charIndex = Number.parseInt(completionData.players.character_type.replace("robot", "")) - 1
-            const gifPath = `/character/character${charIndex === 0 ? "" : charIndex}.gif`
+            const gifPath = `/character/player/character${charIndex === 0 ? "" : charIndex}.gif`
             setCharacterGif(gifPath)
             console.log("Character GIF diatur:", gifPath)
           }
@@ -606,7 +606,7 @@ export default function ResultsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/images/tombstone.png')] bg-no-repeat bg-center bg-cover opacity-20" />
+        <div className="absolute inset-0 bg-[url('/map1/tombstone.png')] bg-no-repeat bg-center bg-cover opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
         <div className="text-center z-10">
           <Skull className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
@@ -621,7 +621,7 @@ export default function ResultsPage() {
   if (!playerData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/images/tombstone.png')] bg-no-repeat bg-center bg-cover opacity-20" />
+        <div className="absolute inset-0 bg-[url('/map1/tombstone.png')] bg-no-repeat bg-center bg-cover opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
         <div className="text-center z-10 p-4">
           <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
@@ -631,6 +631,7 @@ export default function ResultsPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
+
               onClick={() => (window.location.href = "/")}
               className="bg-gray-900 hover:bg-gray-800 text-white font-mono border border-gray-700"
             >
@@ -653,8 +654,8 @@ export default function ResultsPage() {
   // Render utama jika playerData berhasil dimuat
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('/images/dark-clouds.png')] opacity-30" />
-      <div className="absolute inset-0 bg-[url('/images/fog-texture1.png')] opacity-15 animate-pulse" />
+      <div className="absolute inset-0 bg-[url('/map1/dark-clouds.png')] opacity-30" />
+      <div className="absolute inset-0 bg-[url('/map1/fog-texture1.png')] opacity-15 animate-pulse" />
       <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
 
       {/* ... sisa dari JSX (elemen dekoratif, dll.) tetap sama ... */}
@@ -666,13 +667,13 @@ export default function ResultsPage() {
       </div>
 
       <div className="absolute top-20 left-10 opacity-20">
-        <Image src="/images/tombstone.png" width={80} height={80} alt="Nisan" />
+        <Image src="/map1/tombstone.png" width={80} height={80} alt="Nisan" />
       </div>
       <div className="absolute top-1/3 right-10 opacity-20">
-        <Image src="/images/dead-tree.png" width={120} height={120} alt="Pohon mati" />
+        <Image src="/map1/dead-tree.png" width={120} height={120} alt="Pohon mati" />
       </div>
       <div className="absolute bottom-20 left-20 opacity-20">
-        <Image src="/images/spooky-tree-2.png" width={100} height={100} alt="Pohon seram" />
+        <Image src="/map1/spooky-tree-2.png" width={100} height={100} alt="Pohon seram" />
       </div>
 
       <div className="absolute inset-0">

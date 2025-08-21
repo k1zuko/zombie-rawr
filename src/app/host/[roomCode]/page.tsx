@@ -412,22 +412,22 @@ export default function HostPage() {
       setCountdown(null)
     }
   }
-
+// 
   useEffect(() => {
     syncServerTime()
   }, [])
 
   const characterOptions = [
-    { value: "robot1", name: "Hijau", gif: "/character/character.gif", alt: "Karakter Hijau" },
-    { value: "robot2", name: "Biru", gif: "/character/character1.gif", alt: "Karakter Biru" },
-    { value: "robot3", name: "Merah", gif: "/character/character2.gif", alt: "Karakter Merah" },
-    { value: "robot4", name: "Ungu", gif: "/character/character3.gif", alt: "Karakter Ungu" },
-    { value: "robot5", name: "Oranye", gif: "/character/character4.gif", alt: "Karakter Oranye" },
-    { value: "robot6", name: "Kuning", gif: "/character/character5.gif", alt: "Karakter Kuning" },
-    { value: "robot7", name: "Abu-abu", gif: "/character/character6.gif", alt: "Karakter Abu-abu" },
-    { value: "robot8", name: "Pink", gif: "/character/character7.gif", alt: "Karakter Pink" },
-    { value: "robot9", name: "Cokelat", gif: "/character/character8.gif", alt: "Karakter Cokelat" },
-    { value: "robot10", name: "Emas", gif: "/character/character9.gif", alt: "Karakter Emas" },
+    { value: "robot1", name: "Hijau", gif: "/character/player/character.gif", alt: "Karakter Hijau" },
+    { value: "robot2", name: "Biru", gif: "/character/player/character1.gif", alt: "Karakter Biru" },
+    { value: "robot3", name: "Merah", gif: "/character/player/character2.gif", alt: "Karakter Merah" },
+    { value: "robot4", name: "Ungu", gif: "/character/player/character3.gif", alt: "Karakter Ungu" },
+    { value: "robot5", name: "Oranye", gif: "/character/player/character4.gif", alt: "Karakter Oranye" },
+    { value: "robot6", name: "Kuning", gif: "/character/player/character5.gif", alt: "Karakter Kuning" },
+    { value: "robot7", name: "Abu-abu", gif: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
+    { value: "robot8", name: "Pink", gif: "/character/player/character7.gif", alt: "Karakter Pink" },
+    { value: "robot9", name: "Cokelat", gif: "/character/player/character8.gif", alt: "Karakter Cokelat" },
+    { value: "robot10", name: "Emas", gif: "/character/player/character9.gif", alt: "Karakter Emas" },
   ]
 
   if (isLoading) {
@@ -599,9 +599,14 @@ export default function HostPage() {
                 </div>
 
                 {/* Link join */}
+                            <div className="text-center">
+              
+              <div className="text-2xl md:text-6xl font-mono font-bold text-red-500 tracking-wider">{roomCode}</div>
+            </div>
                 <div className="flex items-center w-full max-w-3xl bg-black/50 p-6 rounded-2xl border border-red-500/30">
                   <div className="flex-grow text-center">
-                    <div className="text-red-400 font-mono mb-1">{t("joinLink")}</div>
+                    
+                    <div className="text-red-400 font-mono mb-1"></div>
                     <div className="text-sm font-mono font-bold text-red-500 tracking-widest break-words">
                       {`${window.location.origin}/?code=${roomCode}`}
                     </div>
@@ -698,141 +703,142 @@ export default function HostPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-12"
-        >
-          <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-            <CardHeader>
-              <CardTitle className="text-red-500 text-xl md:text-2xl font-mono flex items-center gap-3">
-                <Users className="w-5 h-5 md:w-6 md:h-6" />
-                {t("players")}
-                <Badge variant="secondary" className="bg-red-900/50 text-red-400 font-mono">
-                  {players.length} {t("online")}
-                </Badge>
-                {connectionStatus === "connected" && (
+<motion.div
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.4 }}
+  className="mb-12"
+>
+  <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+    <CardHeader>
+      <CardTitle className="text-red-500 text-xl md:text-2xl font-mono flex items-center gap-3">
+        <Users className="w-5 h-5 md:w-6 md:h-6" />
+        {t("players")}
+        <Badge variant="secondary" className="bg-red-900/50 text-red-400 font-mono">
+          {players.length} {t("online")}
+        </Badge>
+        {connectionStatus === "connected" && (
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            className="w-2 h-2 bg-red-400 rounded-full"
+          />
+        )}
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <AnimatePresence mode="popLayout">
+        {players.length === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center py-12"
+          >
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+              }}
+            >
+              <Users className="w-12 h-12 md:w-16 md:h-16 text-red-900/50 mx-auto mb-4" />
+            </motion.div>
+            <p className="text-red-400 text-lg font-mono">{t("waitingHost")}</p>
+            <p className="text-red-400/80 text-sm font-mono">{t("shareCode")}</p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="players"
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
+            layout
+            transition={{ layout: { duration: 0.3, type: "spring", stiffness: 100, damping: 20 } }}
+          >
+            <AnimatePresence>
+              {players.map((player, index) => {
+                const selectedCharacter = characterOptions.find(
+                  (char) => char.value === player.character_type
+                );
+
+                return (
                   <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                    className="w-2 h-2 bg-red-400 rounded-full"
-                  />
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AnimatePresence mode="popLayout">
-                {players.length === 0 ? (
-                  <motion.div
-                    key="empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-center py-12"
+                    key={player.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.5,
+                      x: Math.random() > 0.5 ? 200 : -200,
+                      rotate: Math.random() * 360,
+                      transition: { duration: 0.5, ease: "easeIn" },
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30,
+                      delay: index * 0.05,
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    className="bg-black/40 border border-red-900/50 rounded-lg p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative"
                   >
+                    {!player.is_host && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => kickPlayer(player.id, player.nickname)}
+                        className="absolute top-0 right-15 bg-black/40 text-red-500 hover:bg-red-700/50 p-3 relative"
+                        aria-label={t("kickPlayer", { nickname: player.nickname })}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="absolute inset-0" style={{ zIndex: -1 }} />
+                      </Button>
+                    )}
                     <motion.div
+                      className="mb-2"
                       animate={{
-                        scale: [1, 1.1, 1],
-                        opacity: [0.5, 1, 0.5],
+                        rotate: [0, 10, -10, 0],
                       }}
                       transition={{
                         duration: 2,
                         repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
+                        delay: index * 0.2,
                       }}
                     >
-                      <Users className="w-12 h-12 md:w-16 md:h-16 text-red-900/50 mx-auto mb-4" />
+                      {selectedCharacter ? (
+                        <img
+                          src={selectedCharacter.gif}
+                          alt={selectedCharacter.alt}
+                          className="w-15 mx-auto"
+                        />
+                      ) : (
+                        player.character_type
+                      )}
                     </motion.div>
-                    <p className="text-red-400 text-lg font-mono">{t("waitingHost")}</p>
-                    <p className="text-red-400/80 text-sm font-mono">{t("shareCode")}</p>
+                    <div className="text-red-500 font-medium text-sm truncate mb-1 font-mono">{player.nickname}</div>
+                    {player.is_host && (
+                      <Badge variant="secondary" className="text-xs bg-red-900 text-red-400 font-mono">
+                        {t("host")}
+                      </Badge>
+                    )}
+                    {/* <div className="text-red-400/80 text-xs mt-1 font-mono">
+                      {new Date(player.joined_at).toLocaleTimeString()}
+                    </div> */}
                   </motion.div>
-                ) : (
-                  <motion.div
-                    key="players"
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
-                    layout
-                    transition={{ layout: { duration: 0.3, type: "spring", stiffness: 100, damping: 20 } }}
-                  >
-                    <AnimatePresence>
-                      {players.map((player, index) => {
-                        const selectedCharacter = characterOptions.find(
-                          (char) => char.value === player.character_type
-                        );
-
-                        return (
-                          <motion.div
-                            key={player.id}
-                            layout
-                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{
-                              opacity: 0,
-                              scale: 0.5,
-                              x: Math.random() > 0.5 ? 200 : -200,
-                              rotate: Math.random() * 360,
-                              transition: { duration: 0.5, ease: "easeIn" },
-                            }}
-                            transition={{
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 30,
-                              delay: index * 0.05,
-                            }}
-                            whileHover={{ scale: 1.05 }}
-                            className="bg-black/40 border border-red-900/50 rounded-lg p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                          >
-                            <motion.div
-                              className="mb-2"
-                              animate={{
-                                rotate: [0, 10, -10, 0],
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: Number.POSITIVE_INFINITY,
-                                delay: index * 0.2,
-                              }}
-                            >
-                              {selectedCharacter ? (
-                                <img
-                                  src={selectedCharacter.gif}
-                                  alt={selectedCharacter.alt}
-                                  className="w-15 mx-auto"
-                                />
-                              ) : (
-                                player.character_type
-                              )}
-                            </motion.div>
-                            <div className="text-red-500 font-medium text-sm truncate mb-1 font-mono">{player.nickname}</div>
-                            {player.is_host ? (
-                              <Badge variant="secondary" className="text-xs bg-red-900 text-red-400 font-mono">
-                                {t("host")}
-                              </Badge>
-                            ) : (
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => kickPlayer(player.id, player.nickname)}
-                                className="mt-2 bg-red-900/80 hover:bg-red-700 text-white"
-                                aria-label={t("kickPlayer", { nickname: player.nickname })}
-                              >
-                                <Trash2 className="w-4 h-4 mr-1" />
-                                {t("kick")}
-                              </Button>
-                            )}
-                            {/* <div className="text-red-400/80 text-xs mt-1 font-mono">
-                              {new Date(player.joined_at).toLocaleTimeString()}
-                            </div> */}
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
-        </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </CardContent>
+  </Card>
+</motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -869,23 +875,36 @@ export default function HostPage() {
           </Button>
         </motion.div>
       </div>
-      <Dialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
-        <DialogContent className="bg-black/95 border border-red-500/50 text-red-400">
-          <DialogHeader>
-            <DialogTitle>{t("kickPlayerConfirmTitle")}</DialogTitle>
-          </DialogHeader>
-          <p>{t("kickPlayerConfirm", { nickname: selectedPlayer?.nickname })}</p>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setKickDialogOpen(false)}>
-              {t("cancel")}
-            </Button>
-            <Button variant="destructive" onClick={confirmKickPlayer}>
-              {t("confirm")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+<Dialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
+  <DialogContent className="bg-black/95 border border-red-500/50 text-red-400 p-0 overflow-hidden" >
+    <div className="p-6">
+      <DialogHeader className="text-left mb-6">
+        <DialogTitle className="text-lg font-medium">
+          {t("kickPlayerConfirm", { nickname: selectedPlayer?.nickname })}
+        </DialogTitle>
+      </DialogHeader>
+    </div>
+    
+    <DialogFooter className="bg-gray-900/50 p-4 border-t border-gray-800">
+      <div className="flex gap-3 w-full">
+        <Button 
+          variant="ghost" 
+          className="flex-1 justify-start bg-gray-800 hover:bg-gray-700 text-gray-300"
+          onClick={() => setKickDialogOpen(false)}
+        >
+          {t("cancel")}
+        </Button>
+        <Button 
+          variant="destructive" 
+          className="flex-1 justify-start bg-red-600 hover:bg-red-700"
+          onClick={confirmKickPlayer}
+        >
+          {t("confirm")}
+        </Button>
+      </div>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
       <Toaster position="top-right" toastOptions={{ style: { background: "#1a0000", color: "#ff4444", border: "1px solid #ff0000" } }} />
 
       <style jsx global>{`

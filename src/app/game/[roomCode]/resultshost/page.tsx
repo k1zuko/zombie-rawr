@@ -44,10 +44,11 @@ interface GameRoom {
   current_phase: string;
   game_start_time: string | null;
   questions: any[];
-  quiz_id: string; // Ditambahkan
-  duration: number | null; // Ditambahkan
-  question_count: number | null; // Ditambahkan
-  chaser_type: ChaserType; // Ditambahkan
+  quiz_id: string;
+  duration: number | null;
+  question_count: number | null;
+  chaser_type: ChaserType;
+  host_id: string; // Added to store host_id
 }
 
 interface PlayerResult {
@@ -66,16 +67,16 @@ interface PlayerResult {
 }
 
 const characterGifs = [
-  { src: "/character/character.gif", alt: "Karakter Hijau", color: "bg-green-600", type: "robot1", name: "Hijau" },
-  { src: "/character/character1.gif", alt: "Karakter Biru", color: "bg-blue-600", type: "robot2", name: "Biru" },
-  { src: "/character/character2.gif", alt: "Karakter Merah", color: "bg-red-600", type: "robot3", name: "Merah" },
-  { src: "/character/character3.gif", alt: "Karakter Ungu", color: "bg-purple-600", type: "robot4", name: "Ungu" },
-  { src: "/character/character4.gif", alt: "Karakter Oranye", color: "bg-orange-600", type: "robot5", name: "Oranye" },
-  { src: "/character/character5.gif", alt: "Karakter Kuning", color: "bg-yellow-600", type: "robot6", name: "Kuning" },
-  { src: "/character/character6.gif", alt: "Karakter Abu-abu", color: "bg-gray-600", type: "robot7", name: "Abu-abu" },
-  { src: "/character/character7.gif", alt: "Karakter Pink", color: "bg-pink-600", type: "robot8", name: "Pink" },
-  { src: "/character/character8.gif", alt: "Karakter Cokelat", color: "bg-amber-900", type: "robot9", name: "Cokelat" },
-  { src: "/character/character9.gif", alt: "Karakter Emas", color: "bg-yellow-700", type: "robot10", name: "Emas" },
+  { src: "/character/player/character.gif", alt: "Karakter Hijau", color: "bg-green-600", type: "robot1", name: "Hijau" },
+  { src: "/character/player/character1.gif", alt: "Karakter Biru", color: "bg-blue-600", type: "robot2", name: "Biru" },
+  { src: "/character/player/character2.gif", alt: "Karakter Merah", color: "bg-red-600", type: "robot3", name: "Merah" },
+  { src: "/character/player/character3.gif", alt: "Karakter Ungu", color: "bg-purple-600", type: "robot4", name: "Ungu" },
+  { src: "/character/player/character4.gif", alt: "Karakter Oranye", color: "bg-orange-600", type: "robot5", name: "Oranye" },
+  { src: "/character/player/character5.gif", alt: "Karakter Kuning", color: "bg-yellow-600", type: "robot6", name: "Kuning" },
+  { src: "/character/player/character6.gif", alt: "Karakter Abu-abu", color: "bg-gray-600", type: "robot7", name: "Abu-abu" },
+  { src: "/character/player/character7.gif", alt: "Karakter Pink", color: "bg-pink-600", type: "robot8", name: "Pink" },
+  { src: "/character/player/character8.gif", alt: "Karakter Cokelat", color: "bg-amber-900", type: "robot9", name: "Cokelat" },
+  { src: "/character/player/character9.gif", alt: "Karakter Emas", color: "bg-yellow-700", type: "robot10", name: "Emas" },
 ];
 
 export default function ResultsHostPage() {
@@ -91,9 +92,9 @@ export default function ResultsHostPage() {
   const [showContent, setShowContent] = useState(false);
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([]);
   const [isCreatingNewSession, setIsCreatingNewSession] = useState(false);
-  const [flickerText, setFlickerText] = useState(true)
+  const [flickerText, setFlickerText] = useState(true);
 
-  useHostGuard(roomCode)
+  useHostGuard(roomCode);
 
   const getCharacterByType = useCallback((type: string) => {
     return characterGifs.find((char) => char.type === type) || characterGifs[0];
@@ -108,20 +109,15 @@ export default function ResultsHostPage() {
   useEffect(() => {
     const flickerInterval = setInterval(
       () => {
-        setFlickerText((prev) => !prev)
+        setFlickerText((prev) => !prev);
       },
       100 + Math.random() * 150,
-    )
-
-    // const textInterval = setInterval(() => {
-    //   setAtmosphereText(atmosphereTexts[Math.floor(Math.random() * atmosphereTexts.length)]);
-    // }, 2500);
+    );
 
     return () => {
-      clearInterval(flickerInterval)
-      // clearInterval(textInterval);
-    }
-  }, [])
+      clearInterval(flickerInterval);
+    };
+  }, []);
 
   const calculateAccurateDuration = useCallback(
     (gameStartTime: string | null, completedAt: string, joinedAt: string, survivalDuration?: number) => {
@@ -153,61 +149,65 @@ export default function ResultsHostPage() {
       .join("");
   }, []);
 
-const handlePlayAgain = useCallback(async () => {
-  if (!gameRoom) return;
-  setIsCreatingNewSession(true);
-  try {
-    // Hapus data terkait ruangan lama
-    await Promise.all([
-      supabase.from("game_completions").delete().eq("room_id", gameRoom.id),
-      supabase.from("player_health_states").delete().eq("room_id", gameRoom.id),
-      supabase.from("game_states").delete().eq("room_id", gameRoom.id),
-      supabase.from("players").delete().eq("room_id", gameRoom.id),
-      supabase.from("game_rooms").delete().eq("id", gameRoom.id),
-    ]);
+  const handlePlayAgain = useCallback(async () => {
+    if (!gameRoom) return;
+    setIsCreatingNewSession(true);
+    try {
+      // Clean up previous game data
+      await Promise.all([
+        supabase.from("game_completions").delete().eq("room_id", gameRoom.id),
+        supabase.from("player_health_states").delete().eq("room_id", gameRoom.id),
+        supabase.from("game_states").delete().eq("room_id", gameRoom.id),
+        supabase.from("players").delete().eq("room_id", gameRoom.id),
+        supabase.from("game_rooms").delete().eq("id", gameRoom.id),
+      ]);
 
-    const newRoomCode = generateRoomCode();
-    
-    // Validasi chaser_type
-    const validatedChaserType = validChaserTypes.includes(gameRoom.chaser_type) 
-      ? gameRoom.chaser_type 
-      : "zombie";
+      const newRoomCode = generateRoomCode();
+      const tabHostId = crypto.randomUUID(); // Generate new host ID for the session
+      sessionStorage.setItem("currentHostId", tabHostId); // Store new host ID
 
-    // Buat ruangan baru dengan semua pengaturan dari ruangan sebelumnya
-    const { data: newRoom, error: newRoomError } = await supabase
-      .from("game_rooms")
-      .insert({
-        room_code: newRoomCode,
-        title: gameRoom.title,
-        quiz_id: gameRoom.quiz_id, // Menyimpan quiz_id dari ruangan sebelumnya
-        status: "waiting",
-        max_players: gameRoom.max_players,
-        duration: gameRoom.duration || 600, // Default ke 600 detik jika tidak ada
-        question_count: gameRoom.question_count || 20, // Default ke 20 jika tidak ada
-        chaser_type: validatedChaserType, // Menyimpan chaser_type
-        current_phase: "lobby",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
+      // Validate chaser_type
+      const validatedChaserType = validChaserTypes.includes(gameRoom.chaser_type)
+        ? gameRoom.chaser_type
+        : "zombie";
 
-    if (newRoomError || !newRoom) {
-      throw new Error(`Gagal membuat ruangan baru: ${newRoomError?.message || "Tidak ada data ruangan"}`);
+      // Create new room with previous settings
+      const { data: newRoom, error: newRoomError } = await supabase
+        .from("game_rooms")
+        .insert({
+          room_code: newRoomCode,
+          title: gameRoom.title || "New Game",
+          quiz_id: gameRoom.quiz_id,
+          status: "waiting",
+          max_players: gameRoom.max_players || 10,
+          duration: gameRoom.duration || 600,
+          question_count: gameRoom.question_count || 20,
+          chaser_type: validatedChaserType,
+          current_phase: "lobby",
+          host_id: tabHostId, // Set new host ID
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (newRoomError || !newRoom) {
+        throw new Error(`Failed to create new room: ${newRoomError?.message || "No room data"}`);
+      }
+
+      // Redirect to the new host page
+      router.push(`/host/${newRoomCode}`);
+    } catch (error) {
+      console.error("Failed to create new session:", error);
+      setLoadingError(t("errorMessages.createNewSessionFailed"));
+    } finally {
+      setIsCreatingNewSession(false);
     }
-
-    router.push(`/host/${newRoomCode}`);
-  } catch (error) {
-    console.error("Gagal membuat sesi baru:", error);
-    setLoadingError("Gagal membuat sesi baru. Silakan coba lagi.");
-  } finally {
-    setIsCreatingNewSession(false);
-  }
-}, [gameRoom, router, generateRoomCode]);
+  }, [gameRoom, router, generateRoomCode, t]);
 
   const fetchGameData = useCallback(async () => {
     if (!roomCode) {
-      setLoadingError("Kode ruangan tidak valid");
+      setLoadingError(t("errorMessages.invalidRoomCode"));
       setIsLoading(false);
       return;
     }
@@ -216,11 +216,12 @@ const handlePlayAgain = useCallback(async () => {
       setIsLoading(true);
       const { data: room, error: roomError } = await supabase
         .from("game_rooms")
-        .select("*, questions")
+        .select("*, questions, host_id") // Added host_id to the select query
         .eq("room_code", roomCode.toUpperCase())
         .single();
 
-      if (roomError || !room) throw new Error("Ruangan tidak ditemukan");
+      if (roomError || !room) throw new Error(t("errorMessages.roomNotFound"));
+
       setGameRoom(room);
 
       const { data: playersData, error: playersError } = await supabase
@@ -228,7 +229,7 @@ const handlePlayAgain = useCallback(async () => {
         .select("*")
         .eq("room_id", room.id);
 
-      if (playersError) throw new Error("Gagal mengambil data pemain");
+      if (playersError) throw new Error(t("errorMessages.fetchPlayersFailed"));
 
       const { data: completionData, error: completionError } = await supabase
         .from("game_completions")
@@ -322,12 +323,12 @@ const handlePlayAgain = useCallback(async () => {
 
       setTimeout(() => setShowContent(true), 1000);
     } catch (error) {
-      console.error("Gagal mengambil data:", error);
-      setLoadingError("Gagal memuat hasil permainan. Silakan coba lagi.");
+      console.error("Failed to fetch data:", error);
+      setLoadingError(t("errorMessages.fetchGameDataFailed"));
     } finally {
       setIsLoading(false);
     }
-  }, [roomCode, calculateAccurateDuration, formatDuration]);
+  }, [roomCode, calculateAccurateDuration, formatDuration, t]);
 
   useEffect(() => {
     fetchGameData();
@@ -371,7 +372,7 @@ const handlePlayAgain = useCallback(async () => {
           >
             <Ghost className="w-10 h-10" />
           </motion.div>
-          <span>Loading...</span>
+          <span>{t("loading")}</span>
         </motion.div>
       </div>
     );
@@ -394,7 +395,7 @@ const handlePlayAgain = useCallback(async () => {
             onClick={() => window.location.reload()}
             className="bg-red-800 text-white font-mono py-3 px-8 border-2 border-red-600 rounded-lg"
           >
-            Try Again...
+            {t("tryAgain")}
           </motion.button>
         </motion.div>
       </div>
@@ -477,9 +478,7 @@ const handlePlayAgain = useCallback(async () => {
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
           className="flex flex-col gap-4 mb-10 px-4"
         >
-          {/* Baris 1: kiri + kanan */}
           <div className="flex justify-between items-start">
-            {/* Pojok kiri: Title */}
             <h1
               className="text-3xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
@@ -487,7 +486,6 @@ const handlePlayAgain = useCallback(async () => {
               {t("title")}
             </h1>
 
-            {/* Pojok kanan: Buttons */}
             <div className="flex gap-4">
               <motion.button
                 onClick={() => router.push("/")}
@@ -518,7 +516,6 @@ const handlePlayAgain = useCallback(async () => {
             </div>
           </div>
 
-          {/* Baris 2: Tengah Leaderboard */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -536,7 +533,6 @@ const handlePlayAgain = useCallback(async () => {
             <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
           </motion.div>
         </motion.header>
-
 
         <motion.section
           initial={{ opacity: 0, y: 50 }}
@@ -641,7 +637,7 @@ const handlePlayAgain = useCallback(async () => {
                             className={`flex-1 px-3 py-2 rounded-lg border text-center font-bold text-base shadow-[0_0_12px_rgba(0,0,0,0.7)] ${
                               player.isLolos
                                 ? "bg-gradient-to-r from-green-600 to-green-700 text-red-300 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]"
-                                : "bg-gradient-to-r from-red-600 to-red-700 text-white-300   border-red-500 shadow-[inset_0_1px_6px_rgba(0,0,0,0.7)]"
+                                : "bg-gradient-to-r from-red-600 to-red-700 text-white-300 border-red-500 shadow-[inset_0_1px_6px_rgba(0,0,0,0.7)]"
                             }`}
                           >
                             {player.isLolos ? t("pass") : t("fail")}
