@@ -77,7 +77,7 @@ export default function ZombieFeedback({ isCorrect, isVisible }: ZombieFeedbackP
               }}
             >
               <Image
-                src="character/chaser/zombie.gif"
+                src="/character/chaser/zombie.gif"
                 alt="Zombie Pengejar"
                 width={80}
                 height={80}
