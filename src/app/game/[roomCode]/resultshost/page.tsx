@@ -475,59 +475,68 @@ const handlePlayAgain = useCallback(async () => {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
-          className="flex justify-between items-start mb-10"
+          className="flex flex-col gap-4 mb-10 px-4"
         >
-          {/* Pojok kiri atas: Title tanpa blink dan heart */}
-          <h1
-            className="text-3xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] px-5"
-            style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-          >
-            {t("title")}
-          </h1>
+          {/* Baris 1: kiri + kanan */}
+          <div className="flex justify-between items-start">
+            {/* Pojok kiri: Title */}
+            <h1
+              className="text-3xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+              style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+            >
+              {t("title")}
+            </h1>
 
-          {/* Tengah atas: Leaderboard dengan blink dan heart */}
-          <div className="flex items-center justify-center py-4 pt-10">
+            {/* Pojok kanan: Buttons */}
+            <div className="flex gap-4">
+              <motion.button
+                onClick={() => router.push("/")}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(239, 68, 68, 0.8)" }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-red-800 text-white font-mono py-3 px-6 text-sm md:text-base uppercase border-2 border-red-600 rounded-lg"
+              >
+                {t("homeButton")}
+              </motion.button>
+              <motion.button
+                onClick={handlePlayAgain}
+                disabled={isCreatingNewSession}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(239, 68, 68, 0.9)" }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white font-mono py-3 px-6 text-sm md:text-base uppercase border-2 border-red-600 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCreatingNewSession ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-4 h-4 mr-2 inline-block"
+                  >
+                    <Zap className="w-4 h-4" />
+                  </motion.div>
+                ) : null}
+                {isCreatingNewSession ? t("creatingSession") : t("playAgain")}
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Baris 2: Tengah Leaderboard */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
+            className="flex justify-center items-center text-center"
+          >
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-5xl md:text-8xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"}
-                drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-5xl md:text-8xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
+                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.titleLeaderboard")}
             </h1>
             <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
-          </div>
-
-          {/* Pojok kanan atas: Buttons home dan main lagi */}
-          <div className="flex justify-center gap-4">
-            <motion.button
-              onClick={() => router.push("/")}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(239, 68, 68, 0.8)" }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-red-800 text-white font-mono py-3 px-8 text-base uppercase border-2 border-red-600 rounded-lg"
-            >
-              {t("homeButton")}
-            </motion.button>
-            <motion.button
-              onClick={handlePlayAgain}
-              disabled={isCreatingNewSession}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(239, 68, 68, 0.9)" }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white font-mono py-3 px-8 text-base uppercase border-2 border-red-600 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCreatingNewSession ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-4 h-4 mr-2 inline-block"
-                >
-                  <Zap className="w-4 h-4" />
-                </motion.div>
-              ) : null}
-              {isCreatingNewSession ? t("creatingSession") : t("playAgain")}
-            </motion.button>
-          </div>
+          </motion.div>
         </motion.header>
+
 
         <motion.section
           initial={{ opacity: 0, y: 50 }}
