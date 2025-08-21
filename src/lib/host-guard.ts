@@ -12,7 +12,7 @@ export function useHostGuard(roomCode: string) {
 
     const hostId = sessionStorage.getItem("currentHostId");
     if (!hostId) {
-      router.replace(`/game/${roomCode}/lobby`);
+      router.replace(`/`);
       return;
     }
 
@@ -24,7 +24,7 @@ export function useHostGuard(roomCode: string) {
         .single();
 
       if (error || !room || room.host_id !== hostId) {
-        router.replace(`/game/${roomCode}/lobby`);
+        router.replace(`/`);
       }
     })();
   }, [roomCode, router]);
