@@ -3,11 +3,11 @@
 
 // Mengimpor dependensi yang diperlukan
 import { useState, useEffect } from "react";
-import { Users, Skull, Zap, Play, Ghost, Bone, HeartPulse } from "lucide-react";
+import { Users, Skull, Zap, Play, Ghost, Bone, HeartPulse, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import SoulStatus from "./SoulStatus";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -64,14 +64,16 @@ export default function LobbyPhase({
   const [flickerText, setFlickerText] = useState(true)
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([])
   const [atmosphereText, setAtmosphereText] = useState(() => {
-  const texts = t("atmosphereTexts", { returnObjects: true }) as string[];
-  return texts[0];
-});
+    const texts = t("atmosphereTexts", { returnObjects: true }) as string[];
+    return texts[0];
+  });
   const [countdown, setCountdown] = useState<number | null>(null)
   const [room, setRoom] = useState<any>(null)
   const [isCharacterDialogOpen, setIsCharacterDialogOpen] = useState(false)
   const [selectedCharacter, setSelectedCharacter] = useState(currentPlayer.character_type || "robot1")
   const router = useRouter()
+  const [isExitDialogOpen, setIsExitDialogOpen] = useState(false)
+
 
   // Teks atmosfer untuk menciptakan suasana
   const atmosphereTexts = t("atmosphereTexts", { returnObjects: true }) as string[];
@@ -143,74 +145,46 @@ export default function LobbyPhase({
 
   // Langganan real-time untuk pembaruan ruangan
   useEffect(() => {
-  if (!currentPlayer.room_id) return;
-
-  const channel = supabase
-    .channel(`lobby_${currentPlayer.room_id}`)
-    // listener UPDATE ruangan (sudah ada)
-    .on(
-      "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "game_rooms", filter: `id=eq.${currentPlayer.room_id}` },
-      (payload) => {
-        setRoom(payload.new);
-      }
-    )
-    // listener DELETE untuk diri sendiri (baru)
-    .on(
-      "postgres_changes",
-      { event: "DELETE", schema: "public", table: "players", filter: `id=eq.${currentPlayer.id}` },
-      () => {
-        router.replace("/?kicked=1");
-      }
-    )
-    .subscribe((status, err) => {
-      if (status === "SUBSCRIBED") {
-        console.log("Lobby subscribed");
-      } else if (status === "CHANNEL_ERROR") {
-        console.error("Lobby channel error:", err);
-      }
-    });
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [currentPlayer.room_id, currentPlayer.id, router]);
-
-  // Langganan real-time untuk mendeteksi kick pada pemain
-  useEffect(() => {
-    if (!currentPlayer.room_id) {
-      console.warn("⚠️ LobbyPhase: Tidak ada room_id untuk langganan pemain real-time");
-      return;
-    }
-
-    console.log("🔗 LobbyPhase: Menyiapkan langganan real-time untuk pemain di room_id:", currentPlayer.room_id);
+    if (!currentPlayer.room_id) return;
 
     const channel = supabase
-      .channel(`players_${currentPlayer.room_id}`)
+      .channel(`lobby_${currentPlayer.room_id}`)
+      // listener UPDATE ruangan (sudah ada)
       .on(
         "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "players",
-          filter: `id=eq.${currentPlayer.id}`,
-        },
+        { event: "UPDATE", schema: "public", table: "game_rooms", filter: `id=eq.${currentPlayer.room_id}` },
         (payload) => {
-          console.log("📡 LobbyPhase: Pemain dihapus:", payload);
-          // Arahkan pemain ke halaman utama jika mereka dikick
-          router.push("/");
-          alert(t("kickedFromRoom"));
+          setRoom(payload.new);
+        }
+      )
+      // listener DELETE untuk diri sendiri (baru)
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "players", filter: `id=eq.${currentPlayer.id}` },
+        () => {
+          const exited = localStorage.getItem("exitBySelf")
+          if (exited === "1") {
+            localStorage.removeItem("exitBySelf")
+            console.log("Kamu keluar sendiri")
+            // tidak perlu redirect ke /?kicked=1
+          } else {
+            console.log("Kamu di-kick host")
+            router.replace("/?kicked=1")
+          }
         }
       )
       .subscribe((status, err) => {
-        console.log("📡 LobbyPhase: Status langganan pemain:", status, err ? err.message : "");
+        if (status === "SUBSCRIBED") {
+          console.log("Lobby subscribed");
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("Lobby channel error:", err);
+        }
       });
 
     return () => {
-      console.log("🔌 LobbyPhase: Membersihkan langganan pemain");
       supabase.removeChannel(channel);
     };
-  }, [currentPlayer.room_id, currentPlayer.id, router, t]);
+  }, [currentPlayer.room_id, currentPlayer.id, router]);
 
   // Menghasilkan efek tetesan darah
   useEffect(() => {
@@ -265,7 +239,7 @@ export default function LobbyPhase({
 
       if (error) {
         console.error("❌ LobbyPhase: Gagal memperbarui karakter:", error)
-        setSelectedCharacter(previousCharacter); 
+        setSelectedCharacter(previousCharacter);
         alert("Gagal memperbarui karakter: " + error.message)
         return
       }
@@ -302,6 +276,25 @@ export default function LobbyPhase({
       console.error("Gagal memulai countdown:", error)
     }
   }
+
+  // fungsi helper keluar lobby
+  const handleExitLobby = async () => {
+    try {
+      // kasih tanda kalau keluar sendiri
+      localStorage.setItem("exitBySelf", "1")
+
+      // hapus dari tabel
+      await supabase.from("players").delete().eq("id", currentPlayer.id)
+
+      // balik ke homepage
+      router.replace("/")
+    } catch (err) {
+      console.error("Gagal keluar lobby:", err)
+    } finally {
+      setIsExitDialogOpen(false)
+    }
+  }
+
 
   const sortedPlayers = [...players].sort((a, b) => {
     if (a.id === currentPlayer.id) return -1
@@ -385,31 +378,41 @@ export default function LobbyPhase({
       </div>
 
       {countdown !== null && countdown > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black flex items-center justify-center z-50"
+        >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black flex items-center justify-center z-50"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+            className="text-[20rem] md:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
           >
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-              className="text-[20rem] md:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
-            >
-              {countdown}
-            </motion.div>
+            {countdown}
           </motion.div>
-        )}
+        </motion.div>
+      )}
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Header */}
+        <div className="fixed top-4 left-4 z-30">
+          <Button
+            onClick={() => setIsExitDialogOpen(true)}
+            variant="ghost"
+            size="icon"
+            className="bg-red-600/80 hover:bg-red-700 text-white rounded-lg p-2 shadow-lg"
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
+        </div>
+
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-6">
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${
-                flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
-              } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
+                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("lobby")}
@@ -461,7 +464,7 @@ export default function LobbyPhase({
             <Users className="w-6 h-6" />
             <span className="tracking-wider">{players.length} {t("cursedSouls")}</span>
             <Zap className="w-6 h-6 animate-pulse" />
-          </div>  
+          </div>
         </div>
 
         {/* Tombol Pilih Karakter */}
@@ -508,10 +511,9 @@ export default function LobbyPhase({
                     onClick={() => handleCharacterSelect(character.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleCharacterSelect(character.value)}
                     className={`relative flex flex-col items-center p-3 sm:p-4 rounded-lg cursor-pointer transition-all duration-300
-                      ${
-                        selectedCharacter === character.value
-                          ? "border-2 border-red-500 shadow-[0_0_10px_rgba(255,0,0,0.7)] bg-red-900/30"
-                          : "border border-white/20 bg-white/10 hover:bg-red-500/20 hover:shadow-[0_0_8px_rgba(255,0,0,0.5)]"
+                      ${selectedCharacter === character.value
+                        ? "border-2 border-red-500 shadow-[0_0_10px_rgba(255,0,0,0.7)] bg-red-900/30"
+                        : "border border-white/20 bg-white/10 hover:bg-red-500/20 hover:shadow-[0_0_8px_rgba(255,0,0,0.5)]"
                       }
                       hover:scale-105`}
                   >
@@ -536,6 +538,31 @@ export default function LobbyPhase({
           </DialogContent>
         </Dialog>
       </div>
+      <Dialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>
+        <DialogContent className="bg-black/95 border border-red-600/70 text-red-400 rounded-xl shadow-[0_0_30px_rgba(255,0,0,0.4)]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-red-500">
+              {t("exitConfirm")}
+            </DialogTitle>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end space-x-2">
+            <Button
+              variant="ghost"
+              onClick={() => setIsExitDialogOpen(false)}
+              className="text-gray-400 hover:text-red-400 hover:bg-red-950/40"
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              onClick={handleExitLobby}
+              className="bg-red-600 hover:bg-red-700 text-white shadow-[0_0_10px_rgba(255,0,0,0.6)]"
+            >
+              {t("exit")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <style jsx global>{`
         @keyframes fall {

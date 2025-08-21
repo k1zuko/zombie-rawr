@@ -190,5 +190,8 @@
 
   "inviteToPlay": "Undang untuk Bermain",
   "joinLink": "Tautan Bergabung",
-  "notHost": "Kamu bukan host. Dialihkan ke beranda."
+  "notHost": "Kamu bukan host. Dialihkan ke beranda.",
+  "exitConfirm": "Yakin ingin keluar?",
+  "cancel": "Batal",
+  "exit": "Keluar"
 }

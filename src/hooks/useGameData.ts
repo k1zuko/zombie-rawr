@@ -263,22 +263,27 @@ export function useGameData(roomCode: string | undefined, nickname: string | nul
       .subscribe()
 
     // Subscribe to players changes
-    const playersChannel = supabase
-      .channel(`players-${room.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "players",
-          filter: `room_id=eq.${room.id}`,
-        },
-        (payload) => {
-          console.log("Players updated:", payload)
-          loadGameData()
-        },
-      )
-      .subscribe()
+    // Subscribe to players changes
+const playersChannel = supabase
+  .channel(`players-${room.id}`)
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "players",
+      filter: `room_id=eq.${room.id}`,
+    },
+    (payload) => {
+      console.log("Players updated:", payload);
+      if (payload.eventType === "DELETE" && payload.old?.id) {
+        setPlayers((prev) => prev.filter((p) => p.id !== payload.old.id));
+      } else {
+        loadGameData();
+      }
+    },
+  )
+  .subscribe();
 
     // Subscribe to player answers for realtime feedback
     const answersChannel = supabase
