@@ -196,5 +196,6 @@
 
   "kickPlayerConfirm": "Are you sure you want to kick {{nickname}}?",
   "kickPlayerSuccess": "{{nickname}} has been kicked",
-  "kickPlayerError": "Failed to kick player"
+  "kickPlayerError": "Failed to kick player",
+  "notHost": "Not a host. Redirected home."
 }

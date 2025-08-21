@@ -189,5 +189,6 @@
 
 
   "inviteToPlay": "Undang untuk Bermain",
-  "joinLink": "Tautan Bergabung"
+  "joinLink": "Tautan Bergabung",
+  "notHost": "Kamu bukan host. Dialihkan ke beranda."
 }

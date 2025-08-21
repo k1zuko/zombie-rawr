@@ -143,6 +143,11 @@ export default function HomePage() {
       toast.error(t("youWereKicked"));
       window.history.replaceState(null, "", "/");
     }
+
+    if (searchParams.get("isHost") === "0") {
+      toast.error(t("notHost"));
+      window.history.replaceState(null, "", "/");
+    }
   }, [searchParams, i18n.language]);
 
   // Set client-side flag
