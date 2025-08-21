@@ -183,7 +183,7 @@
   },
   "playAgain": "Play Again",
   "creatingSession": "Creating Session...",
-  "youWereKicked": "You have been kicked from the room."
+  "youWereKicked": "You have been kicked from the room.",
   "inviteMessage": "Join the thrilling QuizRush game! Use code: {{roomCode}} or click here: {{joinLink}}",
 
 

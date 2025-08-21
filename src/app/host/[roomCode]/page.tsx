@@ -281,6 +281,7 @@ export default function HostPage() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
   const copyRoomCode1 = async () => {
     if (typeof window === "undefined") return;
 
@@ -294,20 +295,6 @@ export default function HostPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const copyRoomCode1 = async () => {
-  if (typeof window === "undefined") return;
-
-  const joinLink = `${window.location.origin}/?code=${roomCode}`;
-  const inviteMessage = t("inviteMessage", {
-    roomCode: roomCode,
-    joinLink: joinLink,
-  });
-
-  await navigator.clipboard.writeText(inviteMessage);
-  setCopied(true);
-  setTimeout(() => setCopied(false), 2000);
-};
 
   const startGame = async () => {
     if (!room || players.length === 0) {
@@ -571,76 +558,76 @@ export default function HostPage() {
             className="inline-flex items-center gap-4 bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
 
           >
-            
-<Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
-  <DialogTrigger asChild>
-    <motion.div
-      className="w-36 h-16 md:w-24 md:h-24 border bg-white border-red-900/50 rounded overflow-hidden p-1 cursor-pointer hover:scale-105 transition-transform"
-      title="Klik untuk memperbesar QR"
-    >
-      <QRCode
-        value={`${window.location.origin}/?code=${roomCode}`}
-        size={256}
-        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-        viewBox={`0 0 256 256`}
-      />
-    </motion.div>
-  </DialogTrigger>
 
-<DialogContent
-  className="w-[95vw] max-w-6xl h-[90vh] 
+            <Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
+              <DialogTrigger asChild>
+                <motion.div
+                  className="w-36 h-16 md:w-24 md:h-24 border bg-white border-red-900/50 rounded overflow-hidden p-1 cursor-pointer hover:scale-105 transition-transform"
+                  title="Klik untuk memperbesar QR"
+                >
+                  <QRCode
+                    value={`${window.location.origin}/?code=${roomCode}`}
+                    size={256}
+                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                    viewBox={`0 0 256 256`}
+                  />
+                </motion.div>
+              </DialogTrigger>
+
+              <DialogContent
+                className="w-[95vw] max-w-6xl h-[90vh] 
              bg-black/95 text-white 
              border border-red-500/50 
              rounded-3xl p-10 
              shadow-[0_0_50px_rgba(255,0,0,0.6)] 
              flex flex-col items-center gap-10 overflow-auto"
->
-  {/* Header */}
-  <DialogHeader>
-    <DialogTitle className="text-4xl text-center font-bold text-red-400 font-mono tracking-widest drop-shadow-[0_0_12px_rgba(255,0,0,0.7)]">
-      {t("inviteToPlay")}
-    </DialogTitle>
-  </DialogHeader>
+              >
+                {/* Header */}
+                <DialogHeader>
+                  <DialogTitle className="text-4xl text-center font-bold text-red-400 font-mono tracking-widest drop-shadow-[0_0_12px_rgba(255,0,0,0.7)]">
+                    {t("inviteToPlay")}
+                  </DialogTitle>
+                </DialogHeader>
 
-  {/* QR dalam dialog */}
-  <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-xl flex items-center justify-center">
-    <QRCode
-      value={`${window.location.origin}/?code=${roomCode}`}
-      size={340}
-      style={{ height: "auto", width: "100%" }}
-    />
-  </div>
+                {/* QR dalam dialog */}
+                <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-xl flex items-center justify-center">
+                  <QRCode
+                    value={`${window.location.origin}/?code=${roomCode}`}
+                    size={340}
+                    style={{ height: "auto", width: "100%" }}
+                  />
+                </div>
 
-  {/* Link join */}
-  <div className="flex items-center w-full max-w-3xl bg-black/50 p-6 rounded-2xl border border-red-500/30">
-    <div className="flex-grow text-center">
-      <div className="text-red-400 font-mono mb-1">{t("joinLink")}</div>
-      <div className="text-sm font-mono font-bold text-red-500 tracking-widest break-words">
-        {`${window.location.origin}/?code=${roomCode}`}
-      </div>
-    </div>
-    <Button
-      variant="ghost"
-      size="lg"
-      onClick={copyRoomCode}
-      className="ml-4 text-red-400 hover:bg-red-500/20 hover:shadow-[0_0_20px_rgba(255,0,0,0.6)] rounded-xl p-4 transition-all"
-      aria-label="Salin tautan game"
-    >
-      <motion.div
-        key={copied ? "check" : "copy"}
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 400, damping: 15 }}
-      >
-        {copied ? <Check className="w-8 h-8" /> : <Copy className="w-8 h-8" />}
-      </motion.div>
-    </Button>
-  </div>
-</DialogContent>
+                {/* Link join */}
+                <div className="flex items-center w-full max-w-3xl bg-black/50 p-6 rounded-2xl border border-red-500/30">
+                  <div className="flex-grow text-center">
+                    <div className="text-red-400 font-mono mb-1">{t("joinLink")}</div>
+                    <div className="text-sm font-mono font-bold text-red-500 tracking-widest break-words">
+                      {`${window.location.origin}/?code=${roomCode}`}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={copyRoomCode1}
+                    className="ml-4 text-red-400 hover:bg-red-500/20 hover:shadow-[0_0_20px_rgba(255,0,0,0.6)] rounded-xl p-4 transition-all"
+                    aria-label="Salin tautan game"
+                  >
+                    <motion.div
+                      key={copied ? "check" : "copy"}
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                    >
+                      {copied ? <Check className="w-8 h-8" /> : <Copy className="w-8 h-8" />}
+                    </motion.div>
+                  </Button>
+                </div>
+              </DialogContent>
 
 
-</Dialog>
-            
+            </Dialog>
+
             <div className="text-center">
               <div className="text-red-400 text-sm font-mono">{t("roomCode")}</div>
               <div className="text-2xl md:text-3xl font-mono font-bold text-red-500 tracking-wider">{roomCode}</div>
