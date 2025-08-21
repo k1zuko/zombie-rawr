@@ -599,9 +599,14 @@ export default function HostPage() {
                 </div>
 
                 {/* Link join */}
+                            <div className="text-center">
+              
+              <div className="text-2xl md:text-6xl font-mono font-bold text-red-500 tracking-wider">{roomCode}</div>
+            </div>
                 <div className="flex items-center w-full max-w-3xl bg-black/50 p-6 rounded-2xl border border-red-500/30">
                   <div className="flex-grow text-center">
-                    <div className="text-red-400 font-mono mb-1">{t("joinLink")}</div>
+                    
+                    <div className="text-red-400 font-mono mb-1"></div>
                     <div className="text-sm font-mono font-bold text-red-500 tracking-widest break-words">
                       {`${window.location.origin}/?code=${roomCode}`}
                     </div>
