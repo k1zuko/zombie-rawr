@@ -875,36 +875,31 @@ export default function HostPage() {
           </Button>
         </motion.div>
       </div>
-<Dialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
-  <DialogContent className="bg-black/95 border border-red-500/50 text-red-400 p-0 overflow-hidden" >
-    <div className="p-6">
-      <DialogHeader className="text-left mb-6">
-        <DialogTitle className="text-lg font-medium">
-          {t("kickPlayerConfirm", { nickname: selectedPlayer?.nickname })}
-        </DialogTitle>
-      </DialogHeader>
-    </div>
-    
-    <DialogFooter className="bg-gray-900/50 p-4 border-t border-gray-800">
-      <div className="flex gap-3 w-full">
-        <Button 
-          variant="ghost" 
-          className="flex-1 justify-start bg-gray-800 hover:bg-gray-700 text-gray-300"
-          onClick={() => setKickDialogOpen(false)}
-        >
-          {t("cancel")}
-        </Button>
-        <Button 
-          variant="destructive" 
-          className="flex-1 justify-start bg-red-600 hover:bg-red-700"
-          onClick={confirmKickPlayer}
-        >
-          {t("confirm")}
-        </Button>
-      </div>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+      <Dialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
+        <DialogContent className="bg-black/95 border border-red-600/70 text-red-400 rounded-xl shadow-[0_0_30px_rgba(255,0,0,0.4)]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-red-500">
+              {t("kickPlayerConfirm", { nickname: selectedPlayer?.nickname })}
+            </DialogTitle>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end space-x-2">
+            <Button
+              variant="ghost"
+              onClick={() => setKickDialogOpen(false)}
+              className="text-gray-400 hover:text-red-400 hover:bg-red-950/40"
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              onClick={confirmKickPlayer}
+              className="bg-red-600 hover:bg-red-700 text-white shadow-[0_0_10px_rgba(255,0,0,0.6)]"
+            >
+              {t("confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Toaster position="top-right" toastOptions={{ style: { background: "#1a0000", color: "#ff4444", border: "1px solid #ff0000" } }} />
 
       <style jsx global>{`

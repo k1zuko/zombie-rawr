@@ -193,5 +193,6 @@
   "notHost": "Kamu bukan host. Dialihkan ke beranda.",
   "exitConfirm": "Yakin ingin keluar?",
   "cancel": "Batal",
-  "exit": "Keluar"
+  "exit": "Keluar",
+  "confirm": "Konfirmasi"
 }
