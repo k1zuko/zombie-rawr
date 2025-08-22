@@ -200,5 +200,6 @@
   "notHost": "Not a host. Redirected home.",
   "exitConfirm": "Are you sure you want to leave?",
   "cancel": "Cancel",
-  "exit": "Exit"
+  "exit": "Exit",
+  "confirm": "Confirm"
 }
