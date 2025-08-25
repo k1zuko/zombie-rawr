@@ -61,7 +61,7 @@ export default function BackgroundEffects({
         </div>
       )}
       <div className="absolute bottom-0 left-0 right-0 z-25">
-        {[...Array(4)].map((_, i) => (
+        {/* {[...Array(4)].map((_, i) => (
           <div
             key={`ground-fog-${i}`}
             className="absolute bottom-0 opacity-40"
@@ -83,8 +83,8 @@ export default function BackgroundEffects({
               }}
             />
           </div>
-        ))}
-        {[...Array(3)].map((_, i) => (
+        ))} */}
+        {/* {[...Array(3)].map((_, i) => (
           <div
             key={`volume-fog-${i}`}
             className="absolute opacity-30"
@@ -109,7 +109,7 @@ export default function BackgroundEffects({
               }}
             />
           </div>
-        ))}
+        ))} */}
       </div>
       <div className="absolute bottom-16 left-0 right-0 z-25">
         {[...Array(gameMode === "panic" ? 25 : 10)].map((_, i) => (
