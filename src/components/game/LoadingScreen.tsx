@@ -83,7 +83,7 @@ export default function LoadingScreen() {
         </div>
 
         {/* Atmospheric text */}
-        <p className="text-gray-400 text-sm font-mono tracking-wide animate-pulse">Summoning dark forces...</p>
+        <p className="text-gray-400 text-sm font-mono tracking-wide animate-pulse"> forces...</p>
       </div>
 
       {/* Corner decorations */}

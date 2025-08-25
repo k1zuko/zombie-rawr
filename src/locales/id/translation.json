@@ -194,5 +194,10 @@
   "exitConfirm": "Yakin ingin keluar?",
   "cancel": "Batal",
   "exit": "Keluar",
-  "confirm": "Konfirmasi"
+  "confirm": "Konfirmasi",
+
+  "durationTooltip": "Pilih berapa lama permainan berlangsung",
+  "durationError": "Durasi harus antara 1 dan 30 menit!",
+  "minutes": "menit",
+  "generateNickname":"Buat nama acak"
 }

@@ -6,7 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skull, Bone, HeartPulse, Ghost, Zap, Clock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
@@ -36,7 +37,8 @@ export default function CharacterSelectPage() {
 
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [gameDuration, setGameDuration] = useState<string>("10");
+  const [gameDuration, setGameDuration] = useState<number>(10);
+  const [durationError, setDurationError] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(20);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [userSetQuestionCount, setUserSetQuestionCount] = useState(false);
@@ -49,7 +51,7 @@ export default function CharacterSelectPage() {
   });
   const [selectedChaser, setSelectedChaser] = useState<typeof chaserOptions[number] | null>(null);
 
-  useHostGuard(roomCode)
+  useHostGuard(roomCode);
 
   const chaserOptions = [
     {
@@ -91,7 +93,7 @@ export default function CharacterSelectPage() {
 
   const handleQuestionCountChange = (value: string) => {
     setQuestionCount(Number(value));
-    setUserSetQuestionCount(true); // tandai user udah pilih manual
+    setUserSetQuestionCount(true);
   };
 
   const questionOptions = useMemo(() => {
@@ -101,6 +103,21 @@ export default function CharacterSelectPage() {
     }
     return opts;
   }, [totalQuestions]);
+
+  const handleDurationChange = (value: number[]) => {
+    const newValue = value[0];
+    if (newValue < 1 || newValue > 30) {
+      setDurationError(t("durationError"));
+      return;
+    }
+    setDurationError(null);
+    setGameDuration(newValue);
+
+    // Optional: Mainkan sound subtle saat ubah
+    const selectSound = new Audio("/sounds/select.mp3");
+    selectSound.volume = 0.3;
+    selectSound.play().catch((e) => console.log("Sound play prevented:", e));
+  };
 
   useEffect(() => {
     setSounds({
@@ -132,7 +149,7 @@ export default function CharacterSelectPage() {
 
         const fetchedChaserType = validChaserTypes.includes(data.chaser_type) ? data.chaser_type : "zombie";
         setRoom({ ...data, chaser_type: fetchedChaserType });
-        setGameDuration((data.duration ? data.duration / 60 : 10).toString());
+        setGameDuration(data.duration ? data.duration / 60 : 10);
         setQuestionCount(data.question_count ?? 20);
         setChaserType(fetchedChaserType);
 
@@ -143,7 +160,7 @@ export default function CharacterSelectPage() {
 
         if (questionsError) {
           console.error("Error fetching questions count:", questionsError);
-          setTotalQuestions(20); // Fallback
+          setTotalQuestions(20);
         } else {
           const total = questionsCount || 20;
           setTotalQuestions(total);
@@ -212,7 +229,11 @@ export default function CharacterSelectPage() {
     if (!room) return;
 
     const validatedChaserType = validChaserTypes.includes(chaserType) ? chaserType : "zombie";
-    const durationInSeconds = parseInt(gameDuration) * 60;
+    const durationInSeconds = gameDuration * 60;
+    if (gameDuration < 1 || gameDuration > 30) {
+      setDurationError(t("durationError"));
+      return;
+    }
     try {
       const { error } = await supabase
         .from("game_rooms")
@@ -240,13 +261,6 @@ export default function CharacterSelectPage() {
     const selectSound = new Audio("/sounds/select.mp3");
     selectSound.volume = 0.6;
     selectSound.play().catch((e) => console.log("Sound play prevented:", e));
-  };
-
-  const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === "" || /^[0-9]+$/.test(value)) {
-      setGameDuration(value);
-    }
   };
 
   const changeLanguage = (lng: string) => {
@@ -341,23 +355,6 @@ export default function CharacterSelectPage() {
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwTDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBMNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
 
       <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
-        {/* <div className="fixed top-2 right-2 space-x-2 z-30">
-          <Button
-            variant="ghost"
-            onClick={() => changeLanguage("en")}
-            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "en" ? "bg-red-900/30" : ""}`}
-          >
-            EN
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => changeLanguage("id")}
-            className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "id" ? "bg-red-900/30" : ""}`}
-          >
-            ID
-          </Button>
-        </div> */}
-
         <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -394,37 +391,69 @@ export default function CharacterSelectPage() {
               </div>
 
               <div className="mb-6">
-                <Label htmlFor="duration" className="text-red-300 mb-2 block font-medium text-sm font-mono">
+                <Label htmlFor="duration" className="text-red-300 mb-2 block font-medium text-sm font-mono flex items-center">
                   {t("gameDurationLabel")}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Clock className="w-4 h-4 ml-2 text-red-500 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black/80 border-red-900 text-red-300">
+                      {t("durationTooltip")} (1-30 menit)
+                    </TooltipContent>
+                  </Tooltip>
                 </Label>
-                <Input
+                <Slider
                   id="duration"
-                  name="duration"
-                  type="number"
-                  min="1"
-                  value={gameDuration}
-                  onChange={handleDurationChange}
-                  className="bg-black/50 border-red-900/50 text-red-400 font-mono focus:border-red-400/50 focus:ring-red-400/20"
-                  placeholder={t("gameDurationPlaceholder")}
+                  min={1}
+                  max={30}
+                  step={1}
+                  value={[gameDuration]}
+                  onValueChange={handleDurationChange}
+                  className="w-full mb-4"
+                  aria-label={t("gameDurationLabel")}
                 />
+                <p className="text-red-400 font-mono text-sm">
+                  {gameDuration} {t("minutes")}
+                </p>
+                {durationError && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-red-500 text-xs mt-1 animate-pulse"
+                  >
+                    {durationError}
+                  </motion.p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="questionCount" className="text-red-300 mb-2 block font-medium text-sm font-mono">
+                <Label htmlFor="questionCount" className="text-red-300 mb-2 block font-medium text-sm font-mono flex items-center">
                   {t("questionCountLabel")}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Zap className="w-4 h-4 ml-2 text-red-500 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black/80 border-red-900 text-red-300">
+                      {t("questionTooltip")} (Max: {totalQuestions})
+                    </TooltipContent>
+                  </Tooltip>
                 </Label>
-                <Select value={questionCount.toString()} onValueChange={handleQuestionCountChange}>
-                  <SelectTrigger className="w-full bg-black/70 border-red-800/70 text-red-400 rounded-lg hover:bg-red-900/30 transition-colors font-mono">
-                    <SelectValue placeholder={t("selectQuestionCount")} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-black/95 text-red-400 border-red-800/50 rounded-lg font-mono backdrop-blur-sm">
-                    {questionOptions.map((opt) => (
-                      <SelectItem key={opt} value={opt.toString()}>
-                        {opt} {opt === totalQuestions ? `(${t("allLabel")})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Slider
+                  id="questionCount"
+                  min={5}
+                  max={totalQuestions}
+                  step={5}
+                  value={[questionCount]}
+                  onValueChange={(value) => setQuestionCount(value[0])}
+                  className="w-full"
+                  aria-label={t("questionCountLabel")}
+                />
+                <p className="text-red-400 font-mono text-sm mt-2">
+                  {questionCount} {t("questions")} {questionCount === totalQuestions ? `(${t("allLabel")})` : ""}
+                </p>
+                {questionCount > totalQuestions && (
+                  <p className="text-red-500 text-xs mt-1 animate-pulse">{t("questionError")}</p>
+                )}
               </div>
             </div>
 
@@ -576,6 +605,10 @@ export default function CharacterSelectPage() {
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(to bottom, #800000, #ff3030);
+        }
+        .slider [role="slider"] {
+          background: linear-gradient(to right, #ff0000, #600000);
+          box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
         }
       `}</style>
     </div>

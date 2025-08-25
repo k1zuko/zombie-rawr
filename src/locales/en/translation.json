@@ -201,5 +201,11 @@
   "exitConfirm": "Are you sure you want to leave?",
   "cancel": "Cancel",
   "exit": "Exit",
-  "confirm": "Confirm"
+  "confirm": "Confirm",
+
+"durationTooltip": "Select how long the game will last",
+"durationError": "Duration must be between 1 and 30 minutes!",
+"minutes": "minutes",
+"generateNickname":"Create random name"
+
 }
