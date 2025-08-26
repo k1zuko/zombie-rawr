@@ -232,10 +232,10 @@ const generateRandomNickname = useCallback(() => {
         .select("*", { count: "exact" })
         .eq("room_id", room.id);
 
-      if (count && count >= room.max_players) {
-        setErrorMessage(t("errorMessages.roomFull"));
-        return;
-      }
+      // if (count && count >= room.max_players) {
+      //   setErrorMessage(t("errorMessages.roomFull"));
+      //   return;
+      // }
 
       const { error: playerError } = await supabase.from("players").insert({
         room_id: room.id,

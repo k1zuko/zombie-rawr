@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse, Trash2 } from "lucide-react";
+import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse, Trash2, Maximize, Maximize2 } from "lucide-react";
 import { supabase, type Player } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -46,6 +46,7 @@ export default function HostPage() {
   const [room, setRoom] = useState<GameRoom | null>(null)
   const [players, setPlayers] = useState<Player[]>([])
   const [copied, setCopied] = useState(false)
+  const [copied1, setCopied1] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [connectionStatus, setConnectionStatus] = useState<"connected" | "connecting" | "disconnected">("connecting")
@@ -292,8 +293,8 @@ export default function HostPage() {
     });
 
     await navigator.clipboard.writeText(inviteMessage);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied1(true);
+    setTimeout(() => setCopied1(false), 2000);
   };
 
   const startGame = async () => {
@@ -412,7 +413,7 @@ export default function HostPage() {
       setCountdown(null)
     }
   }
-// 
+  // 
   useEffect(() => {
     syncServerTime()
   }, [])
@@ -533,14 +534,14 @@ export default function HostPage() {
         )}
       </AnimatePresence>
 
-      <div className={`relative z-10 container mx-auto px-4 py-4 max-w-6xl ${countdown !== null ? "hidden" : ""}`}>
+      <div className={`relative z-10 container mx-auto px-4 py-4 ${countdown !== null ? "hidden" : ""}`}>
         <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-8"
+          className="text-center m-6"
         >
-          <div className="flex items-center justify-center py-4 mb-6">
+          <div className="flex items-center justify-center py-4 mb-10">
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
               className={`text-5xl md:text-6xl font-bold font-mono tracking-widest transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
@@ -551,72 +552,73 @@ export default function HostPage() {
             </h1>
             <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
           </div>
+        </motion.div>
+        <div className="grid grid-cols-7 gap-7 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-1 col-span-2 gap-6"
+          >
+            <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+              <CardContent className="text-center">
+                <Users className="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2" />
+                <motion.div
+                  key={players.length}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                  className="text-2xl md:text-xl font-bold text-red-500 mb-1 font-mono"
+                >
+                  {players.length}
+                </motion.div>
+                <div className="text-red-400 text-sm font-mono">{t("players")}</div>
+              </CardContent>
+            </Card>
+            <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+              <CardContent className="text-center">
+                <Clock className="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2" />
+                <div className="text-xl font-bold text-red-500 mb-1 font-mono">
+                  {Math.floor((room.duration || 600) / 60)}:{((room.duration || 600) % 60).toString().padStart(2, "0")}
+                </div>
+                <div className="text-red-400 text-sm font-mono">{t("duration")}</div>
+              </CardContent>
+            </Card>
+            <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+              <CardContent className="text-center">
+                <Trophy className="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2" />
+                <div className="text-xl font-bold text-red-500 mb-1 font-mono">{room.question_count || 20}</div>
+                <div className="text-red-400 text-sm font-mono">{t("question")}</div>
+              </CardContent>
+            </Card>
+          </motion.div>
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="inline-flex items-center gap-4 bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-
+            className="flex items-center gap-6 bg-black/40 border border-red-900/50 rounded-lg p-6 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] col-span-5"
           >
-
-            <Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
-              <DialogTrigger asChild>
-                <motion.div
-                  className="w-36 h-16 md:w-24 md:h-24 border bg-white border-red-900/50 rounded overflow-hidden p-1 cursor-pointer hover:scale-105 transition-transform"
-                  title="Klik untuk memperbesar QR"
-                >
-                  <QRCode
-                    value={`${window.location.origin}/?code=${roomCode}`}
-                    size={256}
-                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                    viewBox={`0 0 256 256`}
-                  />
-                </motion.div>
-              </DialogTrigger>
-
-              <DialogContent
-                className="w-[95vw] max-w-6xl h-[90vh] 
-             bg-black/95 text-white 
-             border border-red-500/50 
-             rounded-3xl p-10 
-             shadow-[0_0_50px_rgba(255,0,0,0.6)] 
-             flex flex-col items-center gap-10 overflow-auto"
-              >
-                {/* Header */}
-                <DialogHeader>
-                  <DialogTitle className="text-4xl text-center font-bold text-red-400 font-mono tracking-widest drop-shadow-[0_0_12px_rgba(255,0,0,0.7)]">
-                    {t("inviteToPlay")}
-                  </DialogTitle>
-                </DialogHeader>
-
-                {/* QR dalam dialog */}
-                <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-xl flex items-center justify-center">
-                  <QRCode
-                    value={`${window.location.origin}/?code=${roomCode}`}
-                    size={340}
-                    style={{ height: "auto", width: "100%" }}
-                  />
-                </div>
-
-                {/* Link join */}
-                            <div className="text-center">
-              
-              <div className="text-2xl md:text-6xl font-mono font-bold text-red-500 tracking-wider">{roomCode}</div>
-            </div>
-                <div className="flex items-center w-full max-w-3xl bg-black/50 p-6 rounded-2xl border border-red-500/30">
-                  <div className="flex-grow text-center">
-                    
-                    <div className="text-red-400 font-mono mb-1"></div>
-                    <div className="text-sm font-mono font-bold text-red-500 tracking-widest break-words">
-                      {`${window.location.origin}/?code=${roomCode}`}
-                    </div>
-                  </div>
+            <motion.div
+              className="w-[50%] h-auto bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform"
+              title={t("qrHoverTitle")}
+            >
+              <QRCode
+                value={`${window.location.origin}/?code=${roomCode}`}
+                size={512}
+                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                viewBox={`0 0 512 512`}
+              />
+            </motion.div>
+            <div className="grid gap-8">
+              {/* big code box — copy di pojok kanan atas */}
+              <div className="relative w-full max-w-3xl bg-black/50 p-6 rounded-2xl border border-red-500/30">
+                {/* tombol copy fixed top-right */}
+                <div className="absolute top-3 right-3 z-20">
                   <Button
                     variant="ghost"
                     size="lg"
-                    onClick={copyRoomCode1}
-                    className="ml-4 text-red-400 hover:bg-red-500/20 hover:shadow-[0_0_20px_rgba(255,0,0,0.6)] rounded-xl p-4 transition-all"
-                    aria-label="Salin tautan game"
+                    onClick={copyRoomCode}
+                    className="text-red-400 hover:bg-red-500/20 hover:shadow-[0_0_20px_rgba(255,0,0,0.6)] rounded-xl p-3 pointer-events-auto"
+                    aria-label={t("copyCode")}
                   >
                     <motion.div
                       key={copied ? "check" : "copy"}
@@ -624,221 +626,243 @@ export default function HostPage() {
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 400, damping: 15 }}
                     >
-                      {copied ? <Check className="w-8 h-8" /> : <Copy className="w-8 h-8" />}
+                      {copied ? <Check className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
                     </motion.div>
                   </Button>
                 </div>
-              </DialogContent>
 
+                {/* konten tetap centered */}
+                <div className="flex flex-col items-center">
+                  <div className="text-red-400 font-mono mb-1">{t("roomCode")}</div>
+                  <div className="text-7xl font-mono font-bold text-red-500 tracking-widest break-words select-text">
+                    {roomCode}
+                  </div>
+                </div>
+              </div>
 
-            </Dialog>
+              {/* small join link box — copy di pojok kanan atas */}
+              <div className="relative w-full max-w-3xl bg-black/50 p-6 rounded-2xl border border-red-500/30">
+                <div className="absolute top-3 right-3 z-20">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={copyRoomCode1}
+                    className="text-red-400 hover:bg-red-500/20 rounded-lg p-2 pointer-events-auto"
+                    aria-label={t("copyInvite")}
+                  >
+                    <motion.div key={copied1 ? "check" : "copy"} initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                      {copied1 ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    </motion.div>
+                  </Button>
+                </div>
 
-            <div className="text-center">
-              <div className="text-red-400 text-sm font-mono">{t("roomCode")}</div>
-              <div className="text-2xl md:text-3xl font-mono font-bold text-red-500 tracking-wider">{roomCode}</div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={copyRoomCode}
-              className="text-red-400 hover:bg-red-500/20 rounded-xl"
-            >
-              <motion.div
-                key={copied ? "check" : "copy"}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-              >
-                {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              </motion.div>
-            </Button>
-            <div className="flex items-center gap-2">
-              <Wifi
-                className={`w-4 h-4 ${connectionStatus === "connected"
-                  ? "text-red-400"
-                  : connectionStatus === "connecting"
-                    ? "text-yellow-400"
-                    : "text-red-900"
-                  }`}
-              />
+                <div className="flex flex-col items-center">
+                  <div className="text-red-400 font-mono mb-1">{t("joinLink")}</div>
+                  <div className="text-base font-mono font-bold text-red-500 text-center break-words">
+                    {`${window.location.origin}/?code=${roomCode}`}
+                  </div>
+                </div>
+              </div>
+
+              {/* icons cluster — taruh di dalam parent .relative */}
+              <div className="flex items-center justify-center gap-5">
+                {/* Maximize (opens QR dialog) */}
+                <Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t("expandQr")}
+                      className="bg-black/60 text-red-400 hover:bg-red-700/20 border border-red-800/20 p-2 rounded-md"
+                    >
+                      <Maximize2 className="w-5 h-5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogTitle></DialogTitle>
+                  <DialogContent
+                    className="w-[100vw] max-w-7xl max-h-[85vh] bg-black/95 text-white border border-red-500/50 rounded-2xl p-6 shadow-[0_0_40px_rgba(255,0,0,0.6)]"
+                  >
+                    <div className="flex flex-col items-center gap-6 mt-4">
+                      <div className="bg-white rounded-lg p-3 shadow-lg w-full max-w-8xl flex items-center justify-center">
+                        <QRCode
+                          value={`${window.location.origin}/?code=${roomCode}`}
+                          size={680}
+                          style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="relative w-full max-w-3xl bg-black/50 p-6 rounded-2xl border border-red-500/30">
+                <div className="absolute top-3 right-3 z-20">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={copyRoomCode1}
+                    className="text-red-400 hover:bg-red-500/20 rounded-lg p-2 pointer-events-auto"
+                    aria-label={t("copyInvite")}
+                  >
+                    <motion.div key={copied ? "check" : "copy"} initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                      {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    </motion.div>
+                  </Button>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div className="text-red-400 font-mono mb-1">{t("joinLink")}</div>
+                  <div className="text-base font-mono font-bold text-red-500 text-center break-words">
+                    {`${window.location.origin}/?code=${roomCode}`}
+                  </div>
+                </div>
+              </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Wifi/status (informational) */}
+                <div
+                  className={`flex items-center justify-center w-9 h-9 rounded-md p-1 ${connectionStatus === "connected" ? "text-red-400" : connectionStatus === "connecting" ? "text-yellow-400" : "text-red-900"}`}
+                  title={connectionStatus}
+                  aria-hidden="true"
+                >
+                  <Wifi className="w-5 h-5" />
+                </div>
+              </div>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-3 gap-6 mb-8"
+          transition={{ delay: 0.4 }}
+          className="mb-12"
         >
           <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-            <CardContent className="text-center">
-              <Users className="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2" />
-              <motion.div
-                key={players.length}
-                initial={{ scale: 1.2 }}
-                animate={{ scale: 1 }}
-                className="text-2xl md:text-xl font-bold text-red-500 mb-1 font-mono"
-              >
-                {players.length}/{room.max_players}
-              </motion.div>
-              <div className="text-red-400 text-sm font-mono">{t("players")}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-            <CardContent className="text-center">
-              <Clock className="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2" />
-              <div className="text-xl font-bold text-red-500 mb-1 font-mono">
-                {Math.floor((room.duration || 600) / 60)}:{((room.duration || 600) % 60).toString().padStart(2, "0")}
-              </div>
-              <div className="text-red-400 text-sm font-mono">{t("duration")}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-            <CardContent className="text-center">
-              <Trophy className="w-6 h-6 md:w-8 md:h-8 text-red-500 mx-auto mb-2" />
-              <div className="text-xl font-bold text-red-500 mb-1 font-mono">{room.question_count || 20}</div>
-              <div className="text-red-400 text-sm font-mono">{t("question")}</div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-<motion.div
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.4 }}
-  className="mb-12"
->
-  <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-    <CardHeader>
-      <CardTitle className="text-red-500 text-xl md:text-2xl font-mono flex items-center gap-3">
-        <Users className="w-5 h-5 md:w-6 md:h-6" />
-        {t("players")}
-        <Badge variant="secondary" className="bg-red-900/50 text-red-400 font-mono">
-          {players.length} {t("online")}
-        </Badge>
-        {connectionStatus === "connected" && (
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-            className="w-2 h-2 bg-red-400 rounded-full"
-          />
-        )}
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <AnimatePresence mode="popLayout">
-        {players.length === 0 ? (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="text-center py-12"
-          >
-            <motion.div
-              animate={{
-                scale: [1, 1.1, 1],
-                opacity: [0.5, 1, 0.5],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "easeInOut",
-              }}
-            >
-              <Users className="w-12 h-12 md:w-16 md:h-16 text-red-900/50 mx-auto mb-4" />
-            </motion.div>
-            <p className="text-red-400 text-lg font-mono">{t("waitingHost")}</p>
-            <p className="text-red-400/80 text-sm font-mono">{t("shareCode")}</p>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="players"
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
-            layout
-            transition={{ layout: { duration: 0.3, type: "spring", stiffness: 100, damping: 20 } }}
-          >
-            <AnimatePresence>
-              {players.map((player, index) => {
-                const selectedCharacter = characterOptions.find(
-                  (char) => char.value === player.character_type
-                );
-
-                return (
+            <CardHeader>
+              <CardTitle className="text-red-500 text-xl md:text-2xl font-mono flex items-center gap-3">
+                <Users className="w-5 h-5 md:w-6 md:h-6" />
+                {t("players")}
+                <Badge variant="secondary" className="bg-red-900/50 text-red-400 font-mono">
+                  {players.length} {t("online")}
+                </Badge>
+                {connectionStatus === "connected" && (
                   <motion.div
-                    key={player.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{
-                      opacity: 0,
-                      scale: 0.5,
-                      x: Math.random() > 0.5 ? 200 : -200,
-                      rotate: Math.random() * 360,
-                      transition: { duration: 0.5, ease: "easeIn" },
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 30,
-                      delay: index * 0.05,
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    className="bg-black/40 border border-red-900/50 rounded-lg p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                    className="w-2 h-2 bg-red-400 rounded-full"
+                  />
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AnimatePresence mode="popLayout">
+                {players.length === 0 ? (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center py-12"
                   >
-                    {!player.is_host && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => kickPlayer(player.id, player.nickname)}
-                        className="absolute top-0 right-15 bg-black/40 text-red-500 hover:bg-red-700/50 p-3 relative"
-                        aria-label={t("kickPlayer", { nickname: player.nickname })}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="absolute inset-0" style={{ zIndex: -1 }} />
-                      </Button>
-                    )}
                     <motion.div
-                      className="mb-2"
                       animate={{
-                        rotate: [0, 10, -10, 0],
+                        scale: [1, 1.1, 1],
+                        opacity: [0.5, 1, 0.5],
                       }}
                       transition={{
                         duration: 2,
                         repeat: Number.POSITIVE_INFINITY,
-                        delay: index * 0.2,
+                        ease: "easeInOut",
                       }}
                     >
-                      {selectedCharacter ? (
-                        <img
-                          src={selectedCharacter.gif}
-                          alt={selectedCharacter.alt}
-                          className="w-15 mx-auto"
-                        />
-                      ) : (
-                        player.character_type
-                      )}
+                      <Users className="w-12 h-12 md:w-16 md:h-16 text-red-900/50 mx-auto mb-4" />
                     </motion.div>
-                    <div className="text-red-500 font-medium text-sm truncate mb-1 font-mono">{player.nickname}</div>
-                    {player.is_host && (
-                      <Badge variant="secondary" className="text-xs bg-red-900 text-red-400 font-mono">
-                        {t("host")}
-                      </Badge>
-                    )}
-                    {/* <div className="text-red-400/80 text-xs mt-1 font-mono">
-                      {new Date(player.joined_at).toLocaleTimeString()}
-                    </div> */}
+                    <p className="text-red-400 text-lg font-mono">{t("waitingHost")}</p>
+                    <p className="text-red-400/80 text-sm font-mono">{t("shareCode")}</p>
                   </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </CardContent>
-  </Card>
-</motion.div>
+                ) : (
+                  <motion.div
+                    key="players"
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-10 gap-4 md:gap-6"
+                    layout
+                    transition={{ layout: { duration: 0.3, type: "spring", stiffness: 100, damping: 20 } }}
+                  >
+                    <AnimatePresence>
+                      {players.map((player, index) => {
+                        const selectedCharacter = characterOptions.find(
+                          (char) => char.value === player.character_type
+                        );
+
+                        return (
+                          <motion.div
+                            key={player.id}
+                            layout
+                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{
+                              opacity: 0,
+                              scale: 0.5,
+                              x: Math.random() > 0.5 ? 200 : -200,
+                              rotate: Math.random() * 360,
+                              transition: { duration: 0.5, ease: "easeIn" },
+                            }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 30,
+                              delay: index * 0.05,
+                            }}
+                            className="bg-black/40 border border-red-900/50 rounded-lg p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative"
+                          >
+                            {/* Kick Button in Top-Left Corner */}
+                            {!player.is_host && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => kickPlayer(player.id, player.nickname)}
+                                className="absolute z-10 top-2 left-2 bg-black/40 text-red-500 hover:bg-red-700/50 p-2"
+                                aria-label={t("kickPlayer", { nickname: player.nickname })}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span className="absolute inset-0" style={{ zIndex: -1 }} />
+                              </Button>
+                            )}
+
+                            <motion.div
+                              className="mb-2"
+                              animate={{
+                                rotate: [0, 10, -10, 0],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Number.POSITIVE_INFINITY,
+                                delay: index * 0.2,
+                              }}
+                            >
+                              {selectedCharacter ? (
+                                <img
+                                  src={selectedCharacter.gif}
+                                  alt={selectedCharacter.alt}
+                                  className="w-15 mx-auto"
+                                />
+                              ) : (
+                                player.character_type
+                              )}
+                            </motion.div>
+                            <div className="text-red-500 font-medium text-sm truncate mb-1 font-mono">{player.nickname}</div>
+                            {player.is_host && (
+                              <Badge variant="secondary" className="text-xs bg-red-900 text-red-400 font-mono">
+                                {t("host")}
+                              </Badge>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}

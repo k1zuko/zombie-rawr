@@ -179,7 +179,7 @@ export default function ResultsHostPage() {
           title: gameRoom.title || "New Game",
           quiz_id: gameRoom.quiz_id,
           status: "waiting",
-          max_players: gameRoom.max_players || 10,
+          // max_players: gameRoom.max_players || 10,
           duration: gameRoom.duration || 600,
           question_count: gameRoom.question_count || 20,
           chaser_type: validatedChaserType,
