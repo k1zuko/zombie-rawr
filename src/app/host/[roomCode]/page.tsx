@@ -680,7 +680,7 @@ export default function HostPage() {
                   </DialogTrigger>
                   <DialogTitle></DialogTitle>
                   <DialogContent
-                    className="w-[100vw] max-w-7xl max-h-[85vh] bg-black/95 text-white border border-red-500/50 rounded-2xl p-6 shadow-[0_0_40px_rgba(255,0,0,0.6)]"
+                    className="w-[100vw] max-w-7xl max-h-fit bg-black/95 text-white border border-red-500/50 rounded-2xl p-6 shadow-[0_0_40px_rgba(255,0,0,0.6)]"
                   >
                     <div className="flex flex-col items-center gap-6 mt-4">
                       <div className="bg-white rounded-lg p-3 shadow-lg w-full max-w-8xl flex items-center justify-center">
