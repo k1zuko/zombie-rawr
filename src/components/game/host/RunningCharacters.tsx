@@ -1,9 +1,7 @@
-// RunningCharacters.tsx (Full Code with Fixes)
-
 "use client";
 
 import { Heart } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -75,7 +73,7 @@ export default function RunningCharacters({
   const params = useParams();
   const roomCode = params.roomCode as string;
 
-  // Gunakan useMemo untuk menghitung pemain aktif dan menghindari perhitungan berulang
+  // Gunakan useMemo untuk menghitung pemain aktif
   const activePlayers = useMemo(() => {
     return players.filter((player) => {
       const playerState = playerStates[player.id];
@@ -91,12 +89,10 @@ export default function RunningCharacters({
   }, [players, playerStates, playerHealthStates, completedPlayers]);
 
   useEffect(() => {
-    // Log untuk debugging
     console.log("Active players:", activePlayers.map((p) => p.nickname));
     console.log("Completed players:", completedPlayers.map((p) => p.nickname));
     console.log("Total players:", players.length);
 
-    // Redirect jika tidak ada pemain aktif dan ada pemain di room
     if (activePlayers.length === 0 && players.length > 0) {
       console.log("Tidak ada pemain aktif tersisa, redirect ke resultshost");
       const redirectTimeout = setTimeout(() => {
@@ -106,9 +102,26 @@ export default function RunningCharacters({
     }
   }, [activePlayers, players, router, roomCode]);
 
+  // Fungsi getGridPosition dari file lama
+  const getGridPosition = (index: number, totalPlayers: number) => {
+    const playersPerRow = 100;
+    const row = Math.floor(index / playersPerRow);
+    const col = index % playersPerRow;
+    const spacingX = 100;
+    const spacingY = -120;
+    const offsetX = 300;
+    const offsetY = -30;
+
+    return {
+      x: offsetX + col * spacingX,
+      y: offsetY + row * spacingY,
+    };
+  };
+
+  //posisi vertikal karakter
   return (
-    <div className="absolute bottom-20 z-30">
-      {players.map((player, i) => {
+    <div className="absolute bottom-50 z-30 w-full">
+      {activePlayers.map((player, i) => {
         const character = getCharacterByType(player.character_type);
         const workingPath = getWorkingImagePath(character);
         const playerState = playerStates[player.id];
@@ -121,26 +134,18 @@ export default function RunningCharacters({
         const isCompleted = completedPlayers.some((cp) => cp.id === player.id);
         const isEliminated = !player.is_alive || health <= 0;
 
-        // Jangan render pemain yang sudah lolos atau tereliminasi
         if (isEliminated || isCompleted) {
           console.log(`Skipping render for ${player.nickname} - Eliminated: ${isEliminated}, Completed: ${isCompleted}`);
           return null;
         }
 
-        const speedOffset = (speed - 20) * 10;
+        const { x: gridX, y: gridY } = getGridPosition(i, activePlayers.length);
+        const speedOffset = (speed - 5) * 8;//jarak antar karakter berdasarkan kecepatan
         const charX =
-          centerX -
-          130 +
-          i * 120 +
-          speedOffset +
-          Math.sin(animationTime * (gameMode === "panic" ? 1.2 : 0.4) + i) *
-            (gameMode === "panic" ? 60 : 15);
+          gridX + speedOffset + Math.sin(animationTime * 0.4 + i) * (gameMode === "panic" ? 15 : 8);
         const charY =
-          -77 +
-          Math.abs(Math.sin(animationTime * (gameMode === "panic" ? 2 : 0.6) + i * 0.5)) *
-            (gameMode === "panic" ? 25 : 8);
-
-        const attackShakeIntensity = isBeingAttacked ? attackIntensity * 8 : 0;
+          gridY + Math.abs(Math.sin(animationTime * 0.6 + i * 0.5)) * (gameMode === "panic" ? 10 : 5);
+        const attackShakeIntensity = isBeingAttacked ? attackIntensity * 4 : 0;
         const attackShakeX = isBeingAttacked ? Math.sin(animationTime * 10) * attackShakeIntensity : 0;
         const attackShakeY = isBeingAttacked ? Math.sin(animationTime * 8) * attackShakeIntensity : 0;
 
@@ -151,7 +156,7 @@ export default function RunningCharacters({
             initial={{ opacity: 1, scale: 1 }}
             animate={{
               opacity: 1,
-              scale: isBeingAttacked ? 1.2 : gameMode === "panic" ? 1.8 : 1.6,
+              scale: isBeingAttacked ? 1.2 : gameMode === "panic" ? 1.3 : 1.1,
               x: charX + attackShakeX,
               y: charY + attackShakeY,
             }}
@@ -169,7 +174,7 @@ export default function RunningCharacters({
               {/* Efek aura saat diserang */}
               {isZombieTarget && (
                 <motion.div
-                  className="absolute -inset-3 rounded-full bg-red-600 opacity-30 blur-lg"
+                  className="absolute -inset-2 rounded-full bg-red-600 opacity-30 blur-lg"
                   animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
                   transition={{ duration: 0.5, repeat: Infinity }}
                 />
@@ -177,19 +182,49 @@ export default function RunningCharacters({
 
               {/* Efek partikel saat diserang */}
               {isZombieTarget &&
-                [...Array(3)].map((_, i) => (
+                [...Array(2)].map((_, i) => (
                   <motion.div
                     key={`particle-${i}`}
                     className="absolute w-2 h-2 bg-red-500 rounded-full"
                     initial={{ x: 0, y: 0, opacity: 1 }}
                     animate={{
-                      x: (Math.random() - 0.5) * 30,
-                      y: (Math.random() - 0.5) * 30,
+                      x: (Math.random() - 0.5) * 20,
+                      y: (Math.random() - 0.5) * 20,
                       opacity: 0,
                     }}
                     transition={{ duration: 0.4, delay: i * 0.1 }}
                   />
                 ))}
+
+              {/* Informasi karakter di atas karakter */}
+              <motion.div
+                className="absolute -top-1 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-gradient-to-r from-black/90 to-gray-900/90 rounded-full px-2.5 py-1 shadow-md border border-white/10"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 0.95, y: 0 }}
+                whileHover={{ opacity: 1, scale: 1.05, boxShadow: "0 0 8px rgba(255,255,255,0.3)" }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                style={{ zIndex: 50 }}
+              >
+                <div className="flex gap-0.5">
+                  {[...Array(3)].map((_, heartIndex) => (
+                    <Heart
+                      key={heartIndex}
+                      className={`w-3.5 h-3.5 transition-all duration-300 ${
+                        heartIndex < health
+                          ? isZombieTarget
+                            ? "text-red-600 fill-red-600 animate-pulse"
+                            : "text-red-500 fill-red-500"
+                          : "text-gray-600 fill-gray-600 opacity-50"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-white font-sans text-[10px] font-medium max-w-[50px] truncate ml-1.5">
+                  {player.nickname}
+                </span>
+                <span className="text-gray-200 font-sans text-[10px] font-light">|</span>
+                <span className="text-gray-200 font-sans text-[10px] font-light">{speed}</span>
+              </motion.div>
 
               <motion.div
                 animate={{
@@ -205,8 +240,8 @@ export default function RunningCharacters({
                 <Image
                   src={workingPath}
                   alt={character.alt}
-                  width={gameMode === "panic" ? 120 : 96}
-                  height={gameMode === "panic" ? 120 : 96}
+                  width={gameMode === "panic" ? 60 : 208}
+                  height={gameMode === "panic" ? 60 : 108}
                   className="drop-shadow-2xl"
                   unoptimized
                   style={{
@@ -215,27 +250,9 @@ export default function RunningCharacters({
                 />
               </motion.div>
 
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 flex gap-1">
-                {[...Array(3)].map((_, heartIndex) => (
-                  <Heart
-                    key={heartIndex}
-                    className={`w-4 h-4 transition-all ${
-                      heartIndex < health
-                        ? isZombieTarget
-                          ? "text-red-600 fill-red-600 animate-pulse"
-                          : "text-red-500 fill-red-500"
-                        : "text-gray-600 fill-gray-600"
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <p className="text-white font-mono text-xs mt-1 text-center">{player.nickname}</p>
-              <p className="text-gray-400 font-mono text-xs">kecepatan:{speed}</p>
-
               {/* Bayangan dinamis */}
               <div
-                className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-20 h-4 bg-black rounded-full opacity-30 blur-md"
+                className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 w-12 h-2 bg-black rounded-full opacity-30 blur-md"
                 style={{
                   transform: `translateX(-50%) scaleX(${0.8 + Math.sin(animationTime * 0.6) * 0.2})`,
                 }}
@@ -244,6 +261,13 @@ export default function RunningCharacters({
           </motion.div>
         );
       })}
+      <style jsx>{`
+        .truncate {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      `}</style>
     </div>
   );
 }

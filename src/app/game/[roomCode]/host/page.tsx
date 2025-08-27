@@ -1,17 +1,14 @@
-// HostGamePage.tsx (Full Code with Fixes)
 
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import Background1 from "@/components/game/host/Background1";
+import GameUI from "@/components/game/host/GameUI";
 import { motion, AnimatePresence } from "framer-motion";
-import PlayersPanel from "@/components/game/host/PlayersPanel";
-import GameBackground from "@/components/game/host/GameBackground";
 import ZombieCharacter from "@/components/game/host/ZombieCharacter";
 import RunningCharacters from "@/components/game/host/RunningCharacters";
-import GameUI from "@/components/game/host/GameUI";
-import BackgroundEffects from "@/components/game/host/BackgroundEffects";
 import { useHostGuard } from "@/lib/host-guard";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
@@ -88,16 +85,106 @@ interface GameCompletion {
 }
 
 const characterGifs = [
-  { src: "/character/player/character.gif", alt: "Karakter Hijau", color: "bg-green-500", type: "robot1", name: "Hijau" },
-  { src: "/character/player/character1.gif", alt: "Karakter Biru", color: "bg-blue-500", type: "robot2", name: "Biru" },
-  { src: "/character/player/character2.gif", alt: "Karakter Merah", color: "bg-red-500", type: "robot3", name: "Merah" },
-  { src: "/character/player/character3.gif", alt: "Karakter Ungu", color: "bg-purple-500", type: "robot4", name: "Ungu" },
-  { src: "/character/player/character4.gif", alt: "Karakter Oranye", color: "bg-orange-500", type: "robot5", name: "Oranye" },
-  { src: "/character/player/character5.gif", alt: "Karakter Kuning", color: "bg-yellow-500", type: "robot6", name: "Kuning" },
-  { src: "/character/player/character6.gif", alt: "Karakter Abu-abu", color: "bg-gray-500", type: "robot7", name: "Abu-abu" },
-  { src: "/character/player/character7.gif", alt: "Karakter Pink", color: "bg-pink-500", type: "robot8", name: "Pink" },
-  { src: "/character/player/character8.gif", alt: "Karakter Cokelat", color: "bg-brown-500", type: "robot9", name: "Cokelat" },
-  { src: "/character/player/character9.gif", alt: "Karakter Emas", color: "bg-yellow-600", type: "robot10", name: "Emas" },
+  { 
+    src: "/character/player/character.gif", 
+    alt: "Karakter Hijau", 
+    color: "bg-green-500", 
+    type: "robot1", 
+    name: "Hijau", 
+    width: 48, 
+    height: 48, 
+    verticalOffset: 0 
+  },
+  { 
+    src: "/character/player/character1.gif", 
+    alt: "Karakter Biru", 
+    color: "bg-blue-500", 
+    type: "robot2", 
+    name: "Biru", 
+    width: 52, 
+    height: 50, 
+    verticalOffset: -2 
+  },
+  { 
+    src: "/character/player/character2.gif", 
+    alt: "Karakter Merah", 
+    color: "bg-red-500", 
+    type: "robot3", 
+    name: "Merah", 
+    width: 50, 
+    height: 46, 
+    verticalOffset: 2 
+  },
+  { 
+    src: "/character/player/character3.gif", 
+    alt: "Karakter Ungu", 
+    color: "bg-purple-500", 
+    type: "robot4", 
+    name: "Ungu", 
+    width: 48, 
+    height: 48, 
+    verticalOffset: 0 
+  },
+  { 
+    src: "/character/player/character4.gif", 
+    alt: "Karakter Oranye", 
+    color: "bg-orange-500", 
+    type: "robot5", 
+    name: "Oranye", 
+    width: 46, 
+    height: 50, 
+    verticalOffset: -4 
+  },
+  { 
+    src: "/character/player/character5.gif", 
+    alt: "Karakter Kuning", 
+    color: "bg-yellow-500", 
+    type: "robot6", 
+    name: "Kuning", 
+    width: 50, 
+    height: 48, 
+    verticalOffset: 0 
+  },
+  { 
+    src: "/character/player/character6.gif", 
+    alt: "Karakter Abu-abu", 
+    color: "bg-gray-500", 
+    type: "robot7", 
+    name: "Abu-abu", 
+    width: 48, 
+    height: 46, 
+    verticalOffset: 2 
+  },
+  { 
+    src: "/character/player/character7.gif", 
+    alt: "Karakter Pink", 
+    color: "bg-pink-500", 
+    type: "robot8", 
+    name: "Pink", 
+    width: 52, 
+    height: 50, 
+    verticalOffset: -2 
+  },
+  { 
+    src: "/character/player/character8.gif", 
+    alt: "Karakter Cokelat", 
+    color: "bg-brown-500", 
+    type: "robot9", 
+    name: "Cokelat", 
+    width: 48, 
+    height: 48, 
+    verticalOffset: 0 
+  },
+  { 
+    src: "/character/player/character9.gif", 
+    alt: "Karakter Emas", 
+    color: "bg-yellow-600", 
+    type: "robot10", 
+    name: "Emas", 
+    width: 50, 
+    height: 52, 
+    verticalOffset: -4 
+  },
 ];
 
 export default function HostGamePage() {
@@ -133,7 +220,7 @@ export default function HostGamePage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isStarting, setIsStarting] = useState<boolean>(false);
 
-  useHostGuard(roomCode)
+  useHostGuard(roomCode);
 
   // Initialize player states
   const initializePlayerStates = useCallback((playersData: Player[], healthData: PlayerHealthState[]) => {
@@ -966,16 +1053,11 @@ export default function HostGamePage() {
   const centerX = screenWidth / 2;
 
   return (
-    <div
-      className="relative w-full h-screen bg-black overflow-hidden"
-      style={{
-        transform: `translate(${Math.sin(animationTime * 0.1) * (gameMode === "panic" ? 5 : 2)}px, ${Math.cos(animationTime * 0.1) * (gameMode === "panic" ? 3 : 1)
-          }px)`,
-      }}
-    >
+    <div className="relative w-full h-screen bg-black overflow-hidden">
+      <Background1 isFlashing={backgroundFlash} />
       <audio src="/musics/zombies.mp3" autoPlay />
       <audio src="/musics/background-music.mp3" autoPlay loop />
-      <AnimatePresence>
+      {/* <AnimatePresence>
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 max-w-[240px] max-h-[400px] overflow-y-auto custom-scrollbar">
           {Object.entries(playerStates)
             .filter(([_, state]) => state.countdown !== undefined && state.countdown > 0)
@@ -998,32 +1080,8 @@ export default function HostGamePage() {
               );
             })}
         </div>
-      </AnimatePresence>
+      </AnimatePresence> */}
 
-      <GameBackground
-        animationTime={animationTime}
-        gameMode={gameMode}
-        screenWidth={screenWidth}
-        getLoopPosition={getLoopPosition}
-      />
-      <BackgroundEffects
-        animationTime={animationTime}
-        gameMode={gameMode}
-        screenWidth={screenWidth}
-        backgroundFlash={backgroundFlash}
-        getLoopPosition={getLoopPosition}
-      />
-      <PlayersPanel
-        players={activePlayers}
-        gameRoom={gameRoom}
-        roomCode={roomCode}
-        playerStates={playerStates}
-        zombieState={zombieState}
-        recentAttacks={new Set<string>()}
-        getCharacterByType={getCharacterByType}
-        getWorkingImagePath={getWorkingImagePath}
-        isConnected={isConnected}
-      />
       <RunningCharacters
         players={activePlayers}
         playerStates={playerStates}
@@ -1034,7 +1092,7 @@ export default function HostGamePage() {
         centerX={centerX}
         getCharacterByType={getCharacterByType}
         getWorkingImagePath={getWorkingImagePath}
-        completedPlayers={completedPlayers} // Tambahkan prop ini
+        completedPlayers={completedPlayers}
       />
       <ZombieCharacter
         zombieState={zombieState}
@@ -1044,7 +1102,10 @@ export default function HostGamePage() {
         chaserType={chaserType}
         players={activePlayers}
       />
-      <GameUI roomCode={roomCode} />
+
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
+        <GameUI roomCode={roomCode} />
+      </div>
 
       <style jsx>{`
         .custom-scrollbar {

@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Gamepad2, Users, Play, Hash, Zap, Skull, Bone } from "lucide-react";
+import { Gamepad2, Users, Play, Hash, Zap, Skull, Bone, RefreshCw } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
@@ -101,25 +101,25 @@ export default function HomePage() {
   );
 
   // Generator nama acak
-const generateRandomNickname = useCallback(() => {
-  const prefixes = [
-    "Salsa", "Zombi", "Vampir", "Downey", "Robert", "Windah",
-    "Neko", "Shadow", "Ghost", "Pixel", "Nova", "Luna",
-    "Blaze", "Frost", "Echo", "Cyber", "Storm", "Phantom",
-    "Night", "Inferno", "Zephyr", "Hunter", "Draco", "Falcon",
-    "Toxic", "Venom", "Aqua", "Raven", "Sky", "Zero",
-    "Jinx", "Hex", "Bolt", "Ash", "Flame", "Magma",
-    "Comet", "Glitch", "Vortex", "Wraith", "Slayer", "Bane",
-    "Arcade", "Pixelz", "Mysterio", "Oblivion", "Hydra", "Titan"
-  ];
+  const generateRandomNickname = useCallback(() => {
+    const prefixes = [
+      "Salsa", "Zombi", "Vampir", "Downey", "Robert", "Windah",
+      "Neko", "Shadow", "Ghost", "Pixel", "Nova", "Luna",
+      "Blaze", "Frost", "Echo", "Cyber", "Storm", "Phantom",
+      "Night", "Inferno", "Zephyr", "Hunter", "Draco", "Falcon",
+      "Toxic", "Venom", "Aqua", "Raven", "Sky", "Zero",
+      "Jinx", "Hex", "Bolt", "Ash", "Flame", "Magma",
+      "Comet", "Glitch", "Vortex", "Wraith", "Slayer", "Bane",
+      "Arcade", "Pixelz", "Mysterio", "Oblivion", "Hydra", "Titan"
+    ];
 
-  const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  const randomNumber = Math.floor(Math.random() * 10000); // pakai 4 digit biar lebih unik
-  const newNickname = `${randomPrefix}${randomNumber}`;
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const randomNumber = Math.floor(Math.random() * 10000);
+    const newNickname = `${randomPrefix}${randomNumber}`;
 
-  setNickname(newNickname);
-  return newNickname;
-}, []);
+    setNickname(newNickname);
+    return newNickname;
+  }, []);
 
   // Handler kode permainan dengan validasi regex
   const handleGameCodeChange = useCallback(
@@ -155,13 +155,6 @@ const generateRandomNickname = useCallback(() => {
     i18n.changeLanguage(value);
     localStorage.setItem("language", value);
   };
-
-  // Generate nama acak saat halaman dimuat
-  useEffect(() => {
-    if (!nickname) {
-      generateRandomNickname();
-    }
-  }, [nickname, generateRandomNickname]);
 
   // Handle parameter URL
   useEffect(() => {
@@ -201,7 +194,7 @@ const generateRandomNickname = useCallback(() => {
   // Host permainan
   const handleHostGame = useCallback(() => {
     setIsCreating(true);
-    if (navigator.vibrate) navigator.vibrate(50); // Umpan balik getar
+    if (navigator.vibrate) navigator.vibrate(50);
     router.push("/quiz-select");
   }, [router]);
 
@@ -248,7 +241,7 @@ const generateRandomNickname = useCallback(() => {
       localStorage.setItem("nickname", nickname);
       localStorage.setItem("roomCode", gameCode.toUpperCase());
 
-      if (navigator.vibrate) navigator.vibrate(50); // Umpan balik getar
+      if (navigator.vibrate) navigator.vibrate(50);
       router.push(`/game/${gameCode.toUpperCase()}`);
     } catch (error) {
       console.error("Error bergabung ke permainan:", error);
@@ -418,23 +411,23 @@ const generateRandomNickname = useCallback(() => {
                         aria-label="Kode permainan"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
                       <Input
                         placeholder={t("nicknamePlaceholder")}
                         value={nickname}
                         onChange={(e) => handleNicknameChange(e.target.value)}
-                        className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-xl font-mono h-10 sm:h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30"
+                        className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-xl font-mono h-10 sm:h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 flex-1"
                         maxLength={20}
                         aria-label="Nama panggilan"
                       />
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="icon"
                         onClick={generateRandomNickname}
-                        className="w-full border-red-500/50 text-red-400 hover:bg-red-500/20 text-sm sm:text-base"
+                        className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-10 sm:h-12 w-10 sm:w-12"
                         aria-label="Buat nama acak"
                       >
-                        {t("generateNickname")}
+                        <RefreshCw className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>

@@ -64,21 +64,22 @@ export default function GameUI({ roomCode }: GameUIProps) {
   return (
     <>
       {/* Time Left Display */}
-      <div className="absolute top-4 right-4 z-50 flex items-center space-x-3">
-        <Clock className={`w-7 h-7 ${timeLeft <= 30 ? "text-red-600 animate-pulse" : "text-red-400"}`} />
-        <span
-          className={`text-4xl font-bold ${timeLeft <= 30 ? "text-red-600 animate-pulse" : "text-red-300"}`}
-          style={{
-            fontFamily: "'Creepster', cursive",
-            textShadow: `0 0 10px rgba(255, 0, 0, ${timeLeft <= 30 ? 0.8 : 0.5})`,
-          }}
-        >
-          {formatTime(timeLeft)}
-        </span>
-        {timeLeft <= 15 && (
-          <AlertTriangle className="w-7 h-7 text-red-600 animate-bounce" />
-        )}
-      </div>
+<div className="bg-black/80 border-2 border-red-800 rounded-lg p-2 pl-8 pr-8 shadow-[0_0_20px_rgba(255,0,0,0.5)] flex items-center space-x-3">
+  
+  <span
+    className={`text-4xl font-bold text-red-600 blood-effect ${timeLeft <= 30 ? "animate-pulse" : ""}`}
+    style={{
+      fontFamily: "'Creepster', cursive",
+      textShadow: "0 0 15px rgba(255, 0, 0, 0.8)",
+    }}
+  >
+    {formatTime(timeLeft)}
+  </span>
+  {timeLeft <= 15 && (
+    <AlertTriangle className="w-7 h-7 text-red-600 animate-bounce" />
+  )}
+</div>
+
 
       <style jsx>{`
         @keyframes pulse {
@@ -90,6 +91,16 @@ export default function GameUI({ roomCode }: GameUIProps) {
           50% { transform: translateY(5px); opacity: 0.7; }
           100% { transform: translateY(10px); opacity: 0; }
         }
+          .blood-effect::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            width: 10px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(255, 0, 0, 0.7) 0%, rgba(255, 0, 0, 0) 70%);
+            animation: blood-drip 1.5s infinite;
+          }
         .animate-pulse { animation: pulse 1s infinite; }
         .animate-blood-drip {
           animation: blood-drip 1.5s infinite;
