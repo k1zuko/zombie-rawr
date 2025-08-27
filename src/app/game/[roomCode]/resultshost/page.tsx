@@ -85,10 +85,6 @@ export default function ResultsHostPage() {
   const roomCode = params.roomCode as string;
   const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
   const [playerResults, setPlayerResults] = useState<PlayerResult[]>([]);
-  // --- PAGINATION + ANIMATIONS untuk players display (10 per page) ---
-  const [page, setPage] = useState(0);
-  const pageSize = 10;
-  const totalPages = Math.max(1, Math.ceil(playerResults.length / pageSize));
 
   // framer variants
   const listVariants: Variants = {
@@ -444,10 +440,6 @@ export default function ResultsHostPage() {
     );
   }
 
-  // gunakan paging supaya hanya 10 player dirender per layar
-  const pagedPlayers = playerResults.slice(page * pageSize, (page + 1) * pageSize);
-
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 relative overflow-hidden select-none font-mono">
       <AnimatePresence>
@@ -579,7 +571,7 @@ export default function ResultsHostPage() {
           </motion.div>
         </motion.header>
 
-        {/* ===== PLAYER GRID 5 x 2 (10 per page) ===== */}
+        {/* ===== PLAYER GRID (semua sekaligus) ===== */}
         <motion.section
           variants={listVariants}
           initial="hidden"
@@ -588,17 +580,16 @@ export default function ResultsHostPage() {
         >
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
             <AnimatePresence mode="popLayout">
-              {pagedPlayers.map((player, idx) => {
+              {playerResults.map((player, idx) => {
                 const character = getCharacterByType(player.character_type);
-                const globalIndex = page * pageSize + idx; // nomor global untuk efek stagger
                 return (
                   <motion.div
                     key={player.id}
-                    custom={globalIndex}
+                    custom={idx}
                     variants={cardVariants}
                     initial="hidden"
                     animate="show"
-                    exit={{ opacity: 0, scale: 0.85, x: globalIndex % 2 ? 80 : -80, transition: { duration: 0.36 } }}
+                    exit={{ opacity: 0, scale: 0.85, x: idx % 2 ? 80 : -80, transition: { duration: 0.36 } }}
                     whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(220,38,38,0.18)" }}
                     className="relative bg-gradient-to-br from-gray-950/80 to-black/90 border border-red-800/50 rounded-lg p-3 text-left overflow-hidden"
                     style={{ minHeight: 120 }}
@@ -608,9 +599,8 @@ export default function ResultsHostPage() {
                       {player.rank}
                     </div>
 
-                    {/* Content: character (left) + info (right) */}
+                    {/* Character + Info */}
                     <div className="flex items-center gap-4 h-full">
-                      {/* Character box (fixed size, object-contain to avoid gepeng) */}
                       <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-black/60 flex items-center justify-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)]">
                         <img
                           src={character.src}
@@ -619,39 +609,28 @@ export default function ResultsHostPage() {
                         />
                       </div>
 
-                      {/* Info area: single-column grid (name / duration / qualification) */}
                       <motion.div
                         variants={infoVariants}
                         className="flex-1 grid grid-rows-[auto_auto_auto] gap-2"
                       >
-                        {/* Name (single line, truncate with tooltip) */}
                         <div
                           className="text-red-300 font-bold text-lg truncate font-mono"
                           title={player.nickname}
-                          aria-label={player.nickname}
                         >
                           {player.nickname}
                         </div>
-
-                        {/* Duration (smaller, mono) */}
                         <div className="flex items-center gap-2 text-red-300 text-sm font-mono">
                           <Clock className="w-4 h-4 text-red-400" />
-                          <span className="font-semibold">{player.duration ?? "--:--"}</span>
+                          <span>{player.duration ?? "--:--"}</span>
                         </div>
-
-                        {/* Qualification badge (big & clear) */}
-                        <div>
-                          <div
-                            className={`inline-block px-3 py-1 rounded-md text-sm font-bold select-none
-                            ${player.isLolos
-                                ? "bg-gradient-to-r from-green-400 to-green-500 text-black border border-green-300 shadow-[0_8px_24px_rgba(34,197,94,0.12)]"
-                                : "bg-gradient-to-r from-red-700 to-red-800 text-white border border-red-700 shadow-[inset_0_1px_6px_rgba(0,0,0,0.6)]"
-                              }`}
-                            aria-label={player.isLolos ? "Passed" : "Failed"}
-                            title={player.isLolos ? t("pass") : t("fail")}
-                          >
-                            {player.isLolos ? t("pass") : t("fail")}
-                          </div>
+                        <div
+                          className={`inline-block px-3 py-1 rounded-md text-xs w-fit font-bold
+                  ${player.isLolos
+                              ? "bg-gradient-to-r from-green-400 to-green-500 text-black border border-green-300 shadow-[0_8px_24px_rgba(34,197,94,0.12)]"
+                              : "bg-gradient-to-r from-red-700 to-red-800 text-white border border-red-700"
+                            }`}
+                        >
+                          {player.isLolos ? t("pass") : t("fail")}
                         </div>
                       </motion.div>
                     </div>
@@ -660,33 +639,7 @@ export default function ResultsHostPage() {
               })}
             </AnimatePresence>
           </div>
-
-          {/* PAGINATION (visible only if more than one page) */}
-          {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-center gap-4">
-              <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-                className="px-3 py-2 rounded-md bg-black/40 border border-red-800 text-red-300 disabled:opacity-40"
-              >
-                Prev
-              </button>
-
-              <div className="text-sm text-red-400 font-mono">
-                page {page + 1} / {totalPages}
-              </div>
-
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1}
-                className="px-3 py-2 rounded-md bg-black/40 border border-red-800 text-red-300 disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-          )}
         </motion.section>
-
       </motion.div>
 
       <style jsx global>{`
