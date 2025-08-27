@@ -586,7 +586,7 @@ export default function ResultsHostPage() {
           animate="show"
           className="max-w-7xl mx-auto"
         >
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
             <AnimatePresence mode="popLayout">
               {pagedPlayers.map((player, idx) => {
                 const character = getCharacterByType(player.character_type);
