@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -27,8 +28,8 @@ const chaserImages = {
     alt: "Zombie",
     width: 200,
     height: 50,
-    verticalOffset: "80%", // Posisi vertikal relatif terhadap tinggi layar
-    horizontalOffset: -350, // Offset horizontal dari posisi tengah
+    verticalOffset: "80%",
+    horizontalOffset: -350,
   },
   monster1: {
     src: "/character/chaser/monster1.gif",
@@ -78,9 +79,6 @@ export default function ZombieCharacter({
   const ATTACK_DISTANCE = 300;
 
   const selectedChaser = chaserImages[chaserType as keyof typeof chaserImages] || chaserImages.zombie;
-  const targetPlayer = zombieState.isAttacking
-    ? players.find((p) => p.id === zombieState.targetPlayerId)
-    : null;
 
   // Efek kilatan dan skala saat serangan dimulai
   useEffect(() => {
@@ -107,6 +105,9 @@ export default function ZombieCharacter({
 
   // Logging untuk debugging
   useEffect(() => {
+    const targetPlayer = zombieState.isAttacking
+      ? players.find((p) => p.id === zombieState.targetPlayerId)
+      : null;
     console.log("ZombieCharacter render:", {
       chaserType,
       selectedChaser: selectedChaser.src,
@@ -114,7 +115,7 @@ export default function ZombieCharacter({
       targetPlayer: targetPlayer?.nickname || "Tidak ada target",
       attackProgress: zombieState.attackProgress,
     });
-  }, [chaserType, zombieState.isAttacking, selectedChaser.src, targetPlayer, zombieState.attackProgress]);
+  }, [chaserType, zombieState.isAttacking, selectedChaser.src, zombieState.targetPlayerId, zombieState.attackProgress, players]);
 
   // Pergerakan normal
   const normalMovement = {
@@ -129,7 +130,7 @@ export default function ZombieCharacter({
     x: zombieState.attackProgress * ATTACK_DISTANCE,
     y: 0,
     rotation: 0,
-    scale: gameMode === "panic" ? 2.2 : 2.0, // Zombie membesar saat menyerang
+    scale: gameMode === "panic" ? 2.2 : 2.0,
   };
 
   const currentMovement = zombieState.isAttacking ? attackMovement : normalMovement;
@@ -146,18 +147,6 @@ export default function ZombieCharacter({
       animate={controls}
     >
       <div className="relative">
-        {/* Indikator serangan dengan nama pemain */}
-        {zombieState.isAttacking && targetPlayer && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute -top-12 left-1/2 transform -translate-x-1/2 px-3 py-1.5 rounded text-sm text-white animate-pulse border border-red-600 shadow-xl"
-          >
-            Menyerang {targetPlayer.nickname}!
-          </motion.div>
-        )}
-
         {/* Efek darah saat menyerang */}
         {zombieState.isAttacking && (
           <motion.div
@@ -247,16 +236,6 @@ export default function ZombieCharacter({
             </motion.div>
           ))}
 
-        {/* Efek aura dengan cahaya dinamis */}
-        <motion.div
-
-          animate={{
-            scale: zombieState.isAttacking ? [1, 1.2, 1] : 1,
-            opacity: zombieState.isAttacking ? [0.4, 0.6, 0.4] : undefined,
-            transition: { duration: 0.6, repeat: zombieState.isAttacking ? Infinity : 0 },
-          }}
-        />
-
         {/* Bayangan dinamis */}
         <motion.div
           className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-32 h-8 bg-black/50 rounded-full blur-md"
@@ -299,19 +278,6 @@ export default function ZombieCharacter({
         }
         .animate-pulse {
           animation: pulse 0.5s infinite;
-        }
-
-        @keyframes pulse-slow {
-          0%,
-          100% {
-            opacity: 0.4;
-          }
-          50% {
-            opacity: 0.6;
-          }
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 1.2s infinite;
         }
       `}</style>
     </motion.div>

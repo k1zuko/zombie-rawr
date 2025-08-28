@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ZombieCharacter from "@/components/game/host/ZombieCharacter";
 import RunningCharacters from "@/components/game/host/RunningCharacters";
 import { useHostGuard } from "@/lib/host-guard";
+import AttackIndicator from "@/components/game/host/AttackIndicator";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
 type ChaserType = typeof validChaserTypes[number];
@@ -1012,6 +1013,14 @@ const testAllImages = async () => {
 
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
         <GameUI roomCode={roomCode} />
+        <AttackIndicator
+        isAttacking={zombieState.isAttacking}
+        targetPlayerNickname={
+          zombieState.isAttacking
+            ? players.find((p) => p.id === zombieState.targetPlayerId)?.nickname || null
+            : null
+        }
+      />
       </div>
 
       <style jsx>{`
