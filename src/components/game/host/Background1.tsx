@@ -32,7 +32,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           />
         </div>
         {/* Container untuk 2.png (awan) */}
-        <div className="background-container-grounddua">
+        <div className="background-container-groundtiga">
           <div
             className="background-image"
             style={{
@@ -53,7 +53,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           />
         </div>
         {/* Container untuk 3.png (tanah) */}
-        <div className="background-container-ground">
+        <div className="background-container-grounddua">
           <div
             className="background-image"
             style={{
@@ -113,7 +113,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           width: 200%;
           height: 100%;
           display: flex;
-          animation: slide-ground 7s linear infinite;
+          animation: slide-ground 3s linear infinite;
         }
 
          .background-container-grounddua {
@@ -125,6 +125,17 @@ export default function Background1({ isFlashing }: Background1Props) {
           display: flex;
           animation: slide-ground 17s linear infinite;
         }
+
+          .background-container-groundtiga {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 200%;
+          height: 100%;
+          display: flex;
+          animation: slide-ground 15s linear infinite;
+        }
+
         .background-image {
           width: 50%;
           height: 100%;
