@@ -1,10 +1,8 @@
-
 "use client";
 
 import Image from "next/image";
 import { useRef, useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
-import { Zap } from "lucide-react"; // Ikon kilat untuk kecepatan
 
 interface ZombieState {
   isAttacking: boolean;
@@ -27,22 +25,42 @@ const chaserImages = {
   zombie: {
     src: "/character/chaser/zombie.gif",
     alt: "Zombie",
+    width: 200,
+    height: 50,
+    verticalOffset: "80%", // Posisi vertikal relatif terhadap tinggi layar
+    horizontalOffset: -350, // Offset horizontal dari posisi tengah
   },
   monster1: {
     src: "/character/chaser/monster1.gif",
     alt: "Mutant Gila",
+    width: 220,
+    height: 60,
+    verticalOffset: "80%",
+    horizontalOffset: -350,
   },
   monster2: {
     src: "/character/chaser/monster2.gif",
     alt: "Monster Rawa",
+    width: 280,
+    height: 75,
+    verticalOffset: "83%",
+    horizontalOffset: -330,
   },
   monster3: {
     src: "/character/chaser/monster3.gif",
     alt: "Samurai Gila",
+    width: 210,
+    height: 65,
+    verticalOffset: "81%",
+    horizontalOffset: -360,
   },
   darknight: {
     src: "/character/chaser/darknight.gif",
     alt: "Ksatria Gelap",
+    width: 230,
+    height: 70,
+    verticalOffset: "81%",
+    horizontalOffset: -380,
   },
 };
 
@@ -57,8 +75,7 @@ export default function ZombieCharacter({
   const attackRef = useRef<HTMLDivElement>(null);
   const controls = useAnimation();
   const ZOMBIE_SPEED = 30;
-  const HORIZONTAL_OFFSET = -350; // Offset awal untuk posisi zombie di kiri
-  const ATTACK_DISTANCE = 300; // Jarak serangan zombie ke kanan
+  const ATTACK_DISTANCE = 300;
 
   const selectedChaser = chaserImages[chaserType as keyof typeof chaserImages] || chaserImages.zombie;
   const targetPlayer = zombieState.isAttacking
@@ -99,7 +116,7 @@ export default function ZombieCharacter({
     });
   }, [chaserType, zombieState.isAttacking, selectedChaser.src, targetPlayer, zombieState.attackProgress]);
 
-  // Pergerakan normal (tanpa serangan)
+  // Pergerakan normal
   const normalMovement = {
     x: Math.sin(animationTime * 0.4) * (gameMode === "panic" ? 140 : 30),
     y: Math.sin(animationTime * 1.0) * (gameMode === "panic" ? 50 : 15),
@@ -107,12 +124,12 @@ export default function ZombieCharacter({
     scale: gameMode === "panic" ? 2.0 : 1.8,
   };
 
-  // Pergerakan saat menyerang (bergerak lebih jauh, tanpa getaran)
+  // Pergerakan saat menyerang
   const attackMovement = {
-    x: zombieState.attackProgress * ATTACK_DISTANCE, // Bergerak linier ke kanan sejauh 300px
-    y: 0, // Tanpa getaran vertikal
-    rotation: 0, // Tanpa rotasi
-    scale: 2.4 + zombieState.attackProgress * 0.6, // Membesar saat mendekati target
+    x: zombieState.attackProgress * ATTACK_DISTANCE,
+    y: 0,
+    rotation: 0,
+    scale: gameMode === "panic" ? 2.2 : 2.0, // Zombie membesar saat menyerang
   };
 
   const currentMovement = zombieState.isAttacking ? attackMovement : normalMovement;
@@ -122,8 +139,8 @@ export default function ZombieCharacter({
       ref={attackRef}
       className="absolute z-40 origin-bottom"
       style={{
-        left: `${centerX - zombieState.currentPosition + currentMovement.x + HORIZONTAL_OFFSET}px`,
-        top: "82%",//vertikal posisi zombie
+        left: `${centerX - zombieState.currentPosition + currentMovement.x + selectedChaser.horizontalOffset}px`,
+        top: selectedChaser.verticalOffset,
         transform: `translateY(${currentMovement.y}px)`,
       }}
       animate={controls}
@@ -135,7 +152,7 @@ export default function ZombieCharacter({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute -top-12 left-1/2 transform -translate-x-1/2 px-3 py-1.5 rounded text-sm bg-red-900/95 text-white animate-pulse border border-red-600 shadow-xl"
+            className="absolute -top-12 left-1/2 transform -translate-x-1/2 px-3 py-1.5 rounded text-sm text-white animate-pulse border border-red-600 shadow-xl"
           >
             Menyerang {targetPlayer.nickname}!
           </motion.div>
@@ -188,11 +205,10 @@ export default function ZombieCharacter({
           transition={{ duration: 0.3 }}
         >
           <Image
-          // ukuran
             src={selectedChaser.src}
             alt={selectedChaser.alt}
-            width={200}
-            height={50}
+            width={selectedChaser.width}
+            height={selectedChaser.height}
             className="drop-shadow-xl"
             unoptimized
             style={{
@@ -200,7 +216,7 @@ export default function ZombieCharacter({
               transform: `scale(${currentMovement.scale}) rotate(${currentMovement.rotation}deg)`,
               transformOrigin: "bottom center",
               filter: zombieState.isAttacking
-                ? "drop-shadow(0 0 15px rgba(255,50,50,0.8))"
+                ? "drop-shadow(0 0 15px rgba(99, 99, 99, 0.8))"
                 : "none",
             }}
           />
@@ -219,8 +235,8 @@ export default function ZombieCharacter({
               <Image
                 src={selectedChaser.src}
                 alt={`${selectedChaser.alt} Trail`}
-                width={140}
-                height={140}
+                width={selectedChaser.width * (0.9 - i * 0.1)}
+                height={selectedChaser.height * (0.9 - i * 0.1)}
                 unoptimized
                 style={{
                   imageRendering: "pixelated",
@@ -233,13 +249,7 @@ export default function ZombieCharacter({
 
         {/* Efek aura dengan cahaya dinamis */}
         <motion.div
-          className={`absolute -inset-6 rounded-full blur-lg ${
-            zombieState.isAttacking
-              ? "bg-red-600 opacity-40 animate-pulse-slow"
-              : gameMode === "panic"
-              ? " 500 opacity-25"
-              : " opacity-20"
-          }`}
+
           animate={{
             scale: zombieState.isAttacking ? [1, 1.2, 1] : 1,
             opacity: zombieState.isAttacking ? [0.4, 0.6, 0.4] : undefined,
@@ -257,31 +267,6 @@ export default function ZombieCharacter({
           }}
           transition={{ duration: 0.3 }}
         />
-
-        {/* Informasi kecepatan dengan desain yang dipercantik */}
-        <motion.div
-          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-gradient-to-r from-black/90 to-gray-900/90 rounded-full px-2.5 py-1 shadow-md border border-white/10"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 0.95, y: 0 }}
-          whileHover={{ opacity: 1, scale: 1.05, boxShadow: "0 0 8px rgba(255,255,255,0.3)" }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          style={{ zIndex: 50 }}
-        >
-          {/* <Zap
-            className={`w-3.5 h-3.5 transition-all duration-300 ${
-              zombieState.isAttacking
-                ? "text-red-600 fill-red-600 animate-pulse"
-                : "text-yellow-500 fill-yellow-500"
-            }`}
-          />
-          <span
-            className={`font-sans text-[10px] font-medium ${
-              zombieState.isAttacking ? "text-red-400" : "text-white"
-            }`}
-          >
-            Kecepatan: {ZOMBIE_SPEED}
-          </span> */}
-        </motion.div>
       </div>
 
       <style jsx>{`

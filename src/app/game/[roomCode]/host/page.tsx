@@ -75,108 +75,6 @@ interface GameCompletion {
   completed_at: string;
 }
 
-const characterGifs = [
-  { 
-    src: "/character/player/character.gif", 
-    alt: "Karakter Hijau", 
-    color: "bg-green-500", 
-    type: "robot1", 
-    name: "Hijau", 
-    width: 48, 
-    height: 48, 
-    verticalOffset: 0 
-  },
-  { 
-    src: "/character/player/character1.gif", 
-    alt: "Karakter Biru", 
-    color: "bg-blue-500", 
-    type: "robot2", 
-    name: "Biru", 
-    width: 52, 
-    height: 50, 
-    verticalOffset: -2 
-  },
-  { 
-    src: "/character/player/character2.gif", 
-    alt: "Karakter Merah", 
-    color: "bg-red-500", 
-    type: "robot3", 
-    name: "Merah", 
-    width: 50, 
-    height: 46, 
-    verticalOffset: 2 
-  },
-  { 
-    src: "/character/player/character3.gif", 
-    alt: "Karakter Ungu", 
-    color: "bg-purple-500", 
-    type: "robot4", 
-    name: "Ungu", 
-    width: 48, 
-    height: 48, 
-    verticalOffset: 0 
-  },
-  { 
-    src: "/character/player/character4.gif", 
-    alt: "Karakter Oranye", 
-    color: "bg-orange-500", 
-    type: "robot5", 
-    name: "Oranye", 
-    width: 46, 
-    height: 50, 
-    verticalOffset: -4 
-  },
-  { 
-    src: "/character/player/character5.gif", 
-    alt: "Karakter Kuning", 
-    color: "bg-yellow-500", 
-    type: "robot6", 
-    name: "Kuning", 
-    width: 50, 
-    height: 48, 
-    verticalOffset: 0 
-  },
-  { 
-    src: "/character/player/character6.gif", 
-    alt: "Karakter Abu-abu", 
-    color: "bg-gray-500", 
-    type: "robot7", 
-    name: "Abu-abu", 
-    width: 48, 
-    height: 46, 
-    verticalOffset: 2 
-  },
-  { 
-    src: "/character/player/character7.gif", 
-    alt: "Karakter Pink", 
-    color: "bg-pink-500", 
-    type: "robot8", 
-    name: "Pink", 
-    width: 52, 
-    height: 50, 
-    verticalOffset: -2 
-  },
-  { 
-    src: "/character/player/character8.gif", 
-    alt: "Karakter Cokelat", 
-    color: "bg-brown-500", 
-    type: "robot9", 
-    name: "Cokelat", 
-    width: 48, 
-    height: 48, 
-    verticalOffset: 0 
-  },
-  { 
-    src: "/character/player/character9.gif", 
-    alt: "Karakter Emas", 
-    color: "bg-yellow-600", 
-    type: "robot10", 
-    name: "Emas", 
-    width: 50, 
-    height: 52, 
-    verticalOffset: -4 
-  },
-];
 
 export default function HostGamePage() {
   const params = useParams();
@@ -949,27 +847,39 @@ export default function HostGamePage() {
 
   // Check image loading
   useEffect(() => {
-    const testAllImages = async () => {
-      console.log("Memeriksa pemuatan gambar");
-      const status: { [key: string]: boolean } = {};
-      for (const character of characterGifs) {
-        const works = await testImageLoad(character.src);
-        status[character.src] = works;
-      }
-      const chaserFiles = [
-        "/character/chaser/zombie.gif",
-        "/character/chaser/monster1.gif",
-        "/character/chaser/monster2.gif",
-        "/character/chaser/monster3.gif",
-        "/character/chaser/darknight.gif",
-      ];
-      for (const file of chaserFiles) {
-        const works = await testImageLoad(file);
-        status[file] = works;
-      }
-      setImageLoadStatus(status);
-      console.log("Pemuatan gambar selesai:", status);
-    };
+const testAllImages = async () => {
+  console.log("Memeriksa pemuatan gambar");
+  const status: { [key: string]: boolean } = {};
+  const characterFiles = [
+    "/character/player/character.gif",
+    "/character/player/character1.gif",
+    "/character/player/character2.gif",
+    "/character/player/character3.gif",
+    "/character/player/character4.gif",
+    "/character/player/character5.gif",
+    "/character/player/character6.gif",
+    "/character/player/character7.gif",
+    "/character/player/character8.gif",
+    "/character/player/character9.gif",
+  ];
+  for (const file of characterFiles) {
+    const works = await testImageLoad(file);
+    status[file] = works;
+  }
+  const chaserFiles = [
+    "/character/chaser/zombie.gif",
+    "/character/chaser/monster1.gif",
+    "/character/chaser/monster2.gif",
+    "/character/chaser/monster3.gif",
+    "/character/chaser/darknight.gif",
+  ];
+  for (const file of chaserFiles) {
+    const works = await testImageLoad(file);
+    status[file] = works;
+  }
+  setImageLoadStatus(status);
+  console.log("Pemuatan gambar selesai:", status);
+};
     testAllImages();
   }, []);
 
@@ -1018,13 +928,10 @@ export default function HostGamePage() {
     return position > 0 ? position - spacing : totalDistance + position - spacing;
   };
 
-  const getWorkingImagePath = (character: (typeof characterGifs)[0]) => {
-    return imageLoadStatus[character.src] ? character.src : characterGifs[0].src;
+  const getWorkingImagePath = (character: { src: string }) => {
+    return imageLoadStatus[character.src] ? character.src : "/character/player/character.gif";
   };
 
-  const getCharacterByType = (type: string) => {
-    return characterGifs.find((char) => char.type === type) || characterGifs[0];
-  };
 
   const activePlayers = players.filter(
     p => !completedPlayers.some(c => c.id === p.id)
@@ -1046,6 +953,7 @@ export default function HostGamePage() {
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
+      
       <Background1 isFlashing={backgroundFlash} />
       <audio src="/musics/zombies.mp3" autoPlay />
       <audio src="/musics/background-music.mp3" autoPlay loop />
@@ -1082,7 +990,6 @@ export default function HostGamePage() {
         animationTime={animationTime}
         gameMode={gameMode}
         centerX={centerX}
-        getCharacterByType={getCharacterByType}
         getWorkingImagePath={getWorkingImagePath}
         completedPlayers={completedPlayers}
       />

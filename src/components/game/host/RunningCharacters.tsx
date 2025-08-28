@@ -52,10 +52,112 @@ interface RunningCharactersProps {
   animationTime: number;
   gameMode: "normal" | "panic";
   centerX: number;
-  getCharacterByType: (type: string) => any;
   getWorkingImagePath: (character: any) => string;
   completedPlayers: Player[];
 }
+
+const characterConfigs = [
+  { 
+    src: "/character/player/character.gif", 
+    alt: "Karakter Hijau", 
+    type: "robot1", 
+    name: "Hijau", 
+    width: 48, 
+    height: 48, 
+    verticalOffset: 5,
+    horizontalOffset: 0
+  },
+  { 
+    src: "/character/player/character1.gif", 
+    alt: "Karakter Biru", 
+    type: "robot2", 
+    name: "Biru", 
+    width: 52, 
+    height: 50, 
+    verticalOffset: -2,
+    horizontalOffset: 10
+  },
+  { 
+    src: "/character/player/character2.gif", 
+    alt: "Karakter Merah", 
+    type: "robot3", 
+    name: "Merah", 
+    width: 50, 
+    height: 46, 
+    verticalOffset: 2,
+    horizontalOffset: -10
+  },
+  { 
+    src: "/character/player/character3.gif", 
+    alt: "Karakter Ungu", 
+    type: "robot4", 
+    name: "Ungu", 
+    width: 48, 
+    height: 48, 
+    verticalOffset: 0,
+    horizontalOffset: 5
+  },
+  { 
+    src: "/character/player/character4.gif", 
+    alt: "Karakter Oranye", 
+    type: "robot5", 
+    name: "Oranye", 
+    width: 46, 
+    height: 50, 
+    verticalOffset: -4,
+    horizontalOffset: -5
+  },
+  { 
+    src: "/character/player/character5.gif", 
+    alt: "Karakter Kuning", 
+    type: "robot6", 
+    name: "Kuning", 
+    width: 50, 
+    height: 48, 
+    verticalOffset: 0,
+    horizontalOffset: 15
+  },
+  { 
+    src: "/character/player/character6.gif", 
+    alt: "Karakter Abu-abu", 
+    type: "robot7", 
+    name: "Abu-abu", 
+    width: 48, 
+    height: 46, 
+    verticalOffset: 2,
+    horizontalOffset: -15
+  },
+  { 
+    src: "/character/player/character7.gif", 
+    alt: "Karakter Pink", 
+    type: "robot8", 
+    name: "Pink", 
+    width: 52, 
+    height: 50, 
+    verticalOffset: -2,
+    horizontalOffset: 20
+  },
+  { 
+    src: "/character/player/character8.gif", 
+    alt: "Karakter Cokelat", 
+    type: "robot9", 
+    name: "Cokelat", 
+    width: 48, 
+    height: 48, 
+    verticalOffset: 0,
+    horizontalOffset: -20
+  },
+  { 
+    src: "/character/player/character9.gif", 
+    alt: "Karakter Emas", 
+    type: "robot10", 
+    name: "Emas", 
+    width: 50, 
+    height: 52, 
+    verticalOffset: -4,
+    horizontalOffset: 25
+  },
+];
 
 export default function RunningCharacters({
   players,
@@ -65,7 +167,6 @@ export default function RunningCharacters({
   animationTime,
   gameMode,
   centerX,
-  getCharacterByType,
   getWorkingImagePath,
   completedPlayers,
 }: RunningCharactersProps) {
@@ -102,7 +203,12 @@ export default function RunningCharacters({
     }
   }, [activePlayers, players, router, roomCode]);
 
-  // Fungsi getGridPosition dari file lama
+  // Fungsi untuk mencari konfigurasi karakter berdasarkan tipe
+  const getCharacterByType = (type: string) => {
+    return characterConfigs.find((char) => char.type === type) || characterConfigs[0];
+  };
+
+  // Fungsi getGridPosition
   const getGridPosition = (index: number, totalPlayers: number) => {
     const playersPerRow = 100;
     const row = Math.floor(index / playersPerRow);
@@ -118,7 +224,6 @@ export default function RunningCharacters({
     };
   };
 
-  //posisi vertikal karakter
   return (
     <div className="absolute bottom-50 z-30 w-full">
       {activePlayers.map((player, i) => {
@@ -140,11 +245,11 @@ export default function RunningCharacters({
         }
 
         const { x: gridX, y: gridY } = getGridPosition(i, activePlayers.length);
-        const speedOffset = (speed - 5) * 8;//jarak antar karakter berdasarkan kecepatan
+        const speedOffset = (speed - 5) * 8; // Jarak antar karakter berdasarkan kecepatan
         const charX =
-          gridX + speedOffset + Math.sin(animationTime * 0.4 + i) * (gameMode === "panic" ? 15 : 8);
+          gridX + speedOffset + Math.sin(animationTime * 0.4 + i) * (gameMode === "panic" ? 15 : 8) + character.horizontalOffset;
         const charY =
-          gridY + Math.abs(Math.sin(animationTime * 0.6 + i * 0.5)) * (gameMode === "panic" ? 10 : 5);
+          gridY + Math.abs(Math.sin(animationTime * 0.6 + i * 0.5)) * (gameMode === "panic" ? 10 : 5) + character.verticalOffset;
         const attackShakeIntensity = isBeingAttacked ? attackIntensity * 4 : 0;
         const attackShakeX = isBeingAttacked ? Math.sin(animationTime * 10) * attackShakeIntensity : 0;
         const attackShakeY = isBeingAttacked ? Math.sin(animationTime * 8) * attackShakeIntensity : 0;
@@ -240,8 +345,8 @@ export default function RunningCharacters({
                 <Image
                   src={workingPath}
                   alt={character.alt}
-                  width={gameMode === "panic" ? 60 : 208}
-                  height={gameMode === "panic" ? 60 : 108}
+                  width={gameMode === "panic" ? character.width * 4.2 : character.width * 4.3}
+                  height={gameMode === "panic" ? character.height * 2.1 : character.height * 2.25}
                   className="drop-shadow-2xl"
                   unoptimized
                   style={{
