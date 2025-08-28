@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse, Trash2, Maximize, Maximize2 } from "lucide-react";
+import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse, Trash2, Maximize, Maximize2, CopyIcon } from "lucide-react";
 import { supabase, type Player } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -15,6 +15,7 @@ import { syncServerTime, calculateCountdown } from "@/lib/server-time"
 import { useTranslation } from "react-i18next";
 import { Toaster, toast } from "react-hot-toast";
 import { useHostGuard } from "@/lib/host-guard";
+import { createPortal } from "react-dom";
 
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const
@@ -37,6 +38,81 @@ interface GameRoom {
   countdown_start: string
 }
 
+function QRModal({
+  open,
+  onClose,
+  roomCode
+}: {
+  open: boolean
+  onClose: () => void
+  roomCode: string
+}) {
+  // lock body scroll
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => { document.body.style.overflow = prev }
+  }, [open])
+
+  // esc to close
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [open, onClose])
+
+  if (typeof document === "undefined") return null
+  if (!open) return null
+
+  return createPortal(
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+    >  
+      {/* backdrop */}
+      <div
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden
+      />
+
+      {/* modal content (centered, max-h so QR can fill height) */}
+      <motion.section
+        initial={{ y: 20, scale: 0.98 }}
+        animate={{ y: 0, scale: 1 }}
+        exit={{ y: 10, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 240, damping: 28 }}
+        className="relative z-10 w-[50vw] max-w-[100%] max-h-screen bg-black/95 text-white rounded-2xl p-4 overflow-hidden shadow-[0_0_60px_rgba(255,0,0,0.45)]"
+        role="dialog"
+        aria-modal="true"
+      >
+        {/* layout: left = QR (flex-1, will fill height), right = info column */}
+        <div className="h-full flex flex-col md:flex-row gap-4" style={{ minHeight: 400 }}>
+          {/* LEFT: QR wrapper — will expand to modal height */}
+          <div className="flex-1 flex items-center justify-center p-2 md:p-4">
+            <div className="w-full h-full bg-white rounded-lg p-3 flex items-center justify-center">
+              {/* Make the SVG stretch to fill available area while preserving aspect ratio */}
+              <div className="w-full h-full flex items-center justify-center">
+                <QRCode
+                  value={`${window.location.origin}/?code=${roomCode}`}
+                  style={{ width: "100%", height: "100%" }}
+                  viewBox="0 0 1024 1024"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.section>
+    </motion.div>,
+    document.body
+  )
+}
+
+
 export default function HostPage() {
   const { t } = useTranslation()
   const params = useParams()
@@ -53,7 +129,7 @@ export default function HostPage() {
   const [countdown, setCountdown] = useState<number | null>(null)
   const [flickerText, setFlickerText] = useState(true)
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([])
-  const [isQrDialogOpen, setIsQrDialogOpen] = useState(false)
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [kickDialogOpen, setKickDialogOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; nickname: string } | null>(null);
 
@@ -599,7 +675,7 @@ export default function HostPage() {
           >
             <motion.div
               className="w-[50%] h-auto bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform"
-              title={t("qrHoverTitle")}
+              onClick={() => setIsQrModalOpen(true)}
             >
               <QRCode
                 value={`${window.location.origin}/?code=${roomCode}`}
@@ -667,54 +743,14 @@ export default function HostPage() {
               {/* icons cluster — taruh di dalam parent .relative */}
               <div className="flex items-center justify-center gap-5">
                 {/* Maximize (opens QR dialog) */}
-                <Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={t("expandQr")}
-                      className="bg-black/60 text-red-400 hover:bg-red-700/20 border border-red-800/20 p-2 rounded-md"
-                    >
-                      <Maximize2 className="w-5 h-5" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogTitle></DialogTitle>
-                  <DialogContent
-                    className="w-[100vw] max-w-7xl max-h-fit bg-black/95 text-white border border-red-500/50 rounded-2xl p-6 shadow-[0_0_40px_rgba(255,0,0,0.6)]"
-                  >
-                    <div className="flex flex-col items-center gap-6 mt-4">
-                      <div className="bg-white rounded-lg p-3 shadow-lg w-full max-w-8xl flex items-center justify-center">
-                        <QRCode
-                          value={`${window.location.origin}/?code=${roomCode}`}
-                          size={680}
-                          style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                        />
-                      </div>
-                    </div>
-                    <div className="relative w-full max-w-3xl bg-black/50 p-6 rounded-2xl border border-red-500/30">
-                <div className="absolute top-3 right-3 z-20">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={copyRoomCode1}
-                    className="text-red-400 hover:bg-red-500/20 rounded-lg p-2 pointer-events-auto"
-                    aria-label={t("copyInvite")}
-                  >
-                    <motion.div key={copied ? "check" : "copy"} initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                      {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                    </motion.div>
-                  </Button>
-                </div>
-
-                <div className="flex flex-col items-center">
-                  <div className="text-red-400 font-mono mb-1">{t("joinLink")}</div>
-                  <div className="text-base font-mono font-bold text-red-500 text-center break-words">
-                    {`${window.location.origin}/?code=${roomCode}`}
-                  </div>
-                </div>
-              </div>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsQrModalOpen(true)}
+                  className="bg-black/60 text-red-400 hover:bg-red-700/20 border border-red-800/20 p-2 rounded-md"
+                >
+                  <Maximize2 className="w-5 h-5" />
+                </Button>
 
                 {/* Wifi/status (informational) */}
                 <div
@@ -728,6 +764,12 @@ export default function HostPage() {
             </div>
           </motion.div>
         </div>
+
+        <QRModal
+          open={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          roomCode={roomCode}
+        />
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}

@@ -316,7 +316,7 @@ export default function HomePage() {
       )}
 
       <div className="relative z-10 flex items-center justify-center min-h-screen p-2 sm:p-4">
-        <Button
+        {/* <Button
           variant="ghost"
           size="icon"
           className="absolute top-4 left-4 text-red-500 hover:bg-red-900/20"
@@ -324,7 +324,7 @@ export default function HomePage() {
           aria-label="Buka pengaturan"
         >
           <Gamepad2 className="h-6 w-6 animate-pulse" />
-        </Button>
+        </Button> */}
 
         {/* Pemilih bahasa */}
         <div className="absolute top-4 right-4">

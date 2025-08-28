@@ -11,6 +11,9 @@ import ZombieCharacter from "@/components/game/host/ZombieCharacter";
 import RunningCharacters from "@/components/game/host/RunningCharacters";
 import { useHostGuard } from "@/lib/host-guard";
 
+const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
+type ChaserType = typeof validChaserTypes[number];
+
 interface Player {
   id: string;
   nickname: string;
@@ -27,8 +30,14 @@ interface GameRoom {
   status: string;
   max_players: number;
   current_phase: string;
-  chaser_type: "zombie" | "monster1" | "monster2" | "monster3" | "darknight";
   countdown_start?: string;
+  game_start_time: string | null;
+  questions: any[];
+  quiz_id: string;
+  duration: number | null;
+  question_count: number | null;
+  chaser_type: ChaserType;
+  host_id: string; // Added to store host_id
 }
 
 interface PlayerHealthState {
@@ -431,8 +440,7 @@ export default function HostGamePage() {
         const player = players.find((p) => p.id === playerId);
         const isCompleted = completedPlayers.some((cp) => cp.id === playerId); // Cek apakah pemain sudah lolos
         console.log(
-          `Pemain ${player?.nickname || playerId}: health=${state.health}, is_alive=${
-            player?.is_alive
+          `Pemain ${player?.nickname || playerId}: health=${state.health}, is_alive=${player?.is_alive
           }, isCompleted=${isCompleted}`
         );
         if (player && state.health > 0 && player.is_alive && !isCompleted) {

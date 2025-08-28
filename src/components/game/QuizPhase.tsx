@@ -85,6 +85,7 @@ export default function QuizPhase({
   }, [room?.id, currentPlayer?.id])
 
   const [timeLeft, setTimeLeft] = useState(0)
+
   useEffect(() => {
     if (!roomInfo?.game_start_time || !roomInfo.duration) return
 
@@ -94,6 +95,7 @@ export default function QuizPhase({
     const remaining = Math.max(0, roomInfo.duration - elapsed)
 
     setTimeLeft(remaining)
+    setTimeLoaded(true);
 
     const interval = setInterval(() => {
       const now = Date.now()
@@ -119,6 +121,8 @@ export default function QuizPhase({
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [isProcessingAnswer, setIsProcessingAnswer] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const [timeLoaded, setTimeLoaded] = useState(false);
+
 
   const questions = room?.questions || []
   const totalQuestions = questions.length
@@ -142,7 +146,7 @@ export default function QuizPhase({
         await supabase.from("player_health_states").upsert({
           player_id: currentPlayer.id,
           room_id: room.id,
-          
+
           health: playerHealth,
           speed: playerSpeed,
           last_answer_time: new Date().toISOString(),
@@ -205,8 +209,7 @@ export default function QuizPhase({
       const completionTime = new Date().toISOString()
 
       console.log(
-        `💾 Menyimpan penyelesaian untuk ${currentPlayer.nickname}: health=${finalHealth}, correct=${finalCorrect}, eliminated=${actuallyEliminated}, completion_type=${
-          actuallyEliminated ? "eliminated" : "completed"
+        `💾 Menyimpan penyelesaian untuk ${currentPlayer.nickname}: health=${finalHealth}, correct=${finalCorrect}, eliminated=${actuallyEliminated}, completion_type=${actuallyEliminated ? "eliminated" : "completed"
         }`
       );
 
@@ -217,7 +220,7 @@ export default function QuizPhase({
         correct_answers: finalCorrect,
         total_questions_answered: totalAnswered,
         is_eliminated: actuallyEliminated,
-        completion_type: actuallyEliminated ? "eliminated" : "completed" ,
+        completion_type: actuallyEliminated ? "eliminated" : "completed",
         completed_at: completionTime,
         survival_duration: survivalDuration
       })
@@ -318,6 +321,14 @@ export default function QuizPhase({
       console.error("Error saat sinkronisasi kesehatan dan kecepatan:", error)
     }
   }
+
+  useEffect(() => {
+    if (!timeLoaded) return; // skip kalau belum load
+    if (timeLeft === 0 && !isProcessingAnswer) {
+      redirectToResults(playerHealth, correctAnswers, currentQuestionIndex + 1, true);
+    }
+  }, [timeLeft, isProcessingAnswer, playerHealth, correctAnswers, currentQuestionIndex, timeLoaded]);
+
 
   useEffect(() => {
     if (onProgressUpdate) {
@@ -584,13 +595,12 @@ export default function QuizPhase({
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       <div
-        className={`absolute inset-0 transition-all duration-1000 ${
-          dangerLevel === 3
+        className={`absolute inset-0 transition-all duration-1000 ${dangerLevel === 3
             ? "bg-gradient-to-br from-red-900/40 via-black to-red-950/40"
             : dangerLevel === 2
               ? "bg-gradient-to-br from-red-950/25 via-black to-purple-950/25"
               : "bg-gradient-to-br from-red-950/15 via-black to-purple-950/15"
-        }`}
+          }`}
         style={{
           opacity: 0.3 + pulseIntensity * 0.4,
           filter: `hue-rotate(${pulseIntensity * 30}deg)`,
@@ -650,13 +660,12 @@ export default function QuizPhase({
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className={`w-6 h-6 rounded-full border-2 transition-all duration-300 ${
-                    i < playerHealth
+                  className={`w-6 h-6 rounded-full border-2 transition-all duration-300 ${i < playerHealth
                       ? playerHealth <= 1
                         ? "bg-red-500 border-red-400 animate-pulse"
                         : "bg-green-500 border-green-400"
                       : "bg-gray-600 border-gray-500"
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -693,9 +702,8 @@ export default function QuizPhase({
                     key={index}
                     onClick={() => handleAnswerSelect(option)}
                     disabled={isAnswered || isProcessingAnswer}
-                    className={`${getAnswerButtonClass(option)} p-6 text-left justify-start font-mono text-lg border-2 transition-all duration-300 relative overflow-hidden group ${
-                      isProcessingAnswer ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                    className={`${getAnswerButtonClass(option)} p-6 text-left justify-start font-mono text-lg border-2 transition-all duration-300 relative overflow-hidden group ${isProcessingAnswer ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     <div className="flex items-center space-x-3 relative z-10">

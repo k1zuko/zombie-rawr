@@ -106,7 +106,9 @@ export default function ResultsPage() {
   const isMountedRef = useRef(true)
   const channelsRef = useRef<any[]>([])
 
-  sessionStorage.setItem("redirectTo", window.location.pathname);
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem("redirectTo", window.location.pathname);
+  }
 
   const initializePlayerData = useCallback(
     async (roomId: string) => {
