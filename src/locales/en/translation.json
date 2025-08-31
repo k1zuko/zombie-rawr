@@ -22,7 +22,7 @@
   "searchPlaceholder": "Search",
   "closeSearch": "Close search",
   "defaultQuizDescription": "Fun quiz to play!",
-  "durationLabel": "Duration: {{duration}} minutes",
+  "durationLabel": "{{duration}} minutes",
   "noQuizzesFound": "No quizzes match your search.",
   "noQuizzesAvailable": "No quizzes found.",
   "previousButton": "Previous",

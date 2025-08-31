@@ -22,7 +22,7 @@
   "searchPlaceholder": "Cari",
   "closeSearch": "Tutup pencarian",
   "defaultQuizDescription": "Kuis seru untuk dimainkan!",
-  "durationLabel": "Durasi: {{duration}} menit",
+  "durationLabel": "{{duration}} menit",
   "noQuizzesFound": "Tidak ada kuis yang cocok dengan pencarian.",
   "noQuizzesAvailable": "Tidak ada kuis yang ditemukan.",
   "previousButton": "Sebelumnya",
