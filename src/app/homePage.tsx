@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Tipe untuk TypeScript
 interface BloodDrip {
@@ -64,6 +65,7 @@ export default function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [openHowToPlay, setOpenHowToPlay] = useState(false);
+  const [showTooltipOnce, setShowTooltipOnce] = useState(false);
 
   // Teks suasana
   const atmosphereText = t("atmosphereText");
@@ -348,18 +350,40 @@ export default function HomePage() {
       <div className="relative z-10 flex items-center justify-center min-h-screen p-2 sm:p-4">
         {/* Tombol Help Circle */}
         <div className="absolute top-4 left-4 z-20">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setOpenHowToPlay(true)}
-            className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
-            aria-label="How to Play"
-          >
-            <HelpCircle className="h-6 w-6" />
-          </Button>
+          <TooltipProvider>
+  <Tooltip open={showTooltipOnce}>
+    <TooltipTrigger asChild>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setOpenHowToPlay(true)}
+        className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+        aria-label="How to Play"
+      >
+        <HelpCircle className="h-6 w-6" />
+      </Button>
+    </TooltipTrigger>
+    <TooltipContent
+      side="right"
+      className="bg-black text-red-400 border border-red-500/50 font-mono"
+    >
+      How to Play
+    </TooltipContent>
+  </Tooltip>
+</TooltipProvider>
         </div>
 
-<Dialog open={openHowToPlay} onOpenChange={setOpenHowToPlay}>
+<Dialog open={openHowToPlay} onOpenChange={(isOpen) => {
+    setOpenHowToPlay(isOpen);
+    if (!isOpen && !localStorage.getItem("seenTooltipOnce")) {
+      setShowTooltipOnce(true);
+      localStorage.setItem("seenTooltipOnce", "1");
+      setTimeout(() => {
+        setShowTooltipOnce(false);
+      }, 5000); // tooltip hilang setelah 5 detik
+    }
+  }}
+>
   <AnimatePresence>
     {openHowToPlay && (
       <DialogContent forceMount className="bg-black/80 border-red-500 text-red-400 max-w-sm sm:max-w-lg">
@@ -429,6 +453,8 @@ export default function HomePage() {
     )}
   </AnimatePresence>
 </Dialog>
+
+
 
         {/* Pemilih bahasa */}
         <div className="absolute top-4 right-4">
