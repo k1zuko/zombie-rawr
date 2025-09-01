@@ -10,13 +10,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Gamepad2, Users, Play, Hash, Zap, Skull, Bone, RefreshCw } from "lucide-react";
+import { Gamepad2, Users, Play, Hash, Zap, Skull, Bone, RefreshCw, HelpCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import toast, { Toaster } from "react-hot-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Tipe untuk TypeScript
 interface BloodDrip {
@@ -56,6 +64,8 @@ export default function HomePage() {
   const [isClient, setIsClient] = useState<boolean>(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [openHowToPlay, setOpenHowToPlay] = useState(false);
+  const [showTooltipOnce, setShowTooltipOnce] = useState(false);
 
   // Teks suasana
   const atmosphereText = t("atmosphereText");
@@ -191,6 +201,21 @@ export default function HomePage() {
     setIsClient(true);
   }, []);
 
+  useEffect(() => {
+    if (!isClient) return;
+
+    const timer = setTimeout(() => {
+      const seen = localStorage.getItem("seenHowToPlay");
+      if (!seen) {
+        setOpenHowToPlay(true);
+        localStorage.setItem("seenHowToPlay", "1");
+      }
+    }, 2500); // 3 detik
+
+    // Bersihkan timer kalau komponen unmount sebelum 3 detik
+    return () => clearTimeout(timer);
+  }, [isClient]);
+
   // Host permainan
   const handleHostGame = useCallback(() => {
     setIsCreating(true);
@@ -323,15 +348,113 @@ export default function HomePage() {
       )}
 
       <div className="relative z-10 flex items-center justify-center min-h-screen p-2 sm:p-4">
-        {/* <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-4 left-4 text-red-500 hover:bg-red-900/20"
-          onClick={handleSettingsClick}
-          aria-label="Buka pengaturan"
+        {/* Tombol Help Circle */}
+        <div className="absolute top-4 left-4 z-20">
+          <TooltipProvider>
+  <Tooltip open={showTooltipOnce}>
+    <TooltipTrigger asChild>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setOpenHowToPlay(true)}
+        className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+        aria-label="How to Play"
+      >
+        <HelpCircle className="h-6 w-6" />
+      </Button>
+    </TooltipTrigger>
+    <TooltipContent
+      side="right"
+      className="bg-black text-red-400 border border-red-500/50 font-mono"
+    >
+      How to Play
+    </TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+        </div>
+
+<Dialog open={openHowToPlay} onOpenChange={(isOpen) => {
+    setOpenHowToPlay(isOpen);
+    if (!isOpen && !localStorage.getItem("seenTooltipOnce")) {
+      setShowTooltipOnce(true);
+      localStorage.setItem("seenTooltipOnce", "1");
+      setTimeout(() => {
+        setShowTooltipOnce(false);
+      }, 5000); // tooltip hilang setelah 5 detik
+    }
+  }}
+>
+  <AnimatePresence>
+    {openHowToPlay && (
+      <DialogContent forceMount className="bg-black/80 border-red-500 text-red-400 max-w-sm sm:max-w-lg">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
         >
-          <Gamepad2 className="h-6 w-6 animate-pulse" />
-        </Button> */}
+          {/* --- your existing DialogHeader + Tabs --- */}
+          <DialogHeader>
+            <DialogTitle className="text-red-500 text-2xl font-mono">How to Play</DialogTitle>
+          </DialogHeader>
+
+          {/* 2. ANIMATED TABS */}
+          <Tabs defaultValue="join" className="mt-4">
+            <TabsList className="grid w-full grid-cols-2 bg-black/50 border-red-500/50">
+              <TabsTrigger value="join" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">Cara Gabung</TabsTrigger>
+              <TabsTrigger value="main" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">Cara Main</TabsTrigger>
+            </TabsList>
+
+            {/* wrap each content in motion.div */}
+            <TabsContent value="join" asChild>
+              <motion.div
+                className="mt-4"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <h3 className="text-xl font-mono mb-2">🔥 Cara Join</h3>
+                <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
+                  <li>Masukkan kode game dan namamu.</li>
+                  <li>Klik Gabung.</li>
+                  <li>(Opsional) Pilih karakter yang akan jadi jagoanmu.</li>
+                  <li>Bersiaplah… tunggu host memulai permainan.</li>
+                </ol>
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="main" asChild>
+              <motion.div
+                className="mt-4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <h3 className="text-xl font-bold mb-2">⚡ Cara Main</h3>
+                <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
+                  <li>Pengejar mulai di kecepatan 30, kamu di 20. Awas jadi target!</li>
+                  <li>Dalam 10 detik awal, jawab cepat & benar untuk tambah kecepatan:
+                    <ul className="list-disc list-outside pl-6">
+                      <li>Benar = +5 kecepatan</li>
+                      <li>Salah = -5 kecepatan</li>
+                    </ul>
+                  </li>
+                  <li>Kecepatan ≤30 = pengejar mendekat (10 detik). Jawaban benar bisa menyelamatkanmu!</li>
+                  <li>Habis waktu/nyawa = tertangkap!</li>
+                  <li>Selesaikan kuis untuk kabur dari pengejar!</li>
+                </ol>
+              </motion.div>
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+      </DialogContent>
+    )}
+  </AnimatePresence>
+</Dialog>
+
+
 
         {/* Pemilih bahasa */}
         <div className="absolute top-4 right-4">
@@ -558,11 +681,6 @@ export default function HomePage() {
           border: 1px solid #ff0000 !important;
           font-size: 0.875rem;
           padding: 0.5rem 1rem;
-        }
-        @media (max-width: 640px) {
-          .animate-fall, .animate-float {
-            animation-duration: 0s !important; /* Nonaktifkan animasi berat di mobile */
-          }
         }
       `}</style>
     </div>

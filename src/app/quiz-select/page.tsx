@@ -4,11 +4,10 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skull, Bone, HeartPulse, Search, Loader2, X } from "lucide-react";
+import { Skull, Bone, HeartPulse, Search, Loader2, X, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { motion, AnimatePresence } from "framer-motion";
-import debounce from "lodash/debounce";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
 export default function QuizSelectPage() {
@@ -16,6 +15,7 @@ export default function QuizSelectPage() {
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [filteredQuizzes, setFilteredQuizzes] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); // actual submitted query
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [flickerText, setFlickerText] = useState(true);
@@ -24,7 +24,6 @@ export default function QuizSelectPage() {
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalQuizzes, setTotalQuizzes] = useState(0);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const quizzesPerPage = 12;
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -59,8 +58,7 @@ export default function QuizSelectPage() {
         setFilteredQuizzes(data || []);
       } catch (error) {
         console.error("Error fetching quizzes:", error);
-        // Simulasi toast notification (ganti dengan react-hot-toast jika tersedia)
-        alert(t("errorMessages.fetchQuizzesFailed")); // Ganti dengan toast.error jika menggunakan react-hot-toast
+        alert(t("errorMessages.fetchQuizzesFailed"));
       } finally {
         setIsLoading(false);
       }
@@ -96,26 +94,47 @@ export default function QuizSelectPage() {
       clearInterval(flickerInterval);
       clearInterval(textInterval);
     };
-  }, [currentPage, atmosphereTexts]);
+  }, [currentPage, atmosphereTexts, t]);
 
-  const debouncedSearch = useMemo(
-    () =>
-      debounce((term: string) => {
-        const lowerTerm = term.toLowerCase();
-        const filtered = quizzes.filter(
-          (quiz) =>
-            quiz.theme?.toLowerCase().includes(lowerTerm) ||
-            quiz.description?.toLowerCase().includes(lowerTerm)
-        );
-        setFilteredQuizzes(filtered);
-      }, 300),
-    [quizzes]
+  // ---- SEARCH HANDLERS ----
+  // Note: we NO LONGER run live filtering on every keystroke.
+  const handleSearchSubmit = useCallback(() => {
+    const term = searchTerm.trim();
+    setSearchQuery(term);
+
+    if (!term) {
+      handleSearchClear(); // 🔄 langsung balik ke list normal
+      return;
+    }
+
+    const lowerTerm = term.toLowerCase();
+    const filtered = quizzes.filter(
+      (quiz) =>
+        quiz.theme?.toLowerCase().includes(lowerTerm) ||
+        quiz.description?.toLowerCase().includes(lowerTerm)
+    );
+    setFilteredQuizzes(filtered);
+  }, [searchTerm, quizzes]);
+
+  const handleSearchClear = useCallback(() => {
+    setSearchTerm("");
+    setSearchQuery("");
+    setFilteredQuizzes(quizzes);
+    // keep focus for convenience
+    searchInputRef.current?.focus();
+  }, [quizzes]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSearchSubmit();
+      }
+    },
+    [handleSearchSubmit]
   );
 
-  useEffect(() => {
-    debouncedSearch(searchTerm);
-    return () => debouncedSearch.cancel();
-  }, [searchTerm, debouncedSearch]);
+  // --------------------------
 
   const generateRoomCode = useCallback(() => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -145,8 +164,7 @@ export default function QuizSelectPage() {
         router.push(`/character-select/${roomCode}`);
       } catch (error) {
         console.error("Error creating game:", error);
-        // Simulasi toast notification (ganti dengan react-hot-toast jika tersedia)
-        alert(t("errorMessages.createGameFailed")); // Ganti dengan toast.error jika menggunakan react-hot-toast
+        alert(t("errorMessages.createGameFailed"));
       } finally {
         setIsCreating(false);
       }
@@ -160,18 +178,6 @@ export default function QuizSelectPage() {
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  }, []);
-
-  const handleSearchOpen = useCallback(() => {
-    setIsSearchOpen(true);
-    setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 0);
-  }, []);
-
-  const handleSearchClose = useCallback(() => {
-    setIsSearchOpen(false);
-    setSearchTerm("");
   }, []);
 
   const totalPages = Math.ceil(totalQuizzes / quizzesPerPage);
@@ -205,6 +211,8 @@ export default function QuizSelectPage() {
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
   };
+
+  const isSearching = searchQuery.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none flex flex-col">
@@ -274,7 +282,7 @@ export default function QuizSelectPage() {
         <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
       </div>
 
-      <div className="relative z-10 flex flex-col min-h-screen pt-2 pb-6">
+      <div className="relative z-10 flex flex-col min-h-screen pb-5">
         <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-sm py-4 px-6 flex justify-between items-center">
           <Button
             variant="ghost"
@@ -286,30 +294,14 @@ export default function QuizSelectPage() {
           >
             <HeartPulse className="h-6 w-6 animate-pulse" />
           </Button>
-          <div className="space-x-2">
-            {/* <Button
-              variant="ghost"
-              onClick={() => changeLanguage("en")}
-              className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "en" ? "bg-red-900/30" : ""}`}
-            >
-              EN
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => changeLanguage("id")}
-              className={`text-red-500 hover:bg-red-900/20 ${i18n.language === "id" ? "bg-red-900/30" : ""}`}
-            >
-              ID
-            </Button> */}
-          </div>
         </div>
 
-        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 px-2 md:px-3">
+        <div className="w-full max-w-8xl mx-auto flex flex-col flex-1 px-2 md:px-8 gap-5">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-4"
+            className="text-center"
           >
             <h1
               className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
@@ -318,142 +310,131 @@ export default function QuizSelectPage() {
             >
               {t("selectQuizTitle")}
             </h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="text-red-400/80 text-sm md:text-lg font-mono animate-pulse tracking-wider mt-2"
-            >
-              {atmosphereText}
-            </motion.p>
           </motion.div>
 
-          {/* Search Button */}
-          <div className="max-w-md mx-auto mb-4">
-            <Button
-              variant="outline"
-              className="bg-black/50 border-red-500/50 text-red-400 hover:bg-red-900/20 text-sm font-mono h-9 rounded-xl animate-pulse-glow w-full"
-              onClick={handleSearchOpen}
-            >
-              <Search className="h-4 w-4 mr-2" />
-              {t("searchButton")}
-            </Button>
-          </div>
+          {/* SEARCH INPUT (visible from start). Search runs only on Enter or clicking the search icon. */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="max-w-xl mx-auto"
+          >
+            <div className="relative">
+              <Input
+                ref={searchInputRef}
+                placeholder={t("searchButton")}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="bg-black/70 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-base font-mono h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 backdrop-blur-sm"
+              />
 
-          {/* Search Input and Results */}
-          <AnimatePresence>
-            {isSearchOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="max-w-md mx-auto mb-4"
+              {/* tombol clear X (hanya muncul kalau ada teks), posisinya sebelum tombol submit */}
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-12 top-1/2 -translate-y-1/2 text-red-400/60 hover:text-red-400"
+                  onClick={handleSearchClear}
+                  aria-label={t("closeSearch")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+
+              {/* tombol submit search */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400/80 hover:text-red-400"
+                disabled={searchTerm.trim().length === 0}
+                onClick={handleSearchSubmit}
+                aria-label={t("searchButton")}
               >
-                <div className="relative">
-                  <Input
-                    ref={searchInputRef}
-                    placeholder={t("searchPlaceholder")}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-black/70 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-base font-mono h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 pr-10 backdrop-blur-sm animate-pulse-glow"
-                    autoFocus
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-400/80 hover:text-red-400"
-                    onClick={handleSearchClose}
-                    aria-label={t("closeSearch")}
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
+                <Search className="h-5 w-5" />
+              </Button>
+            </div>
+          </motion.div>
 
-                {/* Search Results */}
-                {searchTerm && filteredQuizzes.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3 }}
-                    className="mt-4 max-h-[50vh] overflow-y-auto custom-scrollbar"
-                  >
-                    {filteredQuizzes.map((quiz) => (
-                      <motion.div
-                        key={quiz.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="w-full mb-2"
-                      >
-                        <Card
-                          className="bg-black/40 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full flex flex-col"
-                          style={{ minHeight: "150px", maxHeight: "200px" }}
-                          onClick={() => handleQuizSelect(quiz.id)}
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") handleQuizSelect(quiz.id);
-                          }}
-                          aria-label={t("selectQuiz", { theme: quiz.theme })}
-                        >
-                          <CardHeader className="pb-2 flex-shrink-0">
-                            <CardTitle className="text-red-400 font-mono text-lg line-clamp-2">{quiz.theme}</CardTitle>
-                            <CardDescription className="text-gray-300 text-sm line-clamp-3">
-                              {quiz.description || t("defaultQuizDescription")}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="flex-grow flex items-end">
-                            <div className="text-gray-300 text-sm font-mono">
-                              {t("durationLabel", { duration: quiz.duration })}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-
-                {/* Empty Search State */}
-                {searchTerm && filteredQuizzes.length === 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="text-center text-red-400/80 text-base font-mono mt-4"
-                  >
-                    {t("noQuizzesFound")}
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Quiz Grid or Loading State */}
+          {/* If user has submitted a search (Enter or icon click), show results for that query.
+    Otherwise show default quiz grid / pagination. */}
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-full mx-auto min-h-[50vh]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full mx-auto min-h-[50vh]">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="w-full max-w-md mx-auto">
-                  <Card className="bg-black/40 border-red-500/20 h-[150px]">
-                    <CardHeader className="pb-2">
-                      <div className="h-6 bg-red-500/20 rounded animate-pulse" />
-                      <div className="h-12 bg-red-500/20 rounded mt-2 animate-pulse" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-4 bg-red-500/20 rounded animate-pulse" />
-                    </CardContent>
-                  </Card>
-                </div>
+                <Card key={i} className="bg-black/40 border-red-500/20 h-[150px] animate-pulse" />
               ))}
             </div>
-          ) : !isSearchOpen || !searchTerm ? (
+          ) : isSearching ? (
+            filteredQuizzes.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`mt-4 grid gap-4 ${{
+                  1: "grid-cols-1",
+                  2: "grid-cols-2",
+                  3: "grid-cols-3",
+                  4: "grid-cols-4",
+                }[Math.min(filteredQuizzes.length, 5)] || "grid-cols-5"
+                  }`}
+              >
+                {filteredQuizzes.map((quiz) => (
+                  <motion.div
+                    key={quiz.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full"
+                  >
+                    <Card
+                      className="bg-black/40 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full flex flex-col"
+                      style={{ minHeight: "150px", maxHeight: "200px" }}
+                      onClick={() => handleQuizSelect(quiz.id)}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") handleQuizSelect(quiz.id);
+                      }}
+                      aria-label={t("selectQuiz", { theme: quiz.theme })}
+                    >
+                      <CardHeader className="pb-2 flex-shrink-0">
+                        <CardTitle className="text-red-400 font-mono text-lg line-clamp-2">{quiz.theme}</CardTitle>
+                        <CardDescription className="text-gray-300 text-sm line-clamp-3">
+                          {quiz.description || t("defaultQuizDescription")}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex items-center text-gray-300 text-sm font-mono gap-3">
+                        <Clock />
+                        {t("durationLabel", { duration: quiz.duration })}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-center text-red-400/80 text-base font-mono mt-4"
+              >
+                {t("noQuizzesFound")}
+              </motion.div>
+            )
+          ) : (
+            // default grid + pagination when not searching
             filteredQuizzes.length === 0 ? (
               <div className="text-center text-red-400/80 text-base font-mono flex-1 flex items-center justify-center">
                 {t("noQuizzesAvailable")}
               </div>
             ) : (
               <div className="flex flex-col flex-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-full mx-auto min-h-[50vh]">
+                <div className={`mt-4 grid gap-4 ${{
+                  1: "grid-cols-1",
+                  2: "grid-cols-2",
+                  3: "grid-cols-3",
+                  4: "grid-cols-4",
+                }[Math.min(filteredQuizzes.length, 5)] || "grid-cols-5"
+                  }`}>
                   {filteredQuizzes.map((quiz) => (
                     <motion.div
                       key={quiz.id}
@@ -461,7 +442,7 @@ export default function QuizSelectPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * (quiz.id % 4), duration: 0.5 }}
                       whileHover={{ scale: 1.02 }}
-                      className="w-full max-w-md mx-auto"
+                      className="w-full"
                     >
                       <Card
                         className="bg-black/50 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full flex flex-col"
@@ -479,16 +460,14 @@ export default function QuizSelectPage() {
                             {quiz.description || t("defaultQuizDescription")}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="flex-grow flex items-end">
-                          <div className="text-gray-300 text-sm font-mono">
-                            {t("durationLabel", { duration: quiz.duration })}
-                          </div>
+                        <CardContent className="flex items-center text-gray-300 text-sm font-mono gap-3">
+                          <Clock />
+                          {t("durationLabel", { duration: quiz.duration })}
                         </CardContent>
                       </Card>
                     </motion.div>
                   ))}
                 </div>
-
                 <motion.div
                   className="mt-4"
                   initial={{ opacity: 0, y: 20 }}
@@ -519,7 +498,7 @@ export default function QuizSelectPage() {
                 </motion.div>
               </div>
             )
-          ) : null}
+          )}
         </div>
       </div>
 

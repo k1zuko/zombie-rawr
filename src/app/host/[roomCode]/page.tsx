@@ -706,7 +706,7 @@ export default function HostPage() {
             </motion.div>
             <div className="grid gap-4 w-full">
               {/* big code box — copy di pojok kanan atas */}
-              <div className="relative w-full max-w-xl mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
+              <div className="relative w-full max-w-[87%] mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
                 {/* tombol copy fixed top-right */}
                 <div className="absolute top-2 right-2 z-20">
                   <Button
@@ -732,7 +732,7 @@ export default function HostPage() {
               </div>
 
               {/* small join link box — copy di pojok kanan atas */}
-              <div className="relative w-full max-w-xl mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
+              <div className="relative w-full max-w-[87%] mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
                 <div className="absolute top-2 right-2 z-20">
                   <Button
                     variant="ghost"
