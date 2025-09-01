@@ -62,7 +62,7 @@ const characterConfigs = [
     alt: "Karakter Hijau", 
     type: "robot1", 
     name: "Hijau", 
-    width: 48, 
+    width: 30, 
     height: 48, 
     verticalOffset: 5,
     horizontalOffset: 0
@@ -72,7 +72,7 @@ const characterConfigs = [
     alt: "Karakter Biru", 
     type: "robot2", 
     name: "Biru", 
-    width: 52, 
+    width: 30, 
     height: 50, 
     verticalOffset: -2,
     horizontalOffset: 10
@@ -82,7 +82,7 @@ const characterConfigs = [
     alt: "Karakter Merah", 
     type: "robot3", 
     name: "Merah", 
-    width: 50, 
+    width: 30, 
     height: 46, 
     verticalOffset: 2,
     horizontalOffset: -10
@@ -92,7 +92,7 @@ const characterConfigs = [
     alt: "Karakter Ungu", 
     type: "robot4", 
     name: "Ungu", 
-    width: 48, 
+    width: 30, 
     height: 48, 
     verticalOffset: 0,
     horizontalOffset: 5
@@ -102,7 +102,7 @@ const characterConfigs = [
     alt: "Karakter Oranye", 
     type: "robot5", 
     name: "Oranye", 
-    width: 46, 
+    width: 30, 
     height: 50, 
     verticalOffset: -4,
     horizontalOffset: -5
@@ -112,7 +112,7 @@ const characterConfigs = [
     alt: "Karakter Kuning", 
     type: "robot6", 
     name: "Kuning", 
-    width: 50, 
+    width: 30, 
     height: 48, 
     verticalOffset: 0,
     horizontalOffset: 15
@@ -122,7 +122,7 @@ const characterConfigs = [
     alt: "Karakter Abu-abu", 
     type: "robot7", 
     name: "Abu-abu", 
-    width: 48, 
+    width: 30, 
     height: 46, 
     verticalOffset: 2,
     horizontalOffset: -15
@@ -132,7 +132,7 @@ const characterConfigs = [
     alt: "Karakter Pink", 
     type: "robot8", 
     name: "Pink", 
-    width: 52, 
+    width: 30, 
     height: 50, 
     verticalOffset: -2,
     horizontalOffset: 20
@@ -142,7 +142,7 @@ const characterConfigs = [
     alt: "Karakter Cokelat", 
     type: "robot9", 
     name: "Cokelat", 
-    width: 48, 
+    width: 30, 
     height: 48, 
     verticalOffset: 0,
     horizontalOffset: -20
@@ -152,7 +152,7 @@ const characterConfigs = [
     alt: "Karakter Emas", 
     type: "robot10", 
     name: "Emas", 
-    width: 50, 
+    width:30, 
     height: 52, 
     verticalOffset: -4,
     horizontalOffset: 25
@@ -173,6 +173,13 @@ export default function RunningCharacters({
   const router = useRouter();
   const params = useParams();
   const roomCode = params.roomCode as string;
+
+
+
+  // utils/gridUtils.ts
+// File utilitas untuk fungsi getGridPosition yang digunakan bersama
+
+// (Removed duplicate export of getGridPosition)
 
   // Gunakan useMemo untuk menghitung pemain aktif
   const activePlayers = useMemo(() => {
@@ -213,10 +220,10 @@ export default function RunningCharacters({
     const playersPerRow = 100;
     const row = Math.floor(index / playersPerRow);
     const col = index % playersPerRow;
-    const spacingX = 100;
-    const spacingY = -120;
+    const spacingX = 0;
+    const spacingY = 0;
     const offsetX = 300;
-    const offsetY = -30;
+    const offsetY = 5;
 
     return {
       x: offsetX + col * spacingX,

@@ -13,6 +13,7 @@ import RunningCharacters from "@/components/game/host/RunningCharacters";
 import { useHostGuard } from "@/lib/host-guard";
 import Background2 from "@/components/game/host/Background2";
 import Background3 from "@/components/game/host/Background3";
+import { t } from "i18next";
 
 interface Player {
   id: string;
@@ -984,6 +985,13 @@ const testAllImages = async () => {
             })}
         </div>
       </AnimatePresence> */}
+
+           <h6
+              className="text-2xl sm:text-2xl md:text-5xl font-bold font-mono tracking-wider text-red-600 drop-shadow-[0_0_10px_rgba(39,68,0)]"
+              style={{ textShadow: "0 0 15px rgba(239, 68, 68, 0.9), 0 0 20px rgba(0, 0, 0, 0.5)" }}
+            >
+              {t("title")}
+            </h6>
 
       <RunningCharacters
         players={activePlayers}

@@ -11,11 +11,11 @@ export default function Background1({ isFlashing }: Background1Props) {
         className={`absolute inset-0 blood-background ${isFlashing ? "flash-effect" : ""}`}
       >
         {/* Container untuk 1.png (langit) */}
-        <div className="background-container-ground">
+        {/* <div className="background-container-ground">
           <div
             className="background-image"
             style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map6/1.png')",
+              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map2/1.png')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + -25px)",
               backgroundRepeat: "no-repeat",
@@ -24,19 +24,19 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map6/1.png')",
+              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map2/1.png')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + -25px)",
               backgroundRepeat: "no-repeat",
             }}
           />
-        </div>
+        </div> */}
         {/* Container untuk 2.png (awan) */}
         <div className="background-container-groundtiga">
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/2.png')",
+              backgroundImage: "url('/map4/1.png')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 25px)",
               backgroundRepeat: "no-repeat",
@@ -45,7 +45,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/2.png')",
+              backgroundImage: "url('/map4/1.png')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 25px)",
               backgroundRepeat: "no-repeat",
@@ -59,7 +59,7 @@ export default function Background1({ isFlashing }: Background1Props) {
             style={{
               backgroundImage: "url('/map6/3.png')",
               backgroundSize: "106%",
-              backgroundPosition: "center calc(100% + 5px)",
+              backgroundPosition: "center calc(100% + 103px)",
               backgroundRepeat: "no-repeat",
             }}
           />
@@ -68,7 +68,7 @@ export default function Background1({ isFlashing }: Background1Props) {
             style={{
               backgroundImage: "url('/map6/3.png')",
               backgroundSize: "106%",
-              backgroundPosition: "center calc(100% + 5px)",
+              backgroundPosition: "center calc(100% + 103px)",
               backgroundRepeat: "scaleX(-1)"
             }}
           />
@@ -118,7 +118,7 @@ export default function Background1({ isFlashing }: Background1Props) {
         </div>
 
 
-         <div className="background-container-ground">
+         {/* <div className="background-container-ground">
           <div
             className="background-image"
             style={{
@@ -137,7 +137,7 @@ export default function Background1({ isFlashing }: Background1Props) {
               backgroundRepeat: "no-repeat",
             }}
           />
-        </div>
+        </div> */}
 
 
                  <div className="background-container-ground">
@@ -205,7 +205,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           width: 200%;
           height: 100%;
           display: flex;
-          animation: slide-ground 3s linear infinite;
+          animation: slide-ground 5s linear infinite;
         }
 
          .background-container-grounddua {
