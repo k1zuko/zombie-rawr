@@ -11,6 +11,7 @@ import type { GameRoom } from "@/lib/supabase"
 import Image from "next/image"
 import { useTranslation } from "react-i18next"
 import { debounce } from "lodash"
+import Link from "next/link"
 
 // Interface tidak berubah
 interface GameCompletion {
@@ -102,6 +103,7 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null)
   const [playerData, setPlayerData] = useState<PlayerData | null>(null) // State untuk data pemain
   const [characterGif, setCharacterGif] = useState<string>("/character.gif")
+  const [flickerText, setFlickerText] = useState(true);
 
   const isMountedRef = useRef(true)
   const channelsRef = useRef<any[]>([])
@@ -524,6 +526,19 @@ export default function ResultsPage() {
   }, [fetchInitialData])
 
   useEffect(() => {
+      const flickerInterval = setInterval(
+        () => {
+          setFlickerText((prev) => !prev);
+        },
+        100 + Math.random() * 150,
+      );
+  
+      return () => {
+        clearInterval(flickerInterval);
+      };
+    }, []);
+
+  useEffect(() => {
     if (room) {
       const cleanup = setupRealtimeSubscriptions()
       return cleanup
@@ -708,20 +723,40 @@ export default function ResultsPage() {
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* ... (sisa dari JSX render tidak berubah) ... */}
-        <motion.div
-          className="text-center mb-8"
+        <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
+          className="flex flex-col gap-1 mb-10"
         >
-          <div className="flex items-center justify-center mb-6">
-            <Skull className="w-8 h-8 text-red-500 mr-3 animate-pulse" />
-            <h1 className="text-5xl font-bold text-white font-horror tracking-wider text-red-600 drop-shadow-[0_0_8px_rgba(255,0,0,0.7)]">
-              {t("result.title")}
-            </h1>
-            <Skull className="w-8 h-8 text-red-500 ml-3 animate-pulse" />
+          <div className="flex items-start mb-5">
+            <Link href={"/"}>
+              <h1
+                className="text-xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+              >
+                {t("title")}
+              </h1>
+            </Link>
           </div>
-        </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
+            className="flex justify-center items-center text-center"
+          >
+            <Skull className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
+            <h1
+              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
+                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.5)" }}
+            >
+               {t("result.title")}
+            </h1>
+            <Skull className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
+          </motion.div>
+        </motion.header>
 
         {error && (
           <motion.div

@@ -15,6 +15,7 @@ import { syncServerTime, calculateCountdown } from "@/lib/server-time"
 
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 // Mendefinisikan tipe data untuk Player
 interface Player {
@@ -394,10 +395,23 @@ export default function LobbyPhase({
         </motion.div>
       )}
 
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="fixed top-4 left-4 z-30">
-          <Button
+      <div className="relative z-10 mx-auto p-7 mb-10">
+        <motion.header
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
+          className="flex flex-col gap-1 mb-10"
+        >
+          <div className="flex items-center justify-between mb-5">
+            <Link href={"/"}>
+              <h1
+                className="text-2xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+              >
+                {t("title")}
+              </h1>
+            </Link>
+            <Button
             onClick={() => setIsExitDialogOpen(true)}
             variant="ghost"
             size="icon"
@@ -405,23 +419,26 @@ export default function LobbyPhase({
           >
             <LogOut className="w-5 h-5" />
           </Button>
-        </div>
+          </div>
 
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
+            className="flex justify-center items-center text-center pb-5"
+          >
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
+              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
                 } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
-              {t("lobby")}
+              {t("waitingRoomTitle")}
             </h1>
             <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
-          </div>
-
-          <p className="text-red-400/80 text-xl font-mono animate-pulse tracking-wider">{atmosphereText}</p>
-        </div>
+          </motion.div>
+          <p className="text-red-400/80 text-base md:text-xl text-center font-mono animate-pulse tracking-wider">{atmosphereText}</p>
+        </motion.header>
 
         {/* Grid Pemain */}
         <div className="max-w-auto mx-auto mb-8 md:h-auto h-[calc(100vh-150px)] overflow-y-auto">

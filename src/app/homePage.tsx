@@ -351,108 +351,108 @@ export default function HomePage() {
         {/* Tombol Help Circle */}
         <div className="absolute top-4 left-4 z-20">
           <TooltipProvider>
-  <Tooltip open={showTooltipOnce}>
-    <TooltipTrigger asChild>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setOpenHowToPlay(true)}
-        className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
-        aria-label="How to Play"
-      >
-        <HelpCircle className="h-6 w-6" />
-      </Button>
-    </TooltipTrigger>
-    <TooltipContent
-      side="right"
-      className="bg-black text-red-400 border border-red-500/50 font-mono"
-    >
-      How to Play
-    </TooltipContent>
-  </Tooltip>
-</TooltipProvider>
+            <Tooltip open={showTooltipOnce}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setOpenHowToPlay(true)}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                  aria-label="How to Play"
+                >
+                  <HelpCircle className="h-6 w-6" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="right"
+                className="bg-black text-red-400 border border-red-500/50 font-mono"
+              >
+                {t("howToPlay")}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
-<Dialog open={openHowToPlay} onOpenChange={(isOpen) => {
-    setOpenHowToPlay(isOpen);
-    if (!isOpen && !localStorage.getItem("seenTooltipOnce")) {
-      setShowTooltipOnce(true);
-      localStorage.setItem("seenTooltipOnce", "1");
-      setTimeout(() => {
-        setShowTooltipOnce(false);
-      }, 5000); // tooltip hilang setelah 5 detik
-    }
-  }}
->
-  <AnimatePresence>
-    {openHowToPlay && (
-      <DialogContent forceMount className="bg-black/80 border-red-500 text-red-400 max-w-sm sm:max-w-lg">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
+        <Dialog open={openHowToPlay} onOpenChange={(isOpen) => {
+          setOpenHowToPlay(isOpen);
+          if (!isOpen && !localStorage.getItem("seenTooltipOnce")) {
+            setShowTooltipOnce(true);
+            localStorage.setItem("seenTooltipOnce", "1");
+            setTimeout(() => {
+              setShowTooltipOnce(false);
+            }, 5000); // tooltip hilang setelah 5 detik
+          }
+        }}
         >
-          {/* --- your existing DialogHeader + Tabs --- */}
-          <DialogHeader>
-            <DialogTitle className="text-red-500 text-2xl font-mono">How to Play</DialogTitle>
-          </DialogHeader>
+          <AnimatePresence>
+            {openHowToPlay && (
+              <DialogContent forceMount className="bg-black/80 border-red-500 text-red-400 max-w-sm sm:max-w-lg">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                >
+                  {/* --- your existing DialogHeader + Tabs --- */}
+                  <DialogHeader>
+                    <DialogTitle className="text-red-500 text-2xl font-mono">{t("howToPlay")}</DialogTitle>
+                  </DialogHeader>
 
-          {/* 2. ANIMATED TABS */}
-          <Tabs defaultValue="join" className="mt-4">
-            <TabsList className="grid w-full grid-cols-2 bg-black/50 border-red-500/50">
-              <TabsTrigger value="join" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">Cara Gabung</TabsTrigger>
-              <TabsTrigger value="main" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">Cara Main</TabsTrigger>
-            </TabsList>
+                  {/* 2. ANIMATED TABS */}
+                  <Tabs defaultValue="join" className="mt-4">
+                    <TabsList className="grid w-full grid-cols-2 bg-black/50 border-red-500/50">
+                      <TabsTrigger value="join" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">{t("join")}</TabsTrigger>
+                      <TabsTrigger value="main" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">{t("play")}</TabsTrigger>
+                    </TabsList>
 
-            {/* wrap each content in motion.div */}
-            <TabsContent value="join" asChild>
-              <motion.div
-                className="mt-4"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <h3 className="text-xl font-mono mb-2">🔥 Cara Join</h3>
-                <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
-                  <li>Masukkan kode game dan namamu.</li>
-                  <li>Klik Gabung.</li>
-                  <li>(Opsional) Pilih karakter yang akan jadi jagoanmu.</li>
-                  <li>Bersiaplah… tunggu host memulai permainan.</li>
-                </ol>
-              </motion.div>
-            </TabsContent>
+                    {/* wrap each content in motion.div */}
+                    <TabsContent value="join" asChild>
+                      <motion.div
+                        className="mt-4"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <h3 className="text-xl font-mono mb-2">{t("joinTitle")}</h3>
+                        <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
+                          {(t("joinSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
+                            <li key={idx}>{step}</li>
+                          ))}
+                        </ol>
+                      </motion.div>
+                    </TabsContent>
 
-            <TabsContent value="main" asChild>
-              <motion.div
-                className="mt-4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <h3 className="text-xl font-bold mb-2">⚡ Cara Main</h3>
-                <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
-                  <li>Pengejar mulai di kecepatan 30, kamu di 20. Awas jadi target!</li>
-                  <li>Dalam 10 detik awal, jawab cepat & benar untuk tambah kecepatan:
-                    <ul className="list-disc list-outside pl-6">
-                      <li>Benar = +5 kecepatan</li>
-                      <li>Salah = -5 kecepatan</li>
-                    </ul>
-                  </li>
-                  <li>Kecepatan ≤30 = pengejar mendekat (10 detik). Jawaban benar bisa menyelamatkanmu!</li>
-                  <li>Habis waktu/nyawa = tertangkap!</li>
-                  <li>Selesaikan kuis untuk kabur dari pengejar!</li>
-                </ol>
-              </motion.div>
-            </TabsContent>
-          </Tabs>
-        </motion.div>
-      </DialogContent>
-    )}
-  </AnimatePresence>
-</Dialog>
+                    <TabsContent value="main" asChild>
+                      <motion.div
+                        className="mt-4"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <h3 className="text-xl font-bold mb-2">{t("playTitle")}</h3>
+                        <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
+                          {(t("playSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
+                            <li key={idx}>
+                              {step}
+                              {idx === 1 && (
+                                <ul className="list-disc list-outside pl-6 mt-1 space-y-1">
+                                  <li>{t("speedRuleCorrect")}</li>
+                                  <li>{t("speedRuleWrong")}</li>
+                                </ul>
+                              )}
+                            </li>
+                          ))}
+                        </ol>
+                      </motion.div>
+                    </TabsContent>
+                  </Tabs>
+                </motion.div>
+              </DialogContent>
+            )}
+          </AnimatePresence>
+        </Dialog>
 
 
 

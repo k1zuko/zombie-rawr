@@ -100,7 +100,6 @@
     "start?": "MULAI...",
     "start": "MULAI GAME"
   },
-  "lobby": "RUANG TUNGGU",
   "atmosphereTexts": [
     "Dinding-dinding berbisik tentang dosa-dosamu...",
     "Darah menetes dari langit-langit...",
@@ -196,5 +195,27 @@
   "durationTooltip": "Pilih berapa lama permainan berlangsung",
   "durationError": "Durasi harus antara 1 dan 30 menit!",
   "minutes": "menit",
-  "generateNickname":"Buat nama acak"
+  "generateNickname":"Buat nama acak",
+  "howToPlay": "Panduan Permainan",
+  "join": "Gabung",
+  "play": "Main",
+  "joinTitle": "🔥 Cara Gabung",
+  "joinSteps": [
+    "Masukkan kode game dan namamu.",
+    "Klik Gabung.",
+    "(Opsional) Pilih karakter yang akan jadi jagoanmu.",
+    "Bersiaplah… tunggu host memulai permainan."
+  ],
+  "playTitle": "⚡ Cara Main",
+  "playSteps": [
+    "Pengejar mulai di kecepatan 30, kamu di 20. Awas jadi target!",
+    "Jawab cepat & benar untuk ubah kecepatan:",
+    "Kecepatan ≤30 → pengejar mendekat (10 detik). Jawaban benar bisa selamatkan!",
+    "Habis waktu/nyawa → tertangkap!",
+    "Selesaikan kuis untuk kabur dari pengejar!"
+  ],
+  "speedRuleCorrect": "Benar = +5 kecepatan",
+  "speedRuleWrong": "Salah = -5 kecepatan",
+  "hostRoomTitle": "RUANG HOST",
+  "waitingRoomTitle": "RUANG TUNGGU"
 }

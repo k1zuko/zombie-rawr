@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import Link from "next/link";
 
 export default function QuizSelectPage() {
   const { t, i18n } = useTranslation();
@@ -41,6 +42,7 @@ export default function QuizSelectPage() {
     setIsClient(true);
 
     const fetchQuizzes = async () => {
+      if (searchQuery) return; // Skip paginated fetch if searching
       setIsLoading(true);
       try {
         const { count, error: countError } = await supabase
@@ -94,33 +96,40 @@ export default function QuizSelectPage() {
       clearInterval(flickerInterval);
       clearInterval(textInterval);
     };
-  }, [currentPage, atmosphereTexts, t]);
+  }, [currentPage, atmosphereTexts, t, searchQuery]);
 
   // ---- SEARCH HANDLERS ----
-  // Note: we NO LONGER run live filtering on every keystroke.
-  const handleSearchSubmit = useCallback(() => {
+  const handleSearchSubmit = useCallback(async () => {
     const term = searchTerm.trim();
     setSearchQuery(term);
 
     if (!term) {
-      handleSearchClear(); // 🔄 langsung balik ke list normal
+      handleSearchClear();
       return;
     }
 
+    setIsLoading(true);
     const lowerTerm = term.toLowerCase();
-    const filtered = quizzes.filter(
-      (quiz) =>
-        quiz.theme?.toLowerCase().includes(lowerTerm) ||
-        quiz.description?.toLowerCase().includes(lowerTerm)
-    );
-    setFilteredQuizzes(filtered);
-  }, [searchTerm, quizzes]);
+    try {
+      const { data, error } = await supabase
+        .from("quizzes")
+        .select("*")
+        .or(`theme.ilike.%${lowerTerm}%,description.ilike.%${lowerTerm}%`);
+      if (error) throw error;
+      setFilteredQuizzes(data || []);
+    } catch (error) {
+      console.error("Error searching quizzes:", error);
+      alert(t("errorMessages.searchQuizzesFailed"));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchTerm, t]);
 
   const handleSearchClear = useCallback(() => {
     setSearchTerm("");
     setSearchQuery("");
     setFilteredQuizzes(quizzes);
-    // keep focus for convenience
+    setCurrentPage(1); // Reset to first page for consistency
     searchInputRef.current?.focus();
   }, [quizzes]);
 
@@ -282,27 +291,32 @@ export default function QuizSelectPage() {
         <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
       </div>
 
-      <div className="relative z-10 flex flex-col min-h-screen pb-5">
-        <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-sm py-4 px-6 flex justify-between items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-red-500 hover:bg-red-900/20"
-            onClick={handleBackClick}
-            disabled={isCreating}
-            aria-label={t("backButton")}
-          >
-            <HeartPulse className="h-6 w-6 animate-pulse" />
-          </Button>
-        </div>
 
-        <div className="w-full max-w-8xl mx-auto flex flex-col flex-1 px-2 md:px-8 gap-5">
+      <div className="relative z-10 flex flex-col min-h-screen p-5">
+        <motion.header
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
+          className="flex flex-col gap-1 mb-10"
+        >
+          <div className="flex items-start">
+            <Link href={"/"}>
+              <h1
+                className="text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+              >
+                {t("title")}
+              </h1>
+            </Link>
+          </div>
+
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
+            className="flex justify-center items-center text-center"
           >
+            <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
               className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
                 } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
@@ -310,8 +324,11 @@ export default function QuizSelectPage() {
             >
               {t("selectQuizTitle")}
             </h1>
+            <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
           </motion.div>
+        </motion.header>
 
+        <div className="w-full max-w-8xl mx-auto flex flex-col flex-1 px-2 md:px-8 gap-5">
           {/* SEARCH INPUT (visible from start). Search runs only on Enter or clicking the search icon. */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}

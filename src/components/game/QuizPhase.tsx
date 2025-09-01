@@ -3,7 +3,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { AlertTriangle, CheckCircle, CircleQuestionMark, Clock, Skull, XCircle, Zap } from "lucide-react"
+import { AlertTriangle, CheckCircle, CircleQuestionMark, Clock, Heart, Skull, XCircle, Zap } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { AnimatePresence, motion } from "framer-motion"
@@ -629,7 +629,7 @@ export default function QuizPhase({
         </div>
       )}
 
-      <div className="relative z-10 container mx-auto px-4 py-8 pb-24">
+      <div className="relative z-10 container mx-auto px-4 pt-8">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
             <Skull className="w-8 h-8 text-red-500 mr-3 animate-pulse" />
@@ -650,10 +650,10 @@ export default function QuizPhase({
           </div>
 
           {/* 1-BAR INFO ROW */}
-          <div className="flex items-center justify-center gap-x-4 md:gap-x-6 font-mono text-sm md:text-base mb-6">
+          <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40 font-mono text-xs md:text-sm">
             {/* 1/10 */}
             <div className="flex items-center gap-x-1">
-                <CircleQuestionMark className="w-4 h-4 text-purple-400" />
+              <CircleQuestionMark className="w-4 h-4 text-purple-400" />
               <span className="text-white">
                 {currentQuestionIndex + 1}/{totalQuestions}
               </span>
@@ -673,16 +673,16 @@ export default function QuizPhase({
               </span>
             </div>
 
-            {/* Nyawa (3 bulatan compact) */}
-            <div className="flex items-center gap-x-0.5">
+            {/* Nyawa (compact heart icons) */}
+            <div className="flex items-center gap-x-1">
               {[...Array(3)].map((_, i) => (
-                <div
+                <Heart
                   key={i}
-                  className={`w-3 h-3 rounded-full border transition-all ${i < playerHealth
+                  className={`w-4 h-4 transition-all ${i < playerHealth
                     ? playerHealth <= 1
-                      ? 'bg-red-500 border-red-400 animate-pulse'
-                      : 'bg-green-500 border-green-400'
-                    : 'bg-gray-600 border-gray-500'
+                      ? 'text-red-500 fill-red-500 animate-pulse'
+                      : 'text-green-500 fill-green-500'
+                    : 'text-gray-600 fill-gray-600'
                     }`}
                 />
               ))}
@@ -695,7 +695,7 @@ export default function QuizPhase({
             </div>
           </div>
 
-          <Card className="max-w-4xl mx-auto mb-8 bg-gray-900/90 border-red-900/50 backdrop-blur-sm">
+          <Card className="max-w-4xl mx-auto bg-gray-900/90 border-red-900/50 backdrop-blur-sm p-0">
             <div className="p-8 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-purple-500/5" />
               <div className="relative z-10">
@@ -710,7 +710,6 @@ export default function QuizPhase({
                 )}
 
                 <div className="flex items-start space-x-4 mb-8">
-                  <Zap className="w-8 h-8 text-purple-500 animate-pulse flex-shrink-0 mt-1" />
                   <h2 className="text-2xl font-bold text-white leading-relaxed">{currentQuestion.question_text}</h2>
                 </div>
 
@@ -728,13 +727,18 @@ export default function QuizPhase({
                         <span className="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-sm font-bold">
                           {String.fromCharCode(65 + index)}
                         </span>
-                        <span>{option}</span>
+
+                        {/* INI BAGIAN YANG DIPERBAIKI */}
+                        <span className="flex-1 whitespace-normal">{option}</span>
+
                         {isAnswered && option === currentQuestion.correct_answer && (
                           <CheckCircle className="w-5 h-5 ml-auto animate-pulse" />
                         )}
-                        {isAnswered && option === selectedAnswer && option !== currentQuestion.correct_answer && (
-                          <XCircle className="w-5 h-5 ml-auto animate-pulse" />
-                        )}
+                        {isAnswered &&
+                          option === selectedAnswer &&
+                          option !== currentQuestion.correct_answer && (
+                            <XCircle className="w-5 h-5 ml-auto animate-pulse" />
+                          )}
                       </div>
                     </Button>
                   ))}

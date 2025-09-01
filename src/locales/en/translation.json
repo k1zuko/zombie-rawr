@@ -100,7 +100,6 @@
     "start?": "START...",
     "start": "START GAME"
   },
-  "lobby": "WAITING ROOM",
   "atmosphereTexts": [
     "The walls whisper your sins...",
     "Blood drips from the ceiling...",
@@ -196,5 +195,27 @@
   "questionTooltip": "Number of questions for the game",
   "durationError": "Duration must be between 1 and 30 minutes!",
   "minutes": "minutes",
-  "generateNickname":"Create random name"
+  "generateNickname":"Create random name",
+  "howToPlay": "Game Guide",
+  "join": "Join",
+  "play": "Play",
+  "joinTitle": "🔥 How to Join",
+  "joinSteps": [
+    "Enter the game code and your name.",
+    "Click Join.",
+    "(Optional) Pick the character that will become your hero.",
+    "Get ready… wait for the host to start the game."
+  ],
+  "playTitle": "⚡ How to Play",
+  "playSteps": [
+    "The chaser starts at 30, you at 20. Don't become the target!",
+    "Answer quickly & correctly to change your speed:",
+    "Speed ≤30 → the chaser closes in (10 s). A correct answer can save you!",
+    "Run out of time/lives → caught!",
+    "Finish the quiz to escape the chaser!"
+  ],
+  "speedRuleCorrect": "Correct = +5 speed",
+  "speedRuleWrong": "Wrong = -5 speed",
+  "hostRoomTitle": "HOST ROOM",
+  "waitingRoomTitle": "WAITING ROOM"
 }
