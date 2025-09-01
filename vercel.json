@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/map4/(.*)",
+      "source": "/map6/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
