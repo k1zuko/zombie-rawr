@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { useHostGuard } from "@/lib/host-guard";
+import Link from "next/link";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
 type ChaserType = typeof validChaserTypes[number];
@@ -354,28 +355,44 @@ export default function CharacterSelectPage() {
 
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwTDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBMNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
 
-      <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
-        <motion.div
+      <div className="relative z-10 mx-auto p-10">
+        <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
+          transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
+          className="flex flex-col gap-1 mb-10"
         >
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex items-start mb-5 md:mb-0">
+            <Link href={"/"}>
+              <h1
+                className="text-2xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+              >
+                {t("title")}
+              </h1>
+            </Link>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
+            className="flex justify-center items-center text-center mb-5"
+          >
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-5xl md:text-6xl font-bold font-mono tracking-widest transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
+              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
                 } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("settingsTitle")}
             </h1>
             <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
-          </div>
+          </motion.div>
           <p className="text-red-300 font-mono max-w-2xl mx-auto text-sm md:text-base">
             {t("settingsDescription")}
           </p>
-        </motion.div>
+        </motion.header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <motion.div
@@ -549,7 +566,7 @@ export default function CharacterSelectPage() {
                 ))}
               </div>
 
-              {selectedChaser && (
+              {/* {selectedChaser && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -563,7 +580,7 @@ export default function CharacterSelectPage() {
                   </div>
                   <p className="text-red-300 font-mono text-sm mt-2">{selectedChaser.description}</p>
                 </motion.div>
-              )}
+              )} */}
             </div>
           </motion.div>
         </div>

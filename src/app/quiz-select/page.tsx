@@ -299,10 +299,10 @@ export default function QuizSelectPage() {
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
           className="flex flex-col gap-1 mb-10"
         >
-          <div className="flex items-start">
+          <div className="flex items-start mb-5 md:mb-0">
             <Link href={"/"}>
               <h1
-                className="text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                className="text-2xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
                 style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
               >
                 {t("title")}
@@ -387,12 +387,12 @@ export default function QuizSelectPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className={`mt-4 grid gap-4 ${{
-                  1: "grid-cols-1",
-                  2: "grid-cols-2",
-                  3: "grid-cols-3",
-                  4: "grid-cols-4",
-                }[Math.min(filteredQuizzes.length, 5)] || "grid-cols-5"
+                className={`mt-4 grid gap-4 grid-cols-1 ${{
+                  1: "md:grid-cols-1",
+                  2: "md:grid-cols-2",
+                  3: "md:grid-cols-3",
+                  4: "md:grid-cols-4",
+                }[Math.min(filteredQuizzes.length, 5)] || "md:grid-cols-5"
                   }`}
               >
                 {filteredQuizzes.map((quiz) => (
@@ -441,12 +441,12 @@ export default function QuizSelectPage() {
               </div>
             ) : (
               <div className="flex flex-col flex-1">
-                <div className={`mt-4 grid gap-4 ${{
-                  1: "grid-cols-1",
-                  2: "grid-cols-2",
-                  3: "grid-cols-3",
-                  4: "grid-cols-4",
-                }[Math.min(filteredQuizzes.length, 5)] || "grid-cols-5"
+                <div className={`mt-4 grid gap-4 grid-cols-1 ${{
+                  1: "md:grid-cols-1",
+                  2: "md:grid-cols-2",
+                  3: "md:grid-cols-3",
+                  4: "md:grid-cols-4",
+                }[Math.min(filteredQuizzes.length, 5)] || "md:grid-cols-5"
                   }`}>
                   {filteredQuizzes.map((quiz) => (
                     <motion.div
