@@ -24,7 +24,7 @@ export default function QuizSelectPage() {
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalQuizzes, setTotalQuizzes] = useState(0);
-  const quizzesPerPage = 12;
+  const quizzesPerPage = 15;
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -402,10 +402,6 @@ export default function QuizSelectPage() {
                           {quiz.description || t("defaultQuizDescription")}
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="flex items-center text-gray-300 text-sm font-mono gap-3">
-                        <Clock />
-                        {t("durationLabel", { duration: quiz.duration })}
-                      </CardContent>
                     </Card>
                   </motion.div>
                 ))}
@@ -460,10 +456,6 @@ export default function QuizSelectPage() {
                             {quiz.description || t("defaultQuizDescription")}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="flex items-center text-gray-300 text-sm font-mono gap-3">
-                          <Clock />
-                          {t("durationLabel", { duration: quiz.duration })}
-                        </CardContent>
                       </Card>
                     </motion.div>
                   ))}
