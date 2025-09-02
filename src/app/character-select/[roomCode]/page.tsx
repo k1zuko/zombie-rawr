@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skull, Bone, HeartPulse, Ghost, Zap, Clock } from "lucide-react";
@@ -14,9 +13,16 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { useHostGuard } from "@/lib/host-guard";
+import { debounce } from "lodash";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
 type ChaserType = typeof validChaserTypes[number];
+
+interface DifficultyOption {
+  value: "easy" | "medium" | "hard";
+  zombieAttackCountdown: number;
+  inactivityPenalty: number;
+}
 
 interface GameRoom {
   id: string;
@@ -27,7 +33,24 @@ interface GameRoom {
   duration: number | null;
   question_count: number | null;
   chaser_type: ChaserType;
+  difficulty_level: DifficultyLevel;
+  quiz_id: string | null;
 }
+
+const validateChaserType = (type: string): ChaserType =>
+  validChaserTypes.includes(type as ChaserType) ? (type as ChaserType) : "zombie";
+
+const validateDifficultyLevel = (level: string): DifficultyLevel =>
+  ["easy", "medium", "hard"].includes(level) ? (level as DifficultyLevel) : "medium";
+
+const playSound = (src: string, volume: number = 0.3) => {
+  const audio = new Audio(src);
+  audio.volume = volume;
+  audio.play().catch((e) => console.log("Sound play prevented:", e));
+  return audio;
+};
+
+type DifficultyLevel = "easy" | "medium" | "hard";
 
 export default function CharacterSelectPage() {
   const { t, i18n } = useTranslation();
@@ -37,12 +60,15 @@ export default function CharacterSelectPage() {
 
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isAudioInitialized, setIsAudioInitialized] = useState(false);
   const [gameDuration, setGameDuration] = useState<number>(10);
   const [durationError, setDurationError] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(20);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [userSetQuestionCount, setUserSetQuestionCount] = useState(false);
   const [chaserType, setChaserType] = useState<ChaserType>("zombie");
+  const [difficultyLevel, setDifficultyLevel] = useState<DifficultyLevel>("medium");
   const [flickerText, setFlickerText] = useState(true);
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([]);
   const [sounds, setSounds] = useState<{ whisper: HTMLAudioElement | null; heartbeat: HTMLAudioElement | null }>({
@@ -53,48 +79,57 @@ export default function CharacterSelectPage() {
 
   useHostGuard(roomCode);
 
-  const chaserOptions = [
-    {
-      value: "zombie" as const,
-      name: t("chasers.zombie.name"),
-      gif: "/character/chaser/zombie.gif",
-      alt: t("chasers.zombie.alt"),
-      description: t("chasers.zombie.description"),
-    },
-    {
-      value: "monster1" as const,
-      name: t("chasers.monster1.name"),
-      gif: "/character/chaser/monster1.gif",
-      alt: t("chasers.monster1.alt"),
-      description: t("chasers.monster1.description"),
-    },
-    {
-      value: "monster2" as const,
-      name: t("chasers.monster2.name"),
-      gif: "/character/chaser/monster2.gif",
-      alt: t("chasers.monster2.alt"),
-      description: t("chasers.monster2.description"),
-    },
-    {
-      value: "monster3" as const,
-      name: t("chasers.monster3.name"),
-      gif: "/character/chaser/monster3.gif",
-      alt: t("chasers.monster3.alt"),
-      description: t("chasers.monster3.description"),
-    },
-    {
-      value: "darknight" as const,
-      name: t("chasers.darknight.name"),
-      gif: "/character/chaser/darknight.gif",
-      alt: t("chasers.darknight.alt"),
-      description: t("chasers.darknight.description"),
-    },
-  ];
+  const chaserOptions = useMemo(
+    () => [
+      {
+        value: "zombie" as const,
+        name: t("chasers.zombie.name"),
+        gif: "/character/chaser/zombie.gif",
+        alt: t("chasers.zombie.alt"),
+        description: t("chasers.zombie.description"),
+      },
+      {
+        value: "monster1" as const,
+        name: t("chasers.monster1.name"),
+        gif: "/character/chaser/monster1.gif",
+        alt: t("chasers.monster1.alt"),
+        description: t("chasers.monster1.description"),
+      },
+      {
+        value: "monster2" as const,
+        name: t("chasers.monster2.name"),
+        gif: "/character/chaser/monster2.gif",
+        alt: t("chasers.monster2.alt"),
+        description: t("chasers.monster2.description"),
+      },
+      {
+        value: "monster3" as const,
+        name: t("chasers.monster3.name"),
+        gif: "/character/chaser/monster3.gif",
+        alt: t("chasers.monster3.alt"),
+        description: t("chasers.monster3.description"),
+      },
+      {
+        value: "darknight" as const,
+        name: t("chasers.darknight.name"),
+        gif: "/character/chaser/darknight.gif",
+        alt: t("chasers.darknight.alt"),
+        description: t("chasers.darknight.description"),
+      },
+    ],
+    [t]
+  );
 
-  const handleQuestionCountChange = (value: string) => {
-    setQuestionCount(Number(value));
-    setUserSetQuestionCount(true);
-  };
+  const difficultyOptions: DifficultyOption[] = useMemo(
+    () => [
+      { value: "easy", zombieAttackCountdown: 30, inactivityPenalty: 25 },
+      { value: "medium", zombieAttackCountdown: 20, inactivityPenalty: 20 },
+      { value: "hard", zombieAttackCountdown: 10, inactivityPenalty: 15 },
+    ],
+    []
+  );
+
+  const isFormValid = gameDuration >= 1 && gameDuration <= 30 && questionCount <= totalQuestions;
 
   const questionOptions = useMemo(() => {
     const opts: number[] = [];
@@ -104,7 +139,7 @@ export default function CharacterSelectPage() {
     return opts;
   }, [totalQuestions]);
 
-  const handleDurationChange = (value: number[]) => {
+  const debouncedHandleDurationChange = debounce((value: number[]) => {
     const newValue = value[0];
     if (newValue < 1 || newValue > 30) {
       setDurationError(t("durationError"));
@@ -112,46 +147,79 @@ export default function CharacterSelectPage() {
     }
     setDurationError(null);
     setGameDuration(newValue);
+    playSound("/sounds/select.mp3", 0.3);
+  }, 300);
 
-    // Optional: Mainkan sound subtle saat ubah
-    const selectSound = new Audio("/sounds/select.mp3");
-    selectSound.volume = 0.3;
-    selectSound.play().catch((e) => console.log("Sound play prevented:", e));
+  const handleDurationChange = (value: number[]) => {
+    debouncedHandleDurationChange(value);
+  };
+
+  const handleQuestionCountChange = (value: number[]) => {
+    const newValue = value[0];
+    if (newValue >= 5 && newValue <= totalQuestions) {
+      setQuestionCount(newValue);
+      setUserSetQuestionCount(true);
+      playSound("/sounds/select.mp3", 0.3);
+    }
+  };
+
+  const handleDifficultyChange = (value: string) => {
+    setDifficultyLevel(value as DifficultyLevel);
+    playSound("/sounds/select.mp3", 0.3);
+  };
+
+  const handleChaserSelect = (chaser: typeof chaserOptions[number]) => {
+    setChaserType(chaser.value);
+    setSelectedChaser(chaser);
+    playSound("/sounds/select.mp3", 0.6);
+  };
+
+  const changeLanguage = (lng: string) => {
+    if (Array.isArray(i18n.options.supportedLngs) && i18n.options.supportedLngs.includes(lng)) {
+      i18n.changeLanguage(lng);
+      router.push(`/character-select/${roomCode}?lng=${lng}`);
+    } else {
+      console.warn(`Unsupported language: ${lng}`);
+    }
   };
 
   useEffect(() => {
-    setSounds({
-      whisper: new Audio("/sounds/whisper.mp3"),
-      heartbeat: new Audio("/sounds/heartbeat.mp3"),
-    });
+    if (!roomCode || typeof roomCode !== "string") {
+      alert(t("errorMessages.invalidRoomCode"));
+      router.push("/");
+      return;
+    }
 
-    return () => {
-      sounds.whisper?.pause();
-      sounds.heartbeat?.pause();
-    };
-  }, []);
-
-  useEffect(() => {
     const fetchRoom = async () => {
       try {
+        setIsLoading(true);
         const { data, error } = await supabase
           .from("game_rooms")
-          .select("*, chaser_type, quiz_id")
+          .select("*, chaser_type, quiz_id, difficulty_level")
           .eq("room_code", roomCode)
           .single();
 
         if (error || !data) {
-          console.error(t("errorMessages.roomNotFoundLog"), error);
+          console.error(t("errorMessages.roomNotFoundLog"), error?.message);
           alert(t("errorMessages.roomNotFound"));
           router.push("/");
           return;
         }
 
-        const fetchedChaserType = validChaserTypes.includes(data.chaser_type) ? data.chaser_type : "zombie";
-        setRoom({ ...data, chaser_type: fetchedChaserType });
+        if (!data.quiz_id) {
+          console.error(t("errorMessages.quizIdNotFoundLog"));
+          alert(t("errorMessages.quizIdNotFound"));
+          router.push("/");
+          return;
+        }
+
+        const fetchedChaserType = validateChaserType(data.chaser_type);
+        const fetchedDifficultyLevel = validateDifficultyLevel(data.difficulty_level);
+        setRoom({ ...data, chaser_type: fetchedChaserType, difficulty_level: fetchedDifficultyLevel });
         setGameDuration(data.duration ? data.duration / 60 : 10);
         setQuestionCount(data.question_count ?? 20);
         setChaserType(fetchedChaserType);
+        setDifficultyLevel(fetchedDifficultyLevel);
 
         const { count: questionsCount, error: questionsError } = await supabase
           .from("quiz_questions")
@@ -172,20 +240,54 @@ export default function CharacterSelectPage() {
             }
           }
         }
-        setIsLoading(false);
       } catch (error) {
         console.error(t("errorMessages.fetchRoomFailedLog"), error);
         alert(t("errorMessages.fetchRoomFailed"));
         router.push("/");
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchRoom();
-  }, [roomCode, router, t]);
+  }, [roomCode, router, t, userSetQuestionCount]);
+
+  useEffect(() => {
+    const whisper = new Audio("/sounds/whisper.mp3");
+    const heartbeat = new Audio("/sounds/heartbeat.mp3");
+    setSounds({ whisper, heartbeat });
+
+    return () => {
+      whisper.pause();
+      whisper.src = "";
+      heartbeat.pause();
+      heartbeat.src = "";
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      setIsAudioInitialized(true);
+      window.removeEventListener("click", handleUserInteraction);
+    };
+    window.addEventListener("click", handleUserInteraction);
+    return () => window.removeEventListener("click", handleUserInteraction);
+  }, []);
+
+  useEffect(() => {
+    if (isAudioInitialized && selectedChaser) {
+      sounds.whisper?.play().catch((e) => console.log("Autoplay prevented:", e));
+      sounds.heartbeat?.play().catch((e) => console.log("Autoplay prevented:", e));
+    }
+    return () => {
+      sounds.whisper?.pause();
+      sounds.heartbeat?.pause();
+    };
+  }, [selectedChaser, sounds, isAudioInitialized]);
 
   useEffect(() => {
     const generateBlood = () => {
-      const newBlood = Array.from({ length: 15 }, (_, i) => ({
+      const newBlood = Array.from({ length: 5 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         speed: 0.5 + Math.random() * 2,
@@ -195,10 +297,7 @@ export default function CharacterSelectPage() {
     };
 
     generateBlood();
-    const bloodInterval = setInterval(() => {
-      generateBlood();
-    }, 8000);
-
+    const bloodInterval = setInterval(generateBlood, 12000);
     return () => clearInterval(bloodInterval);
   }, []);
 
@@ -213,34 +312,21 @@ export default function CharacterSelectPage() {
     return () => clearInterval(flickerInterval);
   }, []);
 
-  useEffect(() => {
-    if (selectedChaser) {
-      sounds.whisper?.play().catch((e) => console.log("Autoplay prevented:", e));
-      sounds.heartbeat?.play().catch((e) => console.log("Autoplay prevented:", e));
-    }
-
-    return () => {
-      sounds.whisper?.pause();
-      sounds.heartbeat?.pause();
-    };
-  }, [selectedChaser]);
-
   const saveSettings = async () => {
-    if (!room) return;
-
-    const validatedChaserType = validChaserTypes.includes(chaserType) ? chaserType : "zombie";
-    const durationInSeconds = gameDuration * 60;
-    if (gameDuration < 1 || gameDuration > 30) {
-      setDurationError(t("durationError"));
-      return;
-    }
+    if (!room || !isFormValid) return;
+    setIsSaving(true);
     try {
+      const validatedChaserType = validateChaserType(chaserType);
+      const validatedDifficultyLevel = validateDifficultyLevel(difficultyLevel);
+      const durationInSeconds = gameDuration * 60;
+
       const { error } = await supabase
         .from("game_rooms")
         .update({
           duration: durationInSeconds,
           question_count: questionCount,
           chaser_type: validatedChaserType,
+          difficulty_level: validatedDifficultyLevel,
           updated_at: new Date().toISOString(),
         })
         .eq("id", room.id);
@@ -251,21 +337,9 @@ export default function CharacterSelectPage() {
     } catch (error) {
       console.error(t("errorMessages.saveSettingsFailedLog"), error);
       alert(t("errorMessages.saveSettingsFailed"));
+    } finally {
+      setIsSaving(false);
     }
-  };
-
-  const handleChaserSelect = (chaser: typeof chaserOptions[number]) => {
-    setChaserType(chaser.value);
-    setSelectedChaser(chaser);
-
-    const selectSound = new Audio("/sounds/select.mp3");
-    selectSound.volume = 0.6;
-    selectSound.play().catch((e) => console.log("Sound play prevented:", e));
-  };
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-    router.push(`/character-select/${roomCode}?lng=${lng}`);
   };
 
   if (isLoading) {
@@ -364,8 +438,7 @@ export default function CharacterSelectPage() {
           <div className="flex items-center justify-center mb-6">
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-5xl md:text-6xl font-bold font-mono tracking-widest transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
-                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-5xl md:text-6xl font-bold font-mono tracking-widest transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"} drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("settingsTitle")}
@@ -398,7 +471,7 @@ export default function CharacterSelectPage() {
                       <Clock className="w-4 h-4 ml-2 text-red-500 cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="bg-black/80 border-red-900 text-red-300">
-                      {t("durationTooltip")} (1-30 menit)
+                      {t("durationTooltip")} (1-30 {t("minutes")})
                     </TooltipContent>
                   </Tooltip>
                 </Label>
@@ -426,7 +499,7 @@ export default function CharacterSelectPage() {
                 )}
               </div>
 
-              <div>
+              <div className="mb-6">
                 <Label htmlFor="questionCount" className="text-red-300 mb-2 block font-medium text-sm font-mono flex items-center">
                   {t("questionCountLabel")}
                   <Tooltip>
@@ -444,7 +517,7 @@ export default function CharacterSelectPage() {
                   max={totalQuestions}
                   step={5}
                   value={[questionCount]}
-                  onValueChange={(value) => setQuestionCount(value[0])}
+                  onValueChange={handleQuestionCountChange}
                   className="w-full"
                   aria-label={t("questionCountLabel")}
                 />
@@ -454,6 +527,50 @@ export default function CharacterSelectPage() {
                 {questionCount > totalQuestions && (
                   <p className="text-red-500 text-xs mt-1 animate-pulse">{t("questionError")}</p>
                 )}
+              </div>
+
+              <div>
+                <Label className="text-red-300 mb-2 block font-medium text-sm font-mono flex items-center">
+                  {t("difficultyLevelLabel")}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Zap className="w-4 h-4 ml-2 text-red-500 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-black/80 border-red-900 text-red-300">
+                 
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+                <div className="flex space-x-4">  
+                  {difficultyOptions.map((option) => (
+                    <Tooltip key={option.value}>
+                      <TooltipTrigger asChild>
+                        <motion.label
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`flex-1 text-center p-3 rounded-lg cursor-pointer transition-all duration-200 border font-mono text-sm ${
+                            difficultyLevel === option.value
+                              ? "bg-red-900/50 border-red-500 shadow-[0_0_10px_rgba(255,0,0,0.5)] text-red-300"
+                              : "bg-black/60 border-red-900/50 text-red-400 hover:bg-red-900/30"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="difficultyLevel"
+                            value={option.value}
+                            checked={difficultyLevel === option.value}
+                            onChange={() => handleDifficultyChange(option.value)}
+                            className="sr-only"
+                          />
+                          {t(`difficulty.${option.value}`)}
+                        </motion.label>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-black/80 border-red-900 text-red-300">
+                  
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -477,14 +594,21 @@ export default function CharacterSelectPage() {
                     {chaserOptions.find((c) => c.value === chaserType)?.name || t("chaserNotSelected")}
                   </span>
                 </div>
+                <div className="flex justify-between text-red-300 font-mono text-sm">
+                  <span>{t("difficultyLevelLabel")}</span>
+                  <span className="text-red-400">
+                    {t(`difficulty.${difficultyLevel}`) || t("selectDifficulty")}
+                  </span>
+                </div>
               </div>
 
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="mt-6">
                 <Button
                   onClick={saveSettings}
-                  className="w-full bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white rounded-lg font-mono text-lg py-6 shadow-lg shadow-red-900/30 transition-all"
+                  disabled={isSaving || !isFormValid}
+                  className={`w-full bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white rounded-lg font-mono text-lg py-6 shadow-lg shadow-red-900/30 transition-all ${!isFormValid || isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  {t("startButton")}
+                  {isSaving ? t("saving") : t("startButton")}
                 </Button>
               </motion.div>
             </div>
@@ -518,15 +642,12 @@ export default function CharacterSelectPage() {
                       tabIndex={0}
                       onClick={() => handleChaserSelect(chaser)}
                       onKeyDown={(e) => e.key === "Enter" && handleChaserSelect(chaser)}
-                      className={`relative flex flex-col items-center p-4 rounded-lg cursor-pointer transition-all duration-300 border ${chaserType === chaser.value
-                        ? "border-red-500 shadow-[0_0_15px_rgba(255,0,0,0.7)] bg-red-900/40"
-                        : "border-red-500/30 bg-black/40 hover:bg-red-900/20 hover:shadow-[0_0_10px_rgba(255,0,0,0.5)]"
-                        } h-full`}
+                      className={`relative flex flex-col items-center p-4 rounded-lg cursor-pointer transition-all duration-300 border ${chaserType === chaser.value ? "border-red-500 shadow-[0_0_15px_rgba(255,0,0,0.7)] bg-red-900/40" : "border-red-500/30 bg-black/40 hover:bg-red-900/20 hover:shadow-[0_0_10px_rgba(255,0,0,0.5)]"} h-full`}
                     >
                       <div className="relative w-24 h-24 mb-3">
                         <Image
                           src={chaser.gif}
-                          alt={chaser.alt}
+                          alt={chaser.alt || `Chaser ${chaser.name}`}
                           fill
                           className="object-contain"
                           unoptimized
@@ -609,6 +730,10 @@ export default function CharacterSelectPage() {
         .slider [role="slider"] {
           background: linear-gradient(to right, #ff0000, #600000);
           box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+        }
+        input[type="radio"]:focus-visible + span {
+          outline: 2px solid #ff0000;
+          outline-offset: 2px;
         }
       `}</style>
     </div>

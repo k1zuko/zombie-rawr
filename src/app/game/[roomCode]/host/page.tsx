@@ -1,19 +1,15 @@
-
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import Background1 from "@/components/game/host/Background1";
-import Backgroud2 from "@/components/game/host/Background2";
+import Background3 from "@/components/game/host/Background3"; // Gunakan Background3, hapus duplikasi
 import GameUI from "@/components/game/host/GameUI";
 import { motion, AnimatePresence } from "framer-motion";
 import ZombieCharacter from "@/components/game/host/ZombieCharacter";
 import RunningCharacters from "@/components/game/host/RunningCharacters";
 import { useHostGuard } from "@/lib/host-guard";
-import Background2 from "@/components/game/host/Background2";
-import Background3 from "@/components/game/host/Background3";
-import { t } from "i18next";
+import { useTranslation } from "react-i18next";
 
 interface Player {
   id: string;
@@ -33,6 +29,7 @@ interface GameRoom {
   current_phase: string;
   chaser_type: "zombie" | "monster1" | "monster2" | "monster3" | "darknight";
   countdown_start?: string;
+  difficulty_level: string; // Tambahkan difficulty_level
 }
 
 interface PlayerHealthState {
@@ -79,8 +76,8 @@ interface GameCompletion {
   completed_at: string;
 }
 
-
 export default function HostGamePage() {
+  const { t } = useTranslation();
   const params = useParams();
   const router = useRouter();
   const roomCode = params.roomCode as string;
@@ -115,51 +112,67 @@ export default function HostGamePage() {
 
   useHostGuard(roomCode);
 
+  // Definisikan pengaturan berdasarkan difficulty_level
+  const difficultySettings = {
+    easy: { zombieAttackCountdown: 20 },
+    medium: { zombieAttackCountdown: 10 },
+    hard: { zombieAttackCountdown: 5 },
+  };
+  const zombieAttackCountdown = gameRoom && ["easy", "medium", "hard"].includes(gameRoom.difficulty_level)
+    ? difficultySettings[gameRoom.difficulty_level as keyof typeof  difficultySettings].zombieAttackCountdown
+    : difficultySettings.medium.zombieAttackCountdown; // Default ke medium
+
   // Initialize player states
-  const initializePlayerStates = useCallback((playersData: Player[], healthData: PlayerHealthState[]) => {
-    console.log("Menginisialisasi status pemain:", playersData.length, "pemain");
-    const newStates: { [playerId: string]: PlayerState } = {};
-    const newHealthStates: { [playerId: string]: PlayerHealthState } = {};
+  const initializePlayerStates = useCallback(
+    (playersData: Player[], healthData: PlayerHealthState[]) => {
+      console.log(t("log.initializePlayerStates", { count: playersData.length }));
+      const newStates: { [playerId: string]: PlayerState } = {};
+      const newHealthStates: { [playerId: string]: PlayerHealthState } = {};
 
-    playersData.forEach((player, index) => {
-      const healthState = healthData.find((h) => h.player_id === player.id);
-      const currentHealth = healthState?.health ?? 3;
-      const currentMaxHealth = healthState?.max_health ?? 3;
-      const currentSpeed = healthState?.speed ?? 20;
-      const isBeingAttacked = healthState?.is_being_attacked ?? false;
-      const lastAttackTime = healthState ? new Date(healthState.last_attack_time).getTime() : 0;
+      playersData.forEach((player, index) => {
+        const healthState = healthData.find((h) => h.player_id === player.id);
+        const currentHealth = healthState?.health ?? 3;
+        const currentMaxHealth = healthState?.max_health ?? 3;
+        const currentSpeed = healthState?.speed ?? 20;
+        const isBeingAttacked = healthState?.is_being_attacked ?? false;
+        const lastAttackTime = healthState ? new Date(healthState.last_attack_time).getTime() : 0;
 
-      newStates[player.id] = {
-        id: player.id,
-        health: currentHealth,
-        maxHealth: currentMaxHealth,
-        speed: currentSpeed,
-        isBeingAttacked,
-        position: index,
-        lastAttackTime,
-        attackIntensity: 0,
-        countdown: currentSpeed <= 30 && !isBeingAttacked && currentHealth > 0 && player.is_alive ? 10 : undefined,
-      };
+        newStates[player.id] = {
+          id: player.id,
+          health: currentHealth,
+          maxHealth: currentMaxHealth,
+          speed: currentSpeed,
+          isBeingAttacked,
+          position: index,
+          lastAttackTime,
+          attackIntensity: 0,
+          countdown:
+            currentSpeed <= 30 && !isBeingAttacked && currentHealth > 0 && player.is_alive
+              ? zombieAttackCountdown // Gunakan zombieAttackCountdown
+              : undefined,
+        };
 
-      if (healthState) {
-        newHealthStates[player.id] = healthState;
-      }
-    });
+        if (healthState) {
+          newHealthStates[player.id] = healthState;
+        }
+      });
 
-    setPlayerStates(newStates);
-    setPlayerHealthStates(newHealthStates);
-  }, []);
+      setPlayerStates(newStates);
+      setPlayerHealthStates(newHealthStates);
+    },
+    [zombieAttackCountdown]
+  );
 
   // Centralized function to update player state
   const updatePlayerState = useCallback(
     async (playerId: string, updates: Partial<PlayerHealthState>, localUpdates: Partial<PlayerState> = {}) => {
       if (!gameRoom) {
-        console.log("Tidak ada gameRoom, lewati pembaruan status pemain");
+        console.log(t("log.noGameRoom"));
         return;
       }
 
       try {
-        console.log(`Memperbarui status pemain ${playerId}:`, updates);
+        console.log(t("log.updatePlayerState", { playerId, updates }));
         const { error } = await supabase
           .from("player_health_states")
           .update({ ...updates, last_attack_time: new Date().toISOString() })
@@ -167,7 +180,7 @@ export default function HostGamePage() {
           .eq("room_id", gameRoom.id);
 
         if (error) {
-          console.error(`⚠️ Gagal memperbarui status pemain ${playerId}:`, error);
+          console.error(t("log.updatePlayerStateError", { playerId, error: error.message }));
           return;
         }
 
@@ -185,12 +198,12 @@ export default function HostGamePage() {
             },
           };
         });
-        console.log(`✅ Status pemain ${playerId} diperbarui`);
+        console.log(t("log.updatePlayerStateSuccess", { playerId }));
       } catch (error) {
-        console.error(`⚠️ Kesalahan saat memperbarui status pemain ${playerId}:`, error);
+        console.error(t("log.updatePlayerStateError", { playerId, error }));
       }
     },
-    [gameRoom],
+    [gameRoom, t]
   );
 
   // Handle chaser attack
@@ -199,15 +212,13 @@ export default function HostGamePage() {
       const playerState = playerStates[playerId];
       const player = players.find((p) => p.id === playerId);
       if (!playerState || !player || newHealth < 0 || !player.is_alive) {
-        console.log(
-          `⚠️ Pemain ${playerId} tidak valid untuk diserang (health=${newHealth}, is_alive=${player?.is_alive})`,
-        );
+        console.log(t("log.invalidPlayerForAttack", { playerId, health: newHealth, is_alive: player?.is_alive }));
         setAttackQueue((prev) => prev.filter((id) => id !== playerId));
         return;
       }
 
       if (zombieState.isAttacking && zombieState.targetPlayerId !== playerId) {
-        console.log(`⚠️ Pengejar sedang menyerang ${zombieState.targetPlayerId}, menambahkan ${playerId} ke antrian`);
+        console.log(t("log.chaserBusy", { targetPlayerId: zombieState.targetPlayerId, playerId }));
         setAttackQueue((prev) => (prev.includes(playerId) ? prev : [...prev, playerId]));
         return;
       }
@@ -217,7 +228,7 @@ export default function HostGamePage() {
         attackIntervalRef.current = null;
       }
 
-      console.log(`🧟 Memulai serangan pada pemain ${playerId}, kesehatan: ${newHealth}, kecepatan: ${newSpeed}`);
+      console.log(t("log.startAttack", { playerId, health: newHealth, speed: newSpeed }));
       setZombieState({
         isAttacking: true,
         targetPlayerId: playerId,
@@ -242,7 +253,7 @@ export default function HostGamePage() {
           isBeingAttacked: true,
           attackIntensity: 0.5,
           countdown: undefined,
-        },
+        }
       );
 
       let progress = 0;
@@ -258,7 +269,7 @@ export default function HostGamePage() {
           clearInterval(attackIntervalRef.current!);
           attackIntervalRef.current = null;
 
-          console.log(`🧟 Serangan pada ${playerId} selesai, health=${newHealth}, speed=${finalSpeed}`);
+          console.log(t("log.attackFinished", { playerId, health: newHealth, speed: finalSpeed }));
           setZombieState({
             isAttacking: false,
             targetPlayerId: null,
@@ -275,8 +286,8 @@ export default function HostGamePage() {
             {
               isBeingAttacked: false,
               attackIntensity: 0,
-              countdown: finalSpeed <= 30 && newHealth > 0 && player.is_alive ? 10 : undefined,
-            },
+              countdown: finalSpeed <= 30 && newHealth > 0 && player.is_alive ? zombieAttackCountdown : undefined,
+            }
           );
 
           setBackgroundFlash(false);
@@ -290,12 +301,12 @@ export default function HostGamePage() {
               const nextState = playerStates[nextPlayerId];
               const nextPlayer = players.find((p) => p.id === nextPlayerId);
               if (nextState && nextState.speed <= 30 && nextState.health > 0 && nextPlayer?.is_alive) {
-                console.log(`📋 Memproses antrian berikutnya: ${nextPlayerId}`);
+                console.log(t("log.processNextQueue", { nextPlayerId }));
                 setTimeout(() => {
                   handleZombieAttack(nextPlayerId, nextState.health - 1, nextState.speed);
                 }, 500);
               } else {
-                console.log(`⚠️ Pemain berikutnya ${nextPlayerId} tidak memenuhi syarat`);
+                console.log(t("log.nextPlayerInvalid", { nextPlayerId }));
               }
             }
             return nextQueue;
@@ -303,7 +314,7 @@ export default function HostGamePage() {
         }
       }, 30);
     },
-    [playerStates, players, gameRoom, updatePlayerState, zombieState],
+    [playerStates, players, updatePlayerState, zombieState, zombieAttackCountdown, t]
   );
 
   useEffect(() => {
@@ -317,7 +328,7 @@ export default function HostGamePage() {
       const elapsed = now - countdownStartTime;
       const remaining = Math.max(0, Math.ceil((countdownDuration - elapsed) / 1000));
 
-      console.log("⏰ Host: Countdown sync - elapsed:", elapsed, "remaining:", remaining);
+      console.log(t("log.countdownSync", { elapsed, remaining }));
       setCountdown(remaining);
 
       if (remaining <= 0) {
@@ -340,21 +351,21 @@ export default function HostGamePage() {
       setCountdown(null);
       setIsStarting(false);
     }
-  }, [gameRoom?.countdown_start]);
+  }, [gameRoom?.countdown_start, t]);
 
   // Handle correct answer
   const handleCorrectAnswer = useCallback(
     (playerId: string) => {
       const playerState = playerStates[playerId];
       if (!playerState) {
-        console.log(`⚠️ Pemain ${playerId} tidak ditemukan untuk jawaban benar`);
+        console.log(t("log.playerNotFoundCorrect", { playerId }));
         return;
       }
 
-      const newSpeed = Math.min(playerState.speed + 5, 100); // Batas maksimum speed
+      const newSpeed = Math.min(playerState.speed + 5, 100);
       const shouldResetCountdown = newSpeed <= 30;
 
-      console.log(`✅ Pemain ${playerId} menjawab benar, kecepatan baru: ${newSpeed}`);
+      console.log(t("log.correctAnswer", { playerId, newSpeed }));
       updatePlayerState(
         playerId,
         {
@@ -365,12 +376,12 @@ export default function HostGamePage() {
         {
           speed: newSpeed,
           isBeingAttacked: false,
-          countdown: shouldResetCountdown ? 10 : undefined,
+          countdown: shouldResetCountdown ? zombieAttackCountdown : undefined,
         }
       );
 
       if (zombieState.targetPlayerId === playerId && zombieState.isAttacking) {
-        console.log(`🛑 Menghentikan serangan pada ${playerId} karena jawaban benar`);
+        console.log(t("log.stopAttackCorrect", { playerId }));
         clearInterval(attackIntervalRef.current!);
         attackIntervalRef.current = null;
         setZombieState({
@@ -386,7 +397,7 @@ export default function HostGamePage() {
 
       setAttackQueue((prev) => prev.filter((id) => id !== playerId));
     },
-    [playerStates, zombieState, updatePlayerState],
+    [playerStates, zombieState, updatePlayerState, zombieAttackCountdown, t]
   );
 
   // Handle wrong answer
@@ -394,14 +405,14 @@ export default function HostGamePage() {
     (playerId: string) => {
       const playerState = playerStates[playerId];
       if (!playerState) {
-        console.log(`⚠️ Pemain ${playerId} tidak ditemukan untuk jawaban salah`);
+        console.log(t("log.playerNotFoundWrong", { playerId }));
         return;
       }
 
       const newSpeed = Math.max(20, playerState.speed - 5);
       const shouldStartCountdown = newSpeed <= 30 && playerState.health > 0 && !playerState.isBeingAttacked;
 
-      console.log(`❌ Pemain ${playerId} menjawab salah, kecepatan baru: ${newSpeed}`);
+      console.log(t("log.wrongAnswer", { playerId, newSpeed }));
       updatePlayerState(
         playerId,
         {
@@ -410,18 +421,17 @@ export default function HostGamePage() {
         },
         {
           speed: newSpeed,
-          countdown: shouldStartCountdown && !playerState.countdown ? 10 : playerState.countdown,
+          countdown: shouldStartCountdown && !playerState.countdown ? zombieAttackCountdown : playerState.countdown,
         }
       );
-
     },
-    [playerStates, updatePlayerState],
+    [playerStates, updatePlayerState, zombieAttackCountdown, t]
   );
 
   // Manage player status and inactivity penalties
   const managePlayerStatus = useCallback(() => {
     if (!gameRoom) {
-      console.log("⚠️ Tidak ada gameRoom, lewati manajemen status pemain");
+      console.log(t("log.noGameRoom"));
       return;
     }
 
@@ -433,28 +443,31 @@ export default function HostGamePage() {
 
       Object.entries(updatedStates).forEach(([playerId, state]) => {
         const player = players.find((p) => p.id === playerId);
-        const isCompleted = completedPlayers.some((cp) => cp.id === playerId); // Cek apakah pemain sudah lolos
-        console.log(
-          `Pemain ${player?.nickname || playerId}: health=${state.health}, is_alive=${
-            player?.is_alive
-          }, isCompleted=${isCompleted}`
-        );
-        if (player && state.health > 0 && player.is_alive && !isCompleted) {
-          activePlayers++;
-          if (state.speed <= 30 && !state.isBeingAttacked) {
-            eligiblePlayer = playerId;
-            if (!newAttackQueue.includes(playerId)) {
-              newAttackQueue.push(playerId);
-            }
+        const isCompleted = completedPlayers.some((cp) => cp.id === playerId);
+        if (isCompleted || !player || state.health <= 0 || !player.is_alive) {
+          updatedStates[playerId] = { ...state, countdown: undefined };
+          return;
+        }
+
+        console.log(t("log.playerStatus", {
+          nickname: player?.nickname || playerId,
+          health: state.health,
+          is_alive: player?.is_alive,
+          isCompleted
+        }));
+        activePlayers++;
+        if (state.speed <= 30 && !state.isBeingAttacked) {
+          eligiblePlayer = playerId;
+          if (!newAttackQueue.includes(playerId)) {
+            newAttackQueue.push(playerId);
           }
         }
       });
 
-      console.log(`🧟 Pemain aktif: ${activePlayers}, attackQueue:`, newAttackQueue);
+      console.log(t("log.activePlayers", { count: activePlayers, queue: newAttackQueue }));
 
-      // Jika tidak ada pemain aktif lagi, set phase ke completed dan redirect
       if (activePlayers === 0 && players.length > 0) {
-        console.log("Semua pemain selesai atau tereliminasi, mengatur phase ke completed dan redirect");
+        console.log(t("log.allPlayersCompleted"));
         supabase
           .from("game_rooms")
           .update({ current_phase: "completed" })
@@ -476,9 +489,9 @@ export default function HostGamePage() {
         const healthState = playerHealthStates[playerId];
         if (healthState) {
           const timeSinceLastAnswer = (Date.now() - new Date(healthState.last_answer_time).getTime()) / 1000;
-          if (timeSinceLastAnswer >= 20 && state.speed > 20) {
+          if (timeSinceLastAnswer >= zombieAttackCountdown + 5 && state.speed > 20) {
             const newSpeed = Math.max(20, state.speed - 10);
-            console.log(`⚠️ Pemain ${playerId} tidak aktif, kecepatan dikurangi ke ${newSpeed}`);
+            console.log(t("log.playerInactive", { playerId, newSpeed }));
             await updatePlayerState(
               playerId,
               {
@@ -492,15 +505,15 @@ export default function HostGamePage() {
 
         if (state.speed <= 30 && !state.isBeingAttacked && state.health > 0) {
           if (state.countdown === undefined) {
-            console.log(`⏲️ Menambahkan countdown untuk ${playerId}`);
-            updatedStates[playerId] = { ...state, countdown: 10 };
+            console.log(t("log.addCountdown", { playerId }));
+            updatedStates[playerId] = { ...state, countdown: zombieAttackCountdown };
           } else if (state.countdown > 0) {
             const newCountdown = state.countdown - 1;
-            console.log(`⏲️ Countdown untuk ${playerId}: ${newCountdown}s`);
+            console.log(t("log.countdown", { playerId, countdown: newCountdown }));
             updatedStates[playerId] = { ...state, countdown: newCountdown };
             if (newCountdown <= 0) {
               if (!zombieState.isAttacking || activePlayers === 1) {
-                console.log(`🧟 Memulai serangan pada ${playerId}, health=${state.health}`);
+                console.log(t("log.startAttack", { playerId, health: state.health }));
                 await updatePlayerState(
                   playerId,
                   {
@@ -528,11 +541,11 @@ export default function HostGamePage() {
           const player = players.find((p) => p.id === id);
           const isCompleted = completedPlayers.some((cp) => cp.id === id);
           return state && state.speed <= 30 && state.health > 0 && player?.is_alive && !state.isBeingAttacked && !isCompleted;
-        }),
+        })
       );
 
       if (activePlayers === 1 && !zombieState.isAttacking && eligiblePlayer) {
-        console.log(`🧟 Hanya satu pemain tersisa (${eligiblePlayer}), memulai serangan`);
+        console.log(t("log.singlePlayerAttack", { playerId: eligiblePlayer }));
         const state = updatedStates[eligiblePlayer];
         if (state && state.countdown !== undefined && state.countdown <= 0) {
           updatePlayerState(
@@ -549,13 +562,13 @@ export default function HostGamePage() {
 
       return updatedStates;
     });
-  }, [gameRoom, playerStates, playerHealthStates, zombieState, handleZombieAttack, updatePlayerState, players, completedPlayers, router, roomCode]);
+  }, [gameRoom, playerStates, playerHealthStates, zombieState, handleZombieAttack, updatePlayerState, players, completedPlayers, router, roomCode, zombieAttackCountdown, t]);
 
   // Fetch game data
   const fetchGameData = useCallback(async () => {
     if (!roomCode) {
-      console.error("Kode ruangan tidak valid atau kosong");
-      setLoadingError("Kode ruangan tidak valid");
+      console.error(t("log.invalidRoomCode"));
+      setLoadingError(t("error.invalidRoomCode"));
       setIsLoading(false);
       return;
     }
@@ -567,21 +580,21 @@ export default function HostGamePage() {
       console.time("fetchRoom");
       const { data: room, error: roomError } = await supabase
         .from("game_rooms")
-        .select("*, chaser_type")
+        .select("*, chaser_type, difficulty_level")
         .eq("room_code", roomCode.toUpperCase())
         .single();
       console.timeEnd("fetchRoom");
 
       if (roomError || !room) {
-        console.error("Gagal mengambil data ruangan:", roomError);
-        throw new Error("Ruangan tidak ditemukan");
+        console.error(t("log.fetchRoomError", { error: roomError?.message }));
+        throw new Error(t("error.roomNotFound"));
       }
-      console.log("Mengambil room:", { ...room, chaser_type: room.chaser_type });
+      console.log(t("log.fetchRoomSuccess", { room }));
       setGameRoom(room);
       setChaserType(room.chaser_type || "zombie");
 
       if (room.current_phase === "completed") {
-        console.log("Fase permainan selesai, mengalihkan ke resultshost");
+        console.log(t("log.phaseCompleted"));
         setIsLoading(false);
         router.push(`/game/${roomCode}/resultshost`);
         return;
@@ -596,10 +609,10 @@ export default function HostGamePage() {
       console.timeEnd("fetchPlayers");
 
       if (playersError) {
-        console.error("Gagal mengambil data pemain:", playersError);
-        throw new Error("Gagal mengambil data pemain");
+        console.error(t("log.fetchPlayersError", { error: playersError.message }));
+        throw new Error(t("error.fetchPlayers"));
       }
-      console.log("Mengambil pemain:", playersData);
+      console.log(t("log.fetchPlayersSuccess", { count: playersData?.length }));
       setPlayers(playersData || []);
 
       console.time("fetchHealth");
@@ -610,8 +623,8 @@ export default function HostGamePage() {
       console.timeEnd("fetchHealth");
 
       if (healthError) {
-        console.error("Gagal mengambil status kesehatan:", healthError);
-        throw new Error("Gagal mengambil status kesehatan");
+        console.error(t("log.fetchHealthError", { error: healthError.message }));
+        throw new Error(t("error.fetchHealth"));
       }
       initializePlayerStates(playersData || [], healthData || []);
 
@@ -624,8 +637,8 @@ export default function HostGamePage() {
       console.timeEnd("fetchCompletions");
 
       if (completionError) {
-        console.error("Gagal mengambil data penyelesaian:", completionError);
-        throw new Error("Gagal mengambil data penyelesaian");
+        console.error(t("log.fetchCompletionsError", { error: completionError.message }));
+        throw new Error(t("error.fetchCompletions"));
       }
       const completed = completionData?.map((completion: any) => completion.players) || [];
       setCompletedPlayers(completed);
@@ -634,7 +647,7 @@ export default function HostGamePage() {
       }
 
       if (playersData && completionData && playersData.length === completionData.length) {
-        console.log("Semua pemain selesai, memperbarui current_phase ke completed");
+        console.log(t("log.allPlayersCompletedFetch"));
         await supabase.from("game_rooms").update({ current_phase: "completed" }).eq("id", room.id);
         setIsLoading(false);
         router.push(`/game/${roomCode}/resultshost`);
@@ -643,27 +656,27 @@ export default function HostGamePage() {
 
       console.timeEnd("fetchGameData");
     } catch (error) {
-      console.error("Gagal mengambil data permainan:", error);
-      setLoadingError("Gagal memuat permainan. Silakan coba lagi.");
+      console.error(t("log.fetchGameDataError", { error }));
+      setLoadingError(t("error.loadGame"));
       setPlayers([]);
       setPlayerStates({});
     } finally {
       setIsLoading(false);
     }
-  }, [roomCode, initializePlayerStates, router]);
+  }, [roomCode, initializePlayerStates, router, t]);
 
   // Sync completed players periodically
   const syncCompletedPlayers = useCallback(async () => {
     if (!gameRoom) return;
     try {
-      console.log("🔄 Menyinkronkan completedPlayers");
+      console.log(t("log.syncCompletedPlayers"));
       const { data, error } = await supabase
         .from("game_completions")
         .select("*, players(nickname, character_type)")
         .eq("room_id", gameRoom.id)
         .eq("completion_type", "completed");
       if (error) {
-        console.error("Gagal menyinkronkan completedPlayers:", error);
+        console.error(t("log.syncCompletedPlayersError", { error: error.message }));
         return;
       }
       const completed = data?.map((completion: any) => completion.players) || [];
@@ -671,17 +684,17 @@ export default function HostGamePage() {
         const newCompleted = completed.filter(
           (player: Player) => !prev.some((p) => p.id === player.id)
         );
-        console.log(`Pemain yang baru selesai: ${newCompleted.map((p: Player) => p.nickname).join(", ")}`);
+        console.log(t("log.newCompletedPlayers", { nicknames: newCompleted.map((p: Player) => p.nickname).join(", ") }));
         return [...prev, ...newCompleted];
       });
     } catch (error) {
-      console.error("Error saat menyinkronkan completedPlayers:", error);
+      console.error(t("log.syncCompletedPlayersError", { error }));
     }
-  }, [gameRoom]);
+  }, [gameRoom, t]);
 
   useEffect(() => {
     syncCompletedPlayers();
-    const interval = setInterval(syncCompletedPlayers, 5000); // Sinkronkan setiap 5 detik
+    const interval = setInterval(syncCompletedPlayers, 5000);
     return () => clearInterval(interval);
   }, [syncCompletedPlayers]);
 
@@ -689,7 +702,7 @@ export default function HostGamePage() {
   useEffect(() => {
     if (!gameRoom) return;
 
-    console.log(`Menyiapkan realtime untuk room: ${gameRoom.id}`);
+    console.log(t("log.setupRealtime", { roomId: gameRoom.id }));
     const roomChannel = supabase.channel(`room-${gameRoom.id}`);
     const healthChannel = supabase.channel(`health-${gameRoom.id}`);
     const answerChannel = supabase.channel(`answers-${gameRoom.id}`);
@@ -701,19 +714,19 @@ export default function HostGamePage() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "game_rooms", filter: `id=eq.${gameRoom.id}` },
         (payload) => {
-          console.log("Perubahan room terdeteksi:", { ...payload.new, chaser_type: payload.new.chaser_type });
+          console.log(t("log.roomChangeDetected", { room: payload.new }));
           const newRoom = payload.new as GameRoom;
           setGameRoom(newRoom);
           setChaserType(newRoom.chaser_type || "zombie");
           if (newRoom.current_phase === "completed") {
-            console.log("Mengalihkan host ke halaman resultshost");
+            console.log(t("log.redirectToResultsHost"));
             setIsLoading(false);
             router.push(`/game/${roomCode}/resultshost`);
           }
-        },
+        }
       )
       .subscribe((status) => {
-        console.log(`Status langganan room: ${status}`);
+        console.log(t("log.roomSubscriptionStatus", { status }));
       });
 
     healthChannel
@@ -721,7 +734,7 @@ export default function HostGamePage() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "player_health_states", filter: `room_id=eq.${gameRoom.id}` },
         (payload) => {
-          console.log("Perubahan status kesehatan terdeteksi:", payload);
+          console.log(t("log.healthChangeDetected", { payload }));
           const healthState = payload.new as PlayerHealthState;
           setPlayerHealthStates((prev) => ({
             ...prev,
@@ -738,14 +751,16 @@ export default function HostGamePage() {
                 isBeingAttacked: healthState.is_being_attacked,
                 lastAttackTime: new Date(healthState.last_attack_time).getTime(),
                 countdown:
-                  healthState.speed <= 30 && !healthState.is_being_attacked && healthState.health > 0 ? 10 : undefined,
+                  healthState.speed <= 30 && !healthState.is_being_attacked && healthState.health > 0
+                    ? zombieAttackCountdown
+                    : undefined,
               },
             };
           });
-        },
+        }
       )
       .subscribe((status) => {
-        console.log(`Status langganan health: ${status}`);
+        console.log(t("log.healthSubscriptionStatus", { status }));
       });
 
     answerChannel
@@ -753,17 +768,17 @@ export default function HostGamePage() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "player_answers", filter: `room_id=eq.${gameRoom.id}` },
         (payload) => {
-          console.log("Jawaban baru diterima:", payload);
+          console.log(t("log.newAnswerReceived", { payload }));
           const answer = payload.new as any;
           if (answer.is_correct) {
             handleCorrectAnswer(answer.player_id);
           } else {
             handleWrongAnswer(answer.player_id);
           }
-        },
+        }
       )
       .subscribe((status) => {
-        console.log(`Status langganan answers: ${status}`);
+        console.log(t("log.answerSubscriptionStatus", { status }));
       });
 
     completionChannel
@@ -771,13 +786,13 @@ export default function HostGamePage() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "game_completions", filter: `room_id=eq.${gameRoom.id}` },
         async (payload) => {
-          console.log("🔄 Penyelesaian permainan terdeteksi:", payload);
+          console.log(t("log.completionDetected", { payload }));
           const completion = payload.new as GameCompletion;
-          console.log(`Pemain ${completion.player_id} selesai dengan tipe: ${completion.completion_type}`);
+          console.log(t("log.playerCompletion", { playerId: completion.player_id, completion_type: completion.completion_type }));
           if (completion.completion_type === "completed") {
             const player = players.find((p) => p.id === completion.player_id);
             if (player) {
-              console.log(`Menambahkan ${player.nickname} ke completedPlayers`);
+              console.log(t("log.addToCompletedPlayers", { nickname: player.nickname }));
               setCompletedPlayers((prev) => {
                 if (!prev.some((p) => p.id === player.id)) {
                   return [...prev, player];
@@ -786,29 +801,29 @@ export default function HostGamePage() {
               });
               setShowCompletionPopup(true);
             } else {
-              console.warn(`Pemain dengan ID ${completion.player_id} tidak ditemukan di daftar players`);
+              console.warn(t("log.playerNotFound", { playerId: completion.player_id }));
             }
           }
           const { data, error } = await supabase.from("game_completions").select("*").eq("room_id", gameRoom.id);
           if (error) {
-            console.error("Gagal memeriksa penyelesaian:", error);
+            console.error(t("log.checkCompletionsError", { error: error.message }));
           } else {
-            console.log(`Total penyelesaian: ${data.length}, total pemain: ${players.length}`);
+            console.log(t("log.totalCompletions", { count: data.length, totalPlayers: players.length }));
             if (data.length === players.length) {
-              console.log("Semua pemain selesai, mengalihkan ke resultshost");
+              console.log(t("log.allPlayersCompletedRedirect"));
               await supabase.from("game_rooms").update({ current_phase: "completed" }).eq("id", gameRoom.id);
               setIsLoading(false);
               router.push(`/game/${roomCode}/resultshost`);
             }
           }
-        },
+        }
       )
       .subscribe((status) => {
-        console.log(`Status langganan completions: ${status}`);
+        console.log(t("log.completionSubscriptionStatus", { status }));
         if (status === "SUBSCRIBED") {
-          console.log("Berhasil berlangganan ke channel completions");
+          console.log(t("log.completionSubscriptionSuccess"));
         } else if (status === "CLOSED" || status === "CHANNEL_ERROR") {
-          console.warn("Gagal berlangganan ke channel completions, status:", status);
+          console.warn(t("log.completionSubscriptionError", { status }));
         }
       });
 
@@ -817,30 +832,30 @@ export default function HostGamePage() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "players", filter: `room_id=eq.${gameRoom.id}` },
         (payload) => {
-          console.log("Perubahan pemain terdeteksi:", payload);
+          console.log(t("log.playerChangeDetected", { payload }));
           const updatedPlayer = payload.new as Player;
           setPlayers((prev) => prev.map((p) => (p.id === updatedPlayer.id ? { ...p, ...updatedPlayer } : p)));
-        },
+        }
       )
       .subscribe((status) => {
-        console.log(`Status langganan players: ${status}`);
+        console.log(t("log.playerSubscriptionStatus", { status }));
       });
 
     return () => {
-      console.log("Berhenti berlangganan dari channel");
+      console.log(t("log.unsubscribeChannels"));
       supabase.removeChannel(roomChannel);
       supabase.removeChannel(healthChannel);
       supabase.removeChannel(answerChannel);
       supabase.removeChannel(completionChannel);
       supabase.removeChannel(playerChannel);
     };
-  }, [gameRoom, handleCorrectAnswer, handleWrongAnswer, players, router, roomCode]);
+  }, [gameRoom, handleCorrectAnswer, handleWrongAnswer, players, router, roomCode, zombieAttackCountdown, t]);
 
   // Initialize game data
   useEffect(() => {
-    console.log("Memulai inisialisasi halaman host untuk roomCode:", roomCode);
+    console.log(t("log.initHostPage", { roomCode }));
     fetchGameData();
-  }, [roomCode, fetchGameData]);
+  }, [roomCode, fetchGameData, t]);
 
   // Interval for player status
   useEffect(() => {
@@ -851,41 +866,41 @@ export default function HostGamePage() {
 
   // Check image loading
   useEffect(() => {
-const testAllImages = async () => {
-  console.log("Memeriksa pemuatan gambar");
-  const status: { [key: string]: boolean } = {};
-  const characterFiles = [
-    "/character/player/character.gif",
-    "/character/player/character1.gif",
-    "/character/player/character2.gif",
-    "/character/player/character3.gif",
-    "/character/player/character4.gif",
-    "/character/player/character5.gif",
-    "/character/player/character6.gif",
-    "/character/player/character7.gif",
-    "/character/player/character8.gif",
-    "/character/player/character9.gif",
-  ];
-  for (const file of characterFiles) {
-    const works = await testImageLoad(file);
-    status[file] = works;
-  }
-  const chaserFiles = [
-    "/character/chaser/zombie.gif",
-    "/character/chaser/monster1.gif",
-    "/character/chaser/monster2.gif",
-    "/character/chaser/monster3.gif",
-    "/character/chaser/darknight.gif",
-  ];
-  for (const file of chaserFiles) {
-    const works = await testImageLoad(file);
-    status[file] = works;
-  }
-  setImageLoadStatus(status);
-  console.log("Pemuatan gambar selesai:", status);
-};
+    const testAllImages = async () => {
+      console.log(t("log.checkImageLoading"));
+      const status: { [key: string]: boolean } = {};
+      const characterFiles = [
+        "/character/player/character.gif",
+        "/character/player/character1.gif",
+        "/character/player/character2.gif",
+        "/character/player/character3.gif",
+        "/character/player/character4.gif",
+        "/character/player/character5.gif",
+        "/character/player/character6.gif",
+        "/character/player/character7.gif",
+        "/character/player/character8.gif",
+        "/character/player/character9.gif",
+      ];
+      for (const file of characterFiles) {
+        const works = await testImageLoad(file);
+        status[file] = works;
+      }
+      const chaserFiles = [
+        "/character/chaser/zombie.gif",
+        "/character/chaser/monster1.gif",
+        "/character/chaser/monster2.gif",
+        "/character/chaser/monster3.gif",
+        "/character/chaser/darknight.gif",
+      ];
+      for (const file of chaserFiles) {
+        const works = await testImageLoad(file);
+        status[file] = works;
+      }
+      setImageLoadStatus(status);
+      console.log(t("log.imageLoadingComplete", { status }));
+    };
     testAllImages();
-  }, []);
+  }, [t]);
 
   const testImageLoad = (src: string): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -899,13 +914,13 @@ const testAllImages = async () => {
 
   // Set client and screen size
   useEffect(() => {
-    console.log("Mengatur isClient ke true");
+    console.log(t("log.setIsClient"));
     setIsClient(true);
     setScreenWidth(window.innerWidth);
     const handleResize = () => setScreenWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [t]);
 
   // Animation time
   useEffect(() => {
@@ -917,14 +932,14 @@ const testAllImages = async () => {
   useEffect(() => {
     const checkConnection = () => {
       const state = supabase.getChannels()[0]?.state || "closed";
-      console.log(`Status koneksi Supabase: ${state}`);
+      console.log(t("log.supabaseConnectionStatus", { state }));
       setIsConnected(state === "joined");
     };
 
     checkConnection();
     const interval = setInterval(checkConnection, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [t]);
 
   const getLoopPosition = (speed: number, spacing: number, offset = 0) => {
     const totalDistance = screenWidth + spacing;
@@ -936,15 +951,12 @@ const testAllImages = async () => {
     return imageLoadStatus[character.src] ? character.src : "/character/player/character.gif";
   };
 
-
-  const activePlayers = players.filter(
-    p => !completedPlayers.some(c => c.id === p.id)
-  );
+  const activePlayers = players.filter((p) => !completedPlayers.some((c) => c.id === p.id));
 
   if (!isClient || isLoading) {
     return (
       <div className="relative w-full h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">{loadingError ? loadingError : "Memuat Kejaran Pengejar..."}</div>
+        <div className="text-white text-xl">{loadingError ? loadingError : t("loadingChase")}</div>
       </div>
     );
   }
@@ -957,41 +969,38 @@ const testAllImages = async () => {
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
-      
       <Background3 isFlashing={backgroundFlash} />
       <audio src="/musics/zombies.mp3" autoPlay />
       <audio src="/musics/background-music.mp3" autoPlay loop />
       {/* <AnimatePresence>
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 max-w-[240px] max-h-[400px] overflow-y-auto custom-scrollbar">
-          {Object.entries(playerStates)
-            .filter(([_, state]) => state.countdown !== undefined && state.countdown > 0)
-            .slice(0, 10)
-            .map(([playerId, state]) => {
-              const player = players.find((p) => p.id === playerId);
-              if (!player) return null;
-              return (
-                <motion.div
-                  key={`countdown-${playerId}`}
-                  initial={{ opacity: 0, y: -20, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="flex items-center bg-red-900/90 text-white font-mono text-sm px-3 py-2 rounded-lg shadow-lg border border-red-500/50 w-[240px] animate-pulse"
-                >
-                  <span className="flex-1 truncate">{player.nickname}</span>
-                  <span className="ml-2 font-bold text-yellow-300">{state.countdown}s</span>
-                </motion.div>
-              );
-            })}
-        </div>
+        {Object.entries(playerStates)
+          .filter(([_, state]) => state.countdown !== undefined && state.countdown > 0)
+          .slice(0, 10)
+          .map(([playerId, state]) => {
+            const player = players.find((p) => p.id === playerId);
+            if (!player) return null;
+            return (
+              <motion.div
+                key={`countdown-${playerId}`}
+                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="flex items-center bg-red-900/90 text-white font-mono text-sm px-3 py-2 rounded-lg shadow-lg border border-red-500/50 w-[240px] animate-pulse"
+              >
+                <span className="flex-1 truncate">{player.nickname}</span>
+                <span className="ml-2 font-bold text-yellow-300">{state.countdown}s</span>
+              </motion.div>
+            );
+          })}
       </AnimatePresence> */}
 
-           <h6
-              className="text-2xl sm:text-2xl md:text-5xl font-bold font-mono tracking-wider text-red-600 drop-shadow-[0_0_10px_rgba(39,68,0)]"
-              style={{ textShadow: "0 0 15px rgba(239, 68, 68, 0.9), 0 0 20px rgba(0, 0, 0, 0.5)" }}
-            >
-              {t("title")}
-            </h6>
+      <h6
+        className="text-2xl sm:text-2xl md:text-5xl font-bold font-mono tracking-wider text-red-600 drop-shadow-[0_0_10px_rgba(39,68,0)]"
+        style={{ textShadow: "0 0 15px rgba(239, 68, 68, 0.9), 0 0 20px rgba(0, 0, 0, 0.5)" }}
+      >
+        {t("title")}
+      </h6>
 
       <RunningCharacters
         players={activePlayers}

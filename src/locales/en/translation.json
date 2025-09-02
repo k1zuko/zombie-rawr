@@ -217,5 +217,12 @@
   "speedRuleCorrect": "Correct = +5 speed",
   "speedRuleWrong": "Wrong = -5 speed",
   "hostRoomTitle": "HOST ROOM",
-  "waitingRoomTitle": "WAITING ROOM"
+  "waitingRoomTitle": "WAITING ROOM",
+
+
+  "difficultyLevelLabel": "Difficulty Level",
+  "difficulty.hard": "Hard",
+  "difficulty.medium": "Medium",
+  "difficulty.easy": "Easy"
+
 }
