@@ -613,57 +613,39 @@ export default function HostPage() {
 
       <div className={`relative z-10 mx-auto p-10 ${countdown !== null ? "hidden" : ""}`}>
         <motion.header
-                  initial={{ opacity: 0, y: -50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
-                  className="flex flex-col gap-1 mb-10"
-                >
-                  <div className="flex items-start">
-                    <Link href={"/"}>
-                      <h1
-                        className="text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
-                        style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-                      >
-                        {t("title")}
-                      </h1>
-                    </Link>
-                  </div>
-        
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
-                    className="flex justify-center items-center text-center"
-                  >
-                    <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
-                    <h1
-                      className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
-                        } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
-                      style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-                    >
-                      {t("hostRoomTitle")}
-                    </h1>
-                    <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
-                  </motion.div>
-                </motion.header>
-        {/* <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center m-6"
+          transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
+          className="flex flex-col gap-1 mb-10"
         >
-          <div className="flex items-center justify-center py-3 mb-10">
+          <div className="flex items-start">
+            <Link href={"/"}>
+              <h1
+                className="text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+              >
+                {t("title")}
+              </h1>
+            </Link>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
+            className="flex justify-center items-center text-center"
+          >
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-5xl md:text-6xl font-bold font-mono tracking-widest transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
+              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
                 } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
-              {t("title")}
+              {t("hostRoomTitle")}
             </h1>
             <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
-          </div>
-        </motion.div> */}
+          </motion.div>
+        </motion.header>
         <div className="grid grid-cols-5 gap-4 mb-5">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -718,16 +700,9 @@ export default function HostPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="relative flex items-center gap-4 bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] col-span-4"
+            className="relative flex items-center bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] col-span-4"
           >
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsQrModalOpen(true)}
-              className="absolute top-2 right-2 bg-black/60 text-red-400 hover:bg-red-700/20 border border-red-800/20 p-2 rounded-md"
-            >
-              <Maximize2 className="w-5 h-5" />
-            </Button>
+            
             <motion.div
               className="w-[40%] h-auto bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform"
               onClick={() => setIsQrModalOpen(true)}
@@ -739,9 +714,17 @@ export default function HostPage() {
                 viewBox={`0 0 256 256`}
               />
             </motion.div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsQrModalOpen(true)}
+              className="bg-black/60 text-red-400 hover:bg-red-700/20 border border-red-800/20 p-2 rounded-md items-start mb-auto ml-3"
+            >
+              <Maximize2 className="w-5 h-5" />
+            </Button>
             <div className="grid gap-4 w-full">
               {/* big code box — copy di pojok kanan atas */}
-              <div className="relative w-full max-w-[87%] mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
+              <div className="relative w-full max-w-[90%] mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
                 {/* tombol copy fixed top-right */}
                 <div className="absolute top-2 right-2 z-20">
                   <Button
@@ -767,7 +750,7 @@ export default function HostPage() {
               </div>
 
               {/* small join link box — copy di pojok kanan atas */}
-              <div className="relative w-full max-w-[87%] mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
+              <div className="relative w-full max-w-[90%] mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
                 <div className="absolute top-2 right-2 z-20">
                   <Button
                     variant="ghost"
@@ -838,14 +821,12 @@ export default function HostPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mb-12"
         >
           <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] gap-3">
             <CardHeader>
               <CardTitle className="text-red-500 text-xl md:text-2xl font-mono flex items-center gap-3">
                 <Users className="w-5 h-5 md:w-6 md:h-6" />
                 {t("players")}
-                
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -870,8 +851,8 @@ export default function HostPage() {
                       }}
                     >
                       {/* <Users className="w-12 h-12 md:w-16 md:h-16 text-red-900/50 mx-auto mb-4" /> */}
-                    <p className="text-red-400 text-lg font-mono">{t("waitingHost")}</p>
-                    <p className="text-red-400/80 text-sm font-mono">{t("shareCode")}</p>
+                      <p className="text-red-400 text-lg font-mono">{t("waitingHost")}</p>
+                      <p className="text-red-400/80 text-sm font-mono">{t("shareCode")}</p>
                     </motion.div>
                   </motion.div>
                 ) : (
