@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  /* config options here */
 };
 
 module.exports = {
+  output: 'standalone',
   images: {
     unoptimized: true, // Nonaktifkan optimisasi gambar global
     domains: [],
