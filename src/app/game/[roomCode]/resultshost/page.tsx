@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import Image from "next/image";
 import Confetti from "react-confetti";
-import { Trophy, Clock, Ghost, Zap, HeartPulse } from "lucide-react";
+import { Trophy, Clock, Ghost, Zap, HeartPulse, RotateCw, Home } from "lucide-react";
 import { t } from "i18next";
 import { useHostGuard } from "@/lib/host-guard";
 
@@ -384,15 +384,13 @@ export default function ResultsHostPage() {
       const newBlood = Array.from({ length: 10 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
-        speed: 1 + Math.random() * 1.5,
+        speed: 2 + Math.random() * 1.5,
         delay: Math.random() * 3,
       }));
       setBloodDrips(newBlood);
     };
 
     generateBlood();
-    const bloodInterval = setInterval(generateBlood, 6000);
-    return () => clearInterval(bloodInterval);
   }, []);
 
   if (isLoading) {
@@ -522,33 +520,41 @@ export default function ResultsHostPage() {
               {t("title")}
             </h1>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2">
+              {/* Tombol Home */}
               <motion.button
                 onClick={() => router.push("/")}
                 whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-red-800 text-white font-mono py-2 px-4 text-xs md:text-sm uppercase border-2 border-red-600 rounded-md"
+                // Ganti padding & tambahkan aria-label
+                className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
+                aria-label={t("homeButton")} // Penting untuk aksesibilitas
               >
-                {t("homeButton")}
+                <Home className="w-4 h-4" />
               </motion.button>
 
+              {/* Tombol Play Again */}
               <motion.button
                 onClick={handlePlayAgain}
                 disabled={isCreatingNewSession}
-                whileHover={{ scale: 1.05, boxShadow: "0 0 12px rgba(239, 68, 68, 0.8)" }}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 12px rgba(239, 68, 0.8)" }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white font-mono py-2 px-4 text-xs md:text-sm uppercase border-2 border-red-600 rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                // Ganti padding & tambahkan aria-label
+                className="bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white p-2 border-2 border-red-600 rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={t("playAgain")} // Penting untuk aksesibilitas
               >
                 {isCreatingNewSession ? (
+                  // State loading: tampilkan ikon Zap yang berputar
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-3 h-3 mr-1 inline-block"
                   >
-                    <Zap className="w-3 h-3" />
+                    <RotateCw className="w-4 h-4" />
                   </motion.div>
-                ) : null}
-                {isCreatingNewSession ? t("creatingSession") : t("playAgain")}
+                ) : (
+                  // State default: tampilkan ikon Play Again
+                  <RotateCw className="w-4 h-4" />
+                )}
               </motion.button>
             </div>
           </div>
@@ -561,8 +567,7 @@ export default function ResultsHostPage() {
           >
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-7xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
-                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-7xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.titleLeaderboard")}
@@ -648,7 +653,7 @@ export default function ResultsHostPage() {
           animation: pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
         @keyframes pulse {
-          0%, 100% { opacity: 1; }
+          0%, 90% { opacity: 1; }
           50% { opacity: 0.6; }
         }
         @keyframes fall {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { useParams } from "next/navigation" // useSearchParams dihapus
+import { useParams, useRouter } from "next/navigation" // useSearchParams dihapus
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Trophy, Skull, Heart, Target, Clock, Home, RotateCcw, AlertTriangle, Zap } from "lucide-react"
@@ -91,6 +91,7 @@ const characterGifs = [
 
 export default function ResultsPage() {
   const { t } = useTranslation()
+  const router = useRouter();
   const params = useParams()
   const roomCode = params.roomCode as string
 
@@ -722,14 +723,13 @@ export default function ResultsPage() {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* ... (sisa dari JSX render tidak berubah) ... */}
         <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
           className="flex flex-col gap-1 mb-10"
         >
-          <div className="flex items-start mb-5">
+          <div className="flex items-start justify-between mb-5">
             <Link href={"/"}>
               <h1
                 className="text-xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
@@ -738,6 +738,18 @@ export default function ResultsPage() {
                 {t("title")}
               </h1>
             </Link>
+
+            {/* Tombol Home */}
+                          <motion.button
+                            onClick={() => router.push("/")}
+                            whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+                            whileTap={{ scale: 0.95 }}
+                            // Ganti padding & tambahkan aria-label
+                            className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
+                            aria-label={t("homeButton")} // Penting untuk aksesibilitas
+                          >
+                            <Home className="w-4 h-4" />
+                          </motion.button>
           </div>
 
           <motion.div
@@ -748,9 +760,8 @@ export default function ResultsPage() {
           >
             <Skull className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
-                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
-              style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.5)" }}
+              className={`text-7xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
                {t("result.title")}
             </h1>
