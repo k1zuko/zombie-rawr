@@ -18,7 +18,6 @@ COPY . .
 # Pastikan next.config.js sudah memiliki "output: 'standalone'"
 RUN yarn build
 
----
 
 # Tahap 2: Jalankan Aplikasi Produksi
 # Menggunakan image yang sama untuk konsistensi
