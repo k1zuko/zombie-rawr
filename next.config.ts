@@ -11,6 +11,6 @@ module.exports = {
     domains: [],
     disableStaticImages: true // Memaksa penggunaan import untuk gambar statis
   }
-}
+};
 
 export default nextConfig;
