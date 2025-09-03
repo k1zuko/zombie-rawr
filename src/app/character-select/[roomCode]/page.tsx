@@ -396,14 +396,13 @@ export default function CharacterSelectPage() {
       </div>
 
       {bloodDrips.map((drip) => (
-        <div
+        <motion.div
           key={drip.id}
-          className="absolute top-0 w-0.5 h-20 bg-red-600/80 animate-fall"
-          style={{
-            left: `${drip.left}%`,
-            animation: `fall ${drip.speed}s linear ${drip.delay}s infinite`,
-            opacity: 0.7 + Math.random() * 0.3,
-          }}
+          initial={{ y: -100 }}
+          animate={{ y: "100vh" }}
+          transition={{ duration: drip.speed, delay: drip.delay, ease: "linear", repeat: Infinity }}
+          className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
+          style={{ left: `${drip.left}%`, opacity: 0.6 + Math.random() * 0.2 }}
         />
       ))}
 
@@ -651,7 +650,7 @@ export default function CharacterSelectPage() {
                 <h2 className="text-xl font-mono text-red-400">{t("chaserSelectTitle")}</h2>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 overflow-y-auto custom-scrollbar pr-2">
                 {chaserOptions.map((chaser) => (
                   <motion.div
                     key={chaser.value}

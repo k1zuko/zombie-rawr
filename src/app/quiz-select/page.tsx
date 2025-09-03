@@ -221,36 +221,19 @@ export default function QuizSelectPage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none flex flex-col">
-      <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 via-black to-purple-900/5">
-        {isClient && (
-          <div className="absolute inset-0 opacity-20">
-            {bloodSpots.map((spot) => (
-              <div
-                key={spot.id}
-                className="absolute w-64 h-64 bg-red-900 rounded-full mix-blend-multiply blur-xl"
-                style={{
-                  left: `${spot.left}%`,
-                  top: `${spot.top}%`,
-                  opacity: spot.opacity,
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      
 
       {isClient &&
         bloodDrips.map((drip) => (
-          <div
-            key={drip.id}
-            className="absolute top-0 w-0.5 h-20 bg-red-600/80 animate-fall"
-            style={{
-              left: `${drip.left}%`,
-              animation: `fall ${drip.speed}s linear ${drip.delay}s infinite`,
-              opacity: 0.7 + Math.random() * 0.3,
-            }}
-          />
-        ))}
+        <motion.div
+          key={drip.id}
+          initial={{ y: -100 }}
+          animate={{ y: "100vh" }}
+          transition={{ duration: drip.speed, delay: drip.delay, ease: "linear", repeat: Infinity }}
+          className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
+          style={{ left: `${drip.left}%`, opacity: 0.6 + Math.random() * 0.2 }}
+        />
+      ))}
 
       {isClient && (
         <div className="absolute inset-0 pointer-events-none">
@@ -445,7 +428,7 @@ export default function QuizSelectPage() {
                 {t("noQuizzesAvailable")}
               </div>
             ) : (
-              <div className="flex flex-col flex-1">
+              <div className="flex flex-col flex-1 gap-7">
                 <div className={`mt-4 grid gap-4 grid-cols-1 ${{
                   1: "md:grid-cols-1",
                   2: "md:grid-cols-2",
@@ -483,7 +466,6 @@ export default function QuizSelectPage() {
                   ))}
                 </div>
                 <motion.div
-                  className="mt-4"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}

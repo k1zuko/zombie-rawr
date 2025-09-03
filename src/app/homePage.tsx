@@ -314,17 +314,15 @@ export default function HomePage() {
 
       {isClient &&
         bloodDrips.map((drip) => (
-          <div
-            key={drip.id}
-            className="absolute top-0 w-0.5 h-20 bg-red-600/80 animate-fall sm:animate-fall"
-            style={{
-              left: `${drip.left}%`,
-              animation: `fall ${drip.speed}s linear ${drip.delay}s infinite`,
-              opacity: drip.opacity,
-              willChange: "transform",
-            }}
-          />
-        ))}
+        <motion.div
+          key={drip.id}
+          initial={{ y: -100 }}
+          animate={{ y: "100vh" }}
+          transition={{ duration: drip.speed, delay: drip.delay, ease: "linear", repeat: Infinity }}
+          className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
+          style={{ left: `${drip.left}%`, opacity: 0.6 + Math.random() * 0.2 }}
+        />
+      ))}
 
       {isClient && (
         <div className="absolute inset-0 pointer-events-none">

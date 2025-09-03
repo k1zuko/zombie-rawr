@@ -103,7 +103,7 @@ export default function ResultsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [playerData, setPlayerData] = useState<PlayerData | null>(null) // State untuk data pemain
-  const [characterGif, setCharacterGif] = useState<string>("/character.gif")
+  const [characterGif, setCharacterGif] = useState<string>()
   const [flickerText, setFlickerText] = useState(true);
 
   const isMountedRef = useRef(true)
@@ -767,14 +767,14 @@ export default function ResultsPage() {
             transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
             className="flex justify-center items-center text-center"
           >
-            <Skull className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
+            <Skull className="w-12 h-12 text-red-500 animate-pulse" />
             <h1
-              className={`text-5xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`mx-3 text-5xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.title")}
             </h1>
-            <Skull className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
+            <Skull className="w-12 h-12 text-red-500 animate-pulse" />
           </motion.div>
         </motion.header>
 
@@ -827,12 +827,6 @@ export default function ResultsPage() {
                     <div className="text-2xl font-bold text-white font-mono">{playerData.health}</div>
                     <div className="text-xs text-gray-400 tracking-widest">{t("health")}</div>
                   </div>
-
-                  {/* <div className="bg-gray-900/70 rounded-lg p-4 border border-red-900/50">
-                    <Trophy className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white font-mono">#{getPlayerRank()}</div>
-                    <div className="text-xs text-gray-400 tracking-widest">Posisi</div>
-                  </div> */}
 
                   <div className="bg-gray-900/70 rounded-lg p-4 border border-red-900/50">
                     <Zap className="w-6 h-6 text-purple-400 mx-auto mb-2" />
