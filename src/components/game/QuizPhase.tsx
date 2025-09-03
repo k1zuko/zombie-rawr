@@ -1,5 +1,3 @@
-// QuizPhase.tsx (Full Code with Fixes)
-
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -49,66 +47,11 @@ export default function QuizPhase({
   const params = useParams()
   const roomCode = params.roomCode as string
 
-  const [roomInfo, setRoomInfo] = useState<{ game_start_time: string; duration: number } | null>(null)
+  const [roomInfo, setRoomInfo] = useState<{ game_start_time: string; duration: number; difficulty_level: string } | null>(null)
   const [gameStartTime, setGameStartTime] = useState<number | null>(null)
   const [playerJoinTime, setPlayerJoinTime] = useState<number | null>(null)
-
-  useEffect(() => {
-    const fetchRoomInfo = async () => {
-      const { data, error } = await supabase
-        .from("game_rooms")
-        .select("game_start_time, duration")
-        .eq("id", room.id)
-        .single()
-
-      if (error) {
-        console.error("❌ Gagal fetch room info:", error.message)
-      } else {
-        setRoomInfo(data)
-        if (data.game_start_time) {
-          const startTime = new Date(data.game_start_time).getTime()
-          setGameStartTime(startTime)
-          const { data: playerData } = await supabase
-            .from("players")
-            .select("joined_at")
-            .eq("id", currentPlayer.id)
-            .single()
-
-          if (playerData?.joined_at) {
-            setPlayerJoinTime(new Date(playerData.joined_at).getTime())
-          }
-        }
-      }
-    }
-
-    if (room?.id) {
-      fetchRoomInfo()
-    }
-  }, [room?.id, currentPlayer?.id])
-
   const [timeLeft, setTimeLeft] = useState(0)
-
-  useEffect(() => {
-    if (!roomInfo?.game_start_time || !roomInfo.duration) return
-
-    const start = new Date(roomInfo.game_start_time).getTime()
-    const now = Date.now()
-    const elapsed = Math.floor((now - start) / 1000)
-    const remaining = Math.max(0, roomInfo.duration - elapsed)
-
-    setTimeLeft(remaining)
-    setTimeLoaded(true);
-
-    const interval = setInterval(() => {
-      const now = Date.now()
-      const newElapsed = Math.floor((now - start) / 1000)
-      const newRemaining = Math.max(0, roomInfo.duration - newElapsed)
-      setTimeLeft(newRemaining)
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [roomInfo])
-
+  const [timeLoaded, setTimeLoaded] = useState(false)
   const [inactivityCountdown, setInactivityCountdown] = useState<number | null>(null)
   const [penaltyCountdown, setPenaltyCountdown] = useState<number | null>(null)
   const [isClient, setIsClient] = useState(false)
@@ -117,7 +60,6 @@ export default function QuizPhase({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(
     Math.min(resumeState?.currentIndex ?? 0, (room?.questions?.length ?? 1) - 1)
   )
-
   const [playerHealth, setPlayerHealth] = useState(resumeState?.health || 3)
   const [playerSpeed, setPlayerSpeed] = useState(resumeState?.speed || 20)
   const [correctAnswers, setCorrectAnswers] = useState(resumeState?.correctAnswers || 0)
@@ -125,15 +67,78 @@ export default function QuizPhase({
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [isProcessingAnswer, setIsProcessingAnswer] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const [timeLoaded, setTimeLoaded] = useState(false);
-
 
   const questions = room?.questions || []
   const totalQuestions = questions.length
   const currentQuestion = questions[currentQuestionIndex]
-
   const pulseIntensity = timeLeft <= 30 ? (31 - timeLeft) / 30 : 0
   const FEEDBACK_DURATION = 1000
+
+  // Definisikan pengaturan berdasarkan difficulty_level
+  const difficultySettings = {
+    easy: { inactivityPenalty: 30 },
+    medium: { inactivityPenalty: 15 },
+    hard: { inactivityPenalty: 10 },
+  }
+  const inactivityPenalty = roomInfo && ["easy", "medium", "hard"].includes(roomInfo.difficulty_level)
+    ? difficultySettings[roomInfo.difficulty_level as keyof typeof difficultySettings].inactivityPenalty
+    : difficultySettings.medium.inactivityPenalty // Default ke medium
+
+  useEffect(() => {
+    const fetchRoomInfo = async () => {
+      const { data, error } = await supabase
+        .from("game_rooms")
+        .select("game_start_time, duration, difficulty_level")
+        .eq("id", room.id)
+        .single()
+
+      if (error) {
+        console.error(t("log.fetchRoomInfoError", { error: error.message }))
+        return
+      }
+
+      setRoomInfo(data)
+      if (data.game_start_time) {
+        const startTime = new Date(data.game_start_time).getTime()
+        setGameStartTime(startTime)
+        const { data: playerData, error: playerError } = await supabase
+          .from("players")
+          .select("joined_at")
+          .eq("id", currentPlayer.id)
+          .single()
+
+        if (playerError) {
+          console.error(t("log.fetchPlayerError", { error: playerError.message }))
+          return
+        }
+
+        if (playerData?.joined_at) {
+          setPlayerJoinTime(new Date(playerData.joined_at).getTime())
+        }
+      }
+    }
+
+    if (room?.id) {
+      fetchRoomInfo()
+    }
+  }, [room?.id, currentPlayer?.id, t])
+
+  useEffect(() => {
+    if (!roomInfo?.game_start_time || !roomInfo.duration) return
+
+    const start = new Date(roomInfo.game_start_time).getTime()
+    const updateTimeLeft = () => {
+      const now = Date.now()
+      const elapsed = Math.floor((now - start) / 1000)
+      const remaining = Math.max(0, roomInfo.duration - elapsed)
+      setTimeLeft(remaining)
+      setTimeLoaded(true)
+    }
+
+    updateTimeLeft()
+    const interval = setInterval(updateTimeLeft, 1000)
+    return () => clearInterval(interval)
+  }, [roomInfo])
 
   useEffect(() => {
     const initializeLastAnswerTime = async () => {
@@ -150,7 +155,6 @@ export default function QuizPhase({
         await supabase.from("player_health_states").upsert({
           player_id: currentPlayer.id,
           room_id: room.id,
-
           health: playerHealth,
           speed: playerSpeed,
           last_answer_time: new Date().toISOString(),
@@ -173,7 +177,7 @@ export default function QuizPhase({
         .order("question_index", { ascending: true })
 
       if (error) {
-        console.error("Gagal mengambil progress jawaban:", error)
+        console.error(t("log.fetchAnsweredProgressError", { error: error.message }))
         return
       }
 
@@ -185,7 +189,7 @@ export default function QuizPhase({
     }
 
     fetchAnsweredProgress()
-  }, [room?.id, currentPlayer?.id])
+  }, [room?.id, currentPlayer?.id, t])
 
   const getDangerLevel = () => {
     if (playerHealth <= 1) return 3
@@ -212,10 +216,13 @@ export default function QuizPhase({
       const survivalDuration = calculateSurvivalDuration()
       const completionTime = new Date().toISOString()
 
-      console.log(
-        `💾 Menyimpan penyelesaian untuk ${currentPlayer.nickname}: health=${finalHealth}, correct=${finalCorrect}, eliminated=${actuallyEliminated}, completion_type=${actuallyEliminated ? "eliminated" : "completed"
-        }`
-      );
+      console.log(t("log.saveGameCompletion", {
+        nickname: currentPlayer.nickname,
+        health: finalHealth,
+        correct: finalCorrect,
+        eliminated: actuallyEliminated,
+        completion_type: actuallyEliminated ? "eliminated" : "completed"
+      }))
 
       const { data, error } = await supabase.from("game_completions").upsert({
         player_id: currentPlayer.id,
@@ -230,12 +237,12 @@ export default function QuizPhase({
       })
 
       if (error) {
-        console.error("❌ Gagal menyimpan penyelesaian permainan:", error)
+        console.error(t("log.saveGameCompletionError", { error: error.message }))
       } else {
-        console.log("✅ Penyelesaian permainan berhasil disimpan:", data);
+        console.log(t("log.saveGameCompletionSuccess", { data }))
       }
     } catch (error) {
-      console.error("Error di saveGameCompletion:", error)
+      console.error(t("log.saveGameCompletionError", { error }))
     }
   }
 
@@ -244,7 +251,6 @@ export default function QuizPhase({
       setIsProcessingAnswer(true)
 
       let newSpeed = playerSpeed
-
       if (isCorrectAnswer) {
         newSpeed = Math.min(playerSpeed + 5, 100)
       } else {
@@ -261,7 +267,7 @@ export default function QuizPhase({
       })
 
       if (answerError) {
-        console.error("Gagal menyimpan jawaban:", answerError)
+        console.error(t("log.saveAnswerError", { error: answerError.message }))
         return false
       }
 
@@ -272,12 +278,11 @@ export default function QuizPhase({
         .eq("room_id", room.id)
 
       setPlayerSpeed(newSpeed)
-
-      console.log("player speed after jawab:", newSpeed)
+      console.log(t("log.playerSpeedAfterAnswer", { newSpeed }))
 
       return true
     } catch (error) {
-      console.error("Error di saveAnswerAndUpdateHealth:", error)
+      console.error(t("log.saveAnswerAndUpdateHealthError", { error }))
       return false
     } finally {
       setIsProcessingAnswer(false)
@@ -286,7 +291,7 @@ export default function QuizPhase({
 
   const syncHealthAndSpeedFromDatabase = async () => {
     if (!room?.id || !currentPlayer?.id) {
-      console.log("⚠️ room or currentPlayer is null, skipping sync")
+      console.log(t("log.skipSync"))
       return
     }
     try {
@@ -296,12 +301,12 @@ export default function QuizPhase({
       })
 
       if (error) {
-        console.error("Gagal mendapatkan kesehatan pemain:", error)
+        console.error(t("log.getPlayerHealthError", { error: error.message }))
         return
       }
 
       if (data !== null && data !== playerHealth) {
-        console.log(`Kesehatan disinkronkan dari ${playerHealth} ke ${data}`)
+        console.log(t("log.syncHealth", { oldHealth: playerHealth, newHealth: data }))
         setPlayerHealth(data)
       }
 
@@ -313,43 +318,22 @@ export default function QuizPhase({
         .single()
 
       if (speedError) {
-        console.error("Gagal mendapatkan kecepatan pemain:", speedError)
+        console.error(t("log.getPlayerSpeedError", { error: speedError.message }))
         return
       }
 
       if (speedData && speedData.speed !== playerSpeed) {
-        console.log(`Kecepatan disinkronkan dari ${playerSpeed} ke ${speedData.speed}`)
+        console.log(t("log.syncSpeed", { oldSpeed: playerSpeed, newSpeed: speedData.speed }))
         setPlayerSpeed(speedData.speed)
       }
     } catch (error) {
-      console.error("Error saat sinkronisasi kesehatan dan kecepatan:", error)
+      console.error(t("log.syncHealthAndSpeedError", { error }))
     }
   }
 
-  useEffect(() => {
-    if (!timeLoaded || timeLeft > 0) return; // skip kalau belum load
-    if (isProcessingAnswer) return;
-    if (timeLeft === 0 && !isProcessingAnswer) {
-      redirectToResults(playerHealth, correctAnswers, currentQuestionIndex + 1, true);
-    }
-  }, [timeLeft, isProcessingAnswer, playerHealth, correctAnswers, currentQuestionIndex, timeLoaded]);
-
-
-  useEffect(() => {
-    if (onProgressUpdate) {
-      onProgressUpdate({
-        health: playerHealth,
-        correctAnswers,
-        currentIndex: currentQuestionIndex,
-      })
-    }
-  }, [playerHealth, correctAnswers, currentQuestionIndex])
-
   const checkInactivityPenalty = async () => {
     if (!room?.id || !currentPlayer?.id || playerHealth <= 0 || isProcessingAnswer || isAnswered) {
-      console.log(
-        "⚠️ Skipping inactivity penalty check: invalid room, player, eliminated, processing answer, or already answered",
-      )
+      console.log(t("log.skipInactivityCheck"))
       setInactivityCountdown(null)
       setPenaltyCountdown(null)
       return
@@ -363,14 +347,14 @@ export default function QuizPhase({
         .single()
 
       if (error) {
-        console.error("Gagal memeriksa ketidakaktifan:", error)
+        console.error(t("log.inactivityCheckError", { error: error.message }))
         setInactivityCountdown(null)
         setPenaltyCountdown(null)
         return
       }
 
       if (!data.last_answer_time) {
-        console.log("No last_answer_time, initializing...")
+        console.log(t("log.noLastAnswerTime"))
         await supabase
           .from("player_health_states")
           .update({ last_answer_time: new Date().toISOString() })
@@ -385,18 +369,17 @@ export default function QuizPhase({
       const currentTime = Date.now()
       const timeSinceLastAnswer = (currentTime - lastAnswerTime) / 1000
 
-      console.log(`🕒 Pemeriksaan ketidakaktifan: timeSinceLastAnswer=${timeSinceLastAnswer}s, speed=${data.speed}`)
+      console.log(t("log.inactivityCheck", { timeSinceLastAnswer, speed: data.speed }))
 
-      if (timeSinceLastAnswer >= 15 && timeSinceLastAnswer < 25 && data.speed > 20) {
-        const countdown = Math.ceil(25 - timeSinceLastAnswer)
-        console.log(`⏲️ Memulai countdown penalti: ${countdown}s`)
+      const warningThreshold = inactivityPenalty - 10 // Peringatan 10 detik sebelum penalti
+      if (timeSinceLastAnswer >= warningThreshold && timeSinceLastAnswer < inactivityPenalty && data.speed > 20) {
+        const countdown = Math.ceil(inactivityPenalty - timeSinceLastAnswer)
+        console.log(t("log.startPenaltyCountdown", { countdown }))
         setInactivityCountdown(null)
         setPenaltyCountdown(countdown)
-      } else if (timeSinceLastAnswer >= 25 && data.speed > 20) {
+      } else if (timeSinceLastAnswer >= inactivityPenalty && data.speed > 20) {
         const newSpeed = Math.max(20, data.speed - 10)
-        console.log(
-          `⚠️ Pemain tidak aktif selama ${timeSinceLastAnswer}s, kecepatan dikurangi dari ${data.speed} ke ${newSpeed}`,
-        )
+        console.log(t("log.applyInactivityPenalty", { timeSinceLastAnswer, oldSpeed: data.speed, newSpeed }))
         await supabase
           .from("player_health_states")
           .update({ speed: newSpeed, last_answer_time: new Date().toISOString() })
@@ -407,13 +390,13 @@ export default function QuizPhase({
         setPenaltyCountdown(null)
       } else {
         if (inactivityCountdown !== null || penaltyCountdown !== null) {
-          console.log("🔄 Menghapus semua countdown karena pemain aktif atau kecepatan <= 20")
+          console.log(t("log.clearCountdowns"))
           setInactivityCountdown(null)
           setPenaltyCountdown(null)
         }
       }
     } catch (error) {
-      console.error("Error di checkInactivityPenalty:", error)
+      console.error(t("log.inactivityCheckError", { error }))
       setInactivityCountdown(null)
       setPenaltyCountdown(null)
     }
@@ -428,9 +411,13 @@ export default function QuizPhase({
   ) => {
     const actuallyEliminated = isEliminated || health <= 0
 
-    console.log(
-      `Mengalihkan ke hasil: health=${health}, correct=${correct}, total=${total}, eliminated=${actuallyEliminated}, perfect=${isPerfect}`,
-    )
+    console.log(t("log.redirectToResults", {
+      health,
+      correct,
+      total,
+      eliminated: actuallyEliminated,
+      perfect: isPerfect
+    }))
 
     if (timerRef.current) {
       clearInterval(timerRef.current)
@@ -439,10 +426,9 @@ export default function QuizPhase({
 
     try {
       await saveGameCompletion(health, correct, total, actuallyEliminated)
-
       await new Promise((resolve) => setTimeout(resolve, 500))
     } catch (error) {
-      console.error("Error saving game completion:", error)
+      console.error(t("log.redirectToResultsError", { error }))
     }
 
     const lastResult = {
@@ -465,6 +451,24 @@ export default function QuizPhase({
   }
 
   useEffect(() => {
+    if (!timeLoaded || timeLeft > 0) return
+    if (isProcessingAnswer) return
+    if (timeLeft === 0 && !isProcessingAnswer) {
+      redirectToResults(playerHealth, correctAnswers, currentQuestionIndex + 1, true)
+    }
+  }, [timeLeft, isProcessingAnswer, playerHealth, correctAnswers, currentQuestionIndex, timeLoaded])
+
+  useEffect(() => {
+    if (onProgressUpdate) {
+      onProgressUpdate({
+        health: playerHealth,
+        correctAnswers,
+        currentIndex: currentQuestionIndex,
+      })
+    }
+  }, [playerHealth, correctAnswers, currentQuestionIndex, onProgressUpdate])
+
+  useEffect(() => {
     syncHealthAndSpeedFromDatabase()
     const syncInterval = setInterval(syncHealthAndSpeedFromDatabase, 2000)
     return () => clearInterval(syncInterval)
@@ -481,7 +485,7 @@ export default function QuizPhase({
 
   useEffect(() => {
     if (playerHealth <= 0) {
-      console.log("[v0] Player eliminated (health <= 0), stopping all timers and redirecting")
+      console.log(t("log.playerEliminated"))
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null
@@ -496,11 +500,10 @@ export default function QuizPhase({
       const feedbackTimer = setTimeout(() => {
         setShowFeedback(false)
         if (playerHealth <= 0) {
-          console.log("Pemain tereliminasi selama feedback, mengalihkan ke hasil")
+          console.log(t("log.eliminatedDuringFeedback"))
           redirectToResults(0, correctAnswers, currentQuestionIndex + 1, true)
         } else if (currentQuestionIndex + 1 >= totalQuestions) {
-          console.log("Semua pertanyaan dijawab, menyimpan penyelesaian dan mengalihkan ke hasil")
-          // const finalCorrect = correctAnswers + (isCorrect ? 1 : 0);
+          console.log(t("log.allQuestionsAnswered"))
           redirectToResults(playerHealth, correctAnswers, totalQuestions, false, correctAnswers === totalQuestions)
         } else {
           nextQuestion()
@@ -529,7 +532,7 @@ export default function QuizPhase({
       .maybeSingle()
 
     if (existing) {
-      console.log("Sudah pernah dijawab, skip")
+      console.log(t("log.alreadyAnswered"))
       return
     }
 
@@ -591,7 +594,7 @@ export default function QuizPhase({
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <Skull className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
-          <p className="text-white font-mono text-xl">Memuat pertanyaan...</p>
+          <p className="text-white font-mono text-xl">{t("loadingQuestion")}</p>
         </div>
       </div>
     )
@@ -600,12 +603,13 @@ export default function QuizPhase({
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       <div
-        className={`absolute inset-0 transition-all duration-1000 ${dangerLevel === 3
-          ? "bg-gradient-to-br from-red-900/40 via-black to-red-950/40"
-          : dangerLevel === 2
+        className={`absolute inset-0 transition-all duration-1000 ${
+          dangerLevel === 3
+            ? "bg-gradient-to-br from-red-900/40 via-black to-red-950/40"
+            : dangerLevel === 2
             ? "bg-gradient-to-br from-red-950/25 via-black to-purple-950/25"
             : "bg-gradient-to-br from-red-950/15 via-black to-purple-950/15"
-          }`}
+        }`}
         style={{
           opacity: 0.3 + pulseIntensity * 0.4,
           filter: `hue-rotate(${pulseIntensity * 30}deg)`,
@@ -649,46 +653,49 @@ export default function QuizPhase({
             <Skull className="w-8 h-8 text-red-500 ml-3 animate-pulse" />
           </div>
 
+          {/* Peringatan Penalti Ketidakaktifan */}
+          {penaltyCountdown !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="mb-4 text-red-500 font-mono text-sm md:text-base animate-pulse"
+            >
+              {t("inactivityWarning", { countdown: penaltyCountdown })}
+            </motion.div>
+          )}
+
           {/* 1-BAR INFO ROW */}
           <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40 font-mono text-xs md:text-sm">
-            {/* 1/10 */}
             <div className="flex items-center gap-x-1">
               <CircleQuestionMark className="w-4 h-4 text-purple-400" />
               <span className="text-white">
                 {currentQuestionIndex + 1}/{totalQuestions}
               </span>
             </div>
-
-            {/* 4:09 */}
             <div className="flex items-center gap-x-1">
               <Clock
-                className={`w-4 h-4 ${timeLeft <= 30 ? 'text-red-500 animate-pulse' : 'text-yellow-500'
-                  }`}
+                className={`w-4 h-4 ${timeLeft <= 30 ? "text-red-500 animate-pulse" : "text-yellow-500"}`}
               />
-              <span
-                className={`${timeLeft <= 30 ? 'text-red-500 animate-pulse' : 'text-white'
-                  }`}
-              >
+              <span className={`${timeLeft <= 30 ? "text-red-500 animate-pulse" : "text-white"}`}>
                 {formatTime(timeLeft)}
               </span>
             </div>
-
-            {/* Nyawa (compact heart icons) */}
             <div className="flex items-center gap-x-1">
               {[...Array(3)].map((_, i) => (
                 <Heart
                   key={i}
-                  className={`w-4 h-4 transition-all ${i < playerHealth
-                    ? playerHealth <= 1
-                      ? 'text-red-500 fill-red-500 animate-pulse'
-                      : 'text-green-500 fill-green-500'
-                    : 'text-gray-600 fill-gray-600'
-                    }`}
+                  className={`w-4 h-4 transition-all ${
+                    i < playerHealth
+                      ? playerHealth <= 1
+                        ? "text-red-500 fill-red-500 animate-pulse"
+                        : "text-green-500 fill-green-500"
+                      : "text-gray-600 fill-gray-600"
+                  }`}
                 />
               ))}
             </div>
-
-            {/* Kecepatan 30 km/h */}
             <div className="flex items-center gap-x-1">
               <Zap className="w-4 h-4 text-purple-400" />
               <span className="text-white">{playerSpeed} km/h</span>
@@ -708,29 +715,25 @@ export default function QuizPhase({
                     />
                   </div>
                 )}
-
                 <div className="flex items-start space-x-4 mb-8">
                   <h2 className="text-2xl font-bold text-white leading-relaxed">{currentQuestion.question_text}</h2>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {currentQuestion.options.map((option: string, index: number) => (
                     <Button
                       key={index}
                       onClick={() => handleAnswerSelect(option)}
                       disabled={isAnswered || isProcessingAnswer}
-                      className={`${getAnswerButtonClass(option)} p-6 text-left justify-start font-mono text-lg border-2 transition-all duration-300 relative overflow-hidden group ${isProcessingAnswer ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                      className={`${getAnswerButtonClass(option)} p-6 text-left justify-start font-mono text-lg border-2 transition-all duration-300 relative overflow-hidden group ${
+                        isProcessingAnswer ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                       <div className="flex items-center space-x-3 relative z-10">
                         <span className="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-sm font-bold">
                           {String.fromCharCode(65 + index)}
                         </span>
-
-                        {/* INI BAGIAN YANG DIPERBAIKI */}
                         <span className="flex-1 whitespace-normal">{option}</span>
-
                         {isAnswered && option === currentQuestion.correct_answer && (
                           <CheckCircle className="w-5 h-5 ml-auto animate-pulse" />
                         )}
@@ -747,7 +750,6 @@ export default function QuizPhase({
             </div>
           </Card>
         </div>
-
         <ZombieFeedback isCorrect={isCorrect} isVisible={showFeedback} />
       </div>
     </div>

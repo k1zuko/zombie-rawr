@@ -217,5 +217,10 @@
   "speedRuleCorrect": "Benar = +5 kecepatan",
   "speedRuleWrong": "Salah = -5 kecepatan",
   "hostRoomTitle": "RUANG HOST",
-  "waitingRoomTitle": "RUANG TUNGGU"
+  "waitingRoomTitle": "RUANG TUNGGU",
+
+  "difficultyLevelLabel": "Tingkat Kesulitan",
+  "difficulty.hard": "Susah",
+  "difficulty.medium": "Sedang",
+  "difficulty.easy": "Mudah"
 }
