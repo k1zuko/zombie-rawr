@@ -527,17 +527,17 @@ export default function ResultsPage() {
   }, [fetchInitialData])
 
   useEffect(() => {
-      const flickerInterval = setInterval(
-        () => {
-          setFlickerText((prev) => !prev);
-        },
-        100 + Math.random() * 150,
-      );
-  
-      return () => {
-        clearInterval(flickerInterval);
-      };
-    }, []);
+    const flickerInterval = setInterval(
+      () => {
+        setFlickerText((prev) => !prev);
+      },
+      100 + Math.random() * 150,
+    );
+
+    return () => {
+      clearInterval(flickerInterval);
+    };
+  }, []);
 
   useEffect(() => {
     if (room) {
@@ -722,34 +722,43 @@ export default function ResultsPage() {
         ))}
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="relative z-10 container mx-auto px-4 py-3">
         <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
           className="flex flex-col gap-1 mb-10"
         >
-          <div className="flex items-start justify-between mb-5">
-            <Link href={"/"}>
-              <h1
-                className="text-xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
-                style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-              >
-                {t("title")}
-              </h1>
-            </Link>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <Link href={"/"}>
+                <h1
+                  className="text-xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                  style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+                >
+                  {t("title")}
+                </h1>
+              </Link>
+            </div>
 
-            {/* Tombol Home */}
-                          <motion.button
-                            onClick={() => router.push("/")}
-                            whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-                            whileTap={{ scale: 0.95 }}
-                            // Ganti padding & tambahkan aria-label
-                            className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
-                            aria-label={t("homeButton")} // Penting untuk aksesibilitas
-                          >
-                            <Home className="w-4 h-4" />
-                          </motion.button>
+            <div className="flex w-fit gap-2 items-center">
+              <img
+                src={`/logo/Gemini_Generated_Image_90360u90360u9036.png`}
+                alt="Game for Smart Logo"
+                className="w-35 md:w-52 lg:w-64 h-auto mr-3"
+              />
+              {/* Tombol Home */}
+              <motion.button
+                onClick={() => router.push("/")}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+                whileTap={{ scale: 0.95 }}
+                // Ganti padding & tambahkan aria-label
+                className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
+                aria-label={t("homeButton")} // Penting untuk aksesibilitas
+              >
+                <Home className="w-3 h-3" />
+              </motion.button>
+            </div>
           </div>
 
           <motion.div
@@ -760,10 +769,10 @@ export default function ResultsPage() {
           >
             <Skull className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-7xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-5xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
-               {t("result.title")}
+              {t("result.title")}
             </h1>
             <Skull className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
           </motion.div>
@@ -895,31 +904,6 @@ export default function ResultsPage() {
             </HorrorCard>
           </motion.div>
         )}
-
-        <motion.div
-          className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.0 }}
-        >
-          <Button
-            onClick={() => (window.location.href = "/")}
-            className="bg-gray-900 hover:bg-gray-800 text-white font-mono tracking-wider flex items-center justify-center border border-gray-700"
-          >
-            <Home className="w-4 h-4 mr-2" />
-            {t("common.home")}
-          </Button>
-
-          {/* <Button
-            onClick={() =>
-              (window.location.href = `/game/${roomCode}?nickname=Survivor${Math.floor(Math.random() * 1000)}`)
-            }
-            className="bg-red-900 hover:bg-red-800 text-white font-mono tracking-wider flex items-center justify-center border border-red-700"
-          >
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Ulang Permainan
-          </Button> */}
-        </motion.div>
 
         <motion.div
           className="mt-12 text-center text-gray-500 text-xs font-mono tracking-widest"

@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skull, Bone, HeartPulse, Search, Loader2, X, Clock } from "lucide-react";
+import { Skull, Bone, HeartPulse, Search, Loader2, X, Clock, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
@@ -72,16 +72,13 @@ export default function QuizSelectPage() {
       const newBlood = Array.from({ length: 8 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
-        speed: 0.5 + Math.random() * 2,
+        speed: 2 + Math.random() * 1.5,
         delay: Math.random() * 5,
       }));
       setBloodDrips(newBlood);
     };
 
     generateBlood();
-    const bloodInterval = setInterval(() => {
-      generateBlood();
-    }, 8000);
 
     const flickerInterval = setInterval(() => {
       setFlickerText((prev) => !prev);
@@ -92,7 +89,6 @@ export default function QuizSelectPage() {
     }, 2500);
 
     return () => {
-      clearInterval(bloodInterval);
       clearInterval(flickerInterval);
       clearInterval(textInterval);
     };
@@ -299,7 +295,7 @@ export default function QuizSelectPage() {
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
           className="flex flex-col gap-1 mb-10"
         >
-          <div className="flex items-start mb-5 md:mb-0">
+          <div className="flex items-center justify-between mb-5 md:mb-0">
             <Link href={"/"}>
               <h1
                 className="text-2xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
@@ -308,6 +304,16 @@ export default function QuizSelectPage() {
                 {t("title")}
               </h1>
             </Link>
+            <motion.button
+              onClick={() => router.push("/")}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+              whileTap={{ scale: 0.95 }}
+              // Ganti padding & tambahkan aria-label
+              className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
+              aria-label={t("homeButton")} // Penting untuk aksesibilitas
+            >
+              <ArrowRight className="w-4 h-4" />
+            </motion.button>
           </div>
 
           <motion.div
@@ -318,8 +324,7 @@ export default function QuizSelectPage() {
           >
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
-                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("selectQuizTitle")}

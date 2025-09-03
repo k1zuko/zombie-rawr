@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse, Trash2, Maximize, Maximize2, CopyIcon, HelpCircle } from "lucide-react";
+import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse, Trash2, Maximize, Maximize2, CopyIcon, HelpCircle, ArrowRight } from "lucide-react";
 import { supabase, type Player } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -287,22 +287,17 @@ export default function HostPage() {
 
   useEffect(() => {
     const generateBlood = () => {
-      const newBlood = Array.from({ length: 15 }, (_, i) => ({
+      const newBlood = Array.from({ length: 10 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
-        speed: 0.5 + Math.random() * 2,
-        delay: Math.random() * 5,
-      }))
-      setBloodDrips(newBlood)
-    }
+        speed: 2 + Math.random() * 1.5,
+        delay: Math.random() * 3,
+      }));
+      setBloodDrips(newBlood);
+    };
 
-    generateBlood()
-    const bloodInterval = setInterval(() => {
-      generateBlood()
-    }, 8000)
-
-    return () => clearInterval(bloodInterval)
-  }, [])
+    generateBlood();
+  }, []);
 
   useEffect(() => {
     const flickerInterval = setInterval(
@@ -618,7 +613,7 @@ export default function HostPage() {
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
           className="flex flex-col gap-1 mb-10"
         >
-          <div className="flex items-start">
+          <div className="flex items-center justify-between">
             <Link href={"/"}>
               <h1
                 className="text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
@@ -627,6 +622,16 @@ export default function HostPage() {
                 {t("title")}
               </h1>
             </Link>
+            <motion.button
+              onClick={() => router.push(`/character-select/${roomCode}`)}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+              whileTap={{ scale: 0.95 }}
+              // Ganti padding & tambahkan aria-label
+              className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
+              aria-label={t("homeButton")} // Penting untuk aksesibilitas
+            >
+              <ArrowRight className="w-4 h-4" />
+            </motion.button>
           </div>
 
           <motion.div
@@ -637,8 +642,7 @@ export default function HostPage() {
           >
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
-                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("hostRoomTitle")}
@@ -702,7 +706,7 @@ export default function HostPage() {
             transition={{ delay: 0.3 }}
             className="relative flex items-center bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] col-span-4"
           >
-            
+
             <motion.div
               className="w-[40%] h-auto bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform"
               onClick={() => setIsQrModalOpen(true)}

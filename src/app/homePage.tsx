@@ -76,7 +76,7 @@ export default function HomePage() {
       Array.from({ length: typeof window !== "undefined" && window.innerWidth < 640 ? 4 : 8 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
-        speed: 0.5 + Math.random() * 2,
+        speed: 2 + Math.random() * 1.5,
         delay: Math.random() * 5,
         opacity: 0.7 + Math.random() * 0.3,
       })),
