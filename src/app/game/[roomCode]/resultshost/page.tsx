@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import Image from "next/image";
 import Confetti from "react-confetti";
-import { Trophy, Clock, Ghost, Zap, HeartPulse, RotateCw, Home } from "lucide-react";
+import { Trophy, Clock, Ghost, Zap, HeartPulse, RotateCw, Home, X } from 'lucide-react';
 import { t } from "i18next";
 import { useHostGuard } from "@/lib/host-guard";
 
@@ -477,7 +477,7 @@ export default function ResultsHostPage() {
           initial={{ y: -100 }}
           animate={{ y: windowSize.height }}
           transition={{ duration: drip.speed, delay: drip.delay, ease: "linear", repeat: Infinity }}
-          className="absolute top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
+          className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
           style={{ left: `${drip.left}%`, opacity: 0.6 + Math.random() * 0.2 }}
         />
       ))}
@@ -504,15 +504,15 @@ export default function ResultsHostPage() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: showContent ? 1 : 0, scale: showContent ? 1 : 0.9 }}
         transition={{ duration: 1.2, ease: [0.6, -0.05, 0.01, 0.99] }}
-        className="relative z-10 container px-4 py-8 min-w-screen"
+        className="relative z-10 container px-4 py-3 min-w-screen"
       >
         <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
-          className="flex flex-col gap-4 mb-10 px-4"
+          className="flex flex-col gap-3 mb-10 px-4"
         >
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-center">
             <h1
               className="text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
@@ -520,7 +520,8 @@ export default function ResultsHostPage() {
               {t("title")}
             </h1>
 
-            <div className="flex gap-2">
+            <div className="flex w-fit gap-2 items-center">
+              <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036.png`} alt="" width={254} height={0} className="mr-3" />
               {/* Tombol Home */}
               <motion.button
                 onClick={() => router.push("/")}

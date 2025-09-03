@@ -193,18 +193,13 @@ export default function LobbyPhase({
       const newBlood = Array.from({ length: 15 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
-        speed: 0.5 + Math.random() * 2,
+        speed: 2 + Math.random() * 1.5,
         delay: Math.random() * 5,
       }))
       setBloodDrips(newBlood)
     }
 
     generateBlood()
-    const bloodInterval = setInterval(() => {
-      generateBlood()
-    }, 8000)
-
-    return () => clearInterval(bloodInterval)
   }, [])
 
   useEffect(() => {
@@ -405,7 +400,7 @@ export default function LobbyPhase({
           <div className="flex items-center justify-between mb-5">
             <Link href={"/"}>
               <h1
-                className="text-2xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                className="text-2xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
                 style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
               >
                 {t("title")}
@@ -429,8 +424,7 @@ export default function LobbyPhase({
           >
             <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 ${flickerText ? "text-red-500 opacity-100" : "text-red-900 opacity-30"
-                } drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("waitingRoomTitle")}
