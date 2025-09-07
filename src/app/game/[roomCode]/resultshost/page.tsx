@@ -521,7 +521,7 @@ export default function ResultsHostPage() {
             </h1>
 
             <div className="flex w-fit gap-2 items-center">
-              <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036.png`} alt="" width={254} height={0} className="mr-3" />
+              <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} className="mr-3" />
               {/* Tombol Home */}
               <motion.button
                 onClick={() => router.push("/")}
