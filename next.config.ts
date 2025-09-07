@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
 };
 
 module.exports = {
-  output: 'standalone',
   images: {
     unoptimized: true, // Nonaktifkan optimisasi gambar global
     domains: [],

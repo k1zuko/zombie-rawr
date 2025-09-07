@@ -349,22 +349,17 @@ export default function HostPage() {
 
   const copyRoomCode = async () => {
     if (typeof window === "undefined") return
-    const joinLink = `${window.location.origin}/?code=${roomCode}`
-    await navigator.clipboard.writeText(joinLink)
+    await navigator.clipboard.writeText(roomCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const copyRoomCode1 = async () => {
+  const copyLinkRoomCode = async () => {
     if (typeof window === "undefined") return;
 
     const joinLink = `${window.location.origin}/?code=${roomCode}`;
-    const inviteMessage = t("inviteMessage", {
-      roomCode: roomCode,
-      joinLink: joinLink,
-    });
+    await navigator.clipboard.writeText(joinLink);
 
-    await navigator.clipboard.writeText(inviteMessage);
     setCopied1(true);
     setTimeout(() => setCopied1(false), 2000);
   };
@@ -758,7 +753,7 @@ export default function HostPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={copyRoomCode1}
+                    onClick={copyLinkRoomCode}
                     className="text-red-400 hover:bg-red-500/20 rounded-full p-2 pointer-events-auto"
                     aria-label={t("copyInvite")}
                   >
