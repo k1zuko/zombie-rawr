@@ -66,7 +66,7 @@ export default function CharacterSelectPage() {
   const [gameDuration, setGameDuration] = useState<number>(10);
   const [durationError, setDurationError] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(20);
-  const [totalQuestions, setTotalQuestions] = useState<number>(15);
+  const [totalQuestions, setTotalQuestions] = useState<number>(10);
   const [userSetQuestionCount, setUserSetQuestionCount] = useState(false);
   const [chaserType, setChaserType] = useState<ChaserType>("zombie");
   const [difficultyLevel, setDifficultyLevel] = useState<DifficultyLevel>("medium");
@@ -218,7 +218,7 @@ export default function CharacterSelectPage() {
         const fetchedDifficultyLevel = validateDifficultyLevel(data.difficulty_level);
         setRoom({ ...data, chaser_type: fetchedChaserType, difficulty_level: fetchedDifficultyLevel });
         setGameDuration(data.duration ? data.duration / 60 : 10);
-        setQuestionCount(data.question_count ?? 15);
+        setQuestionCount(data.question_count ?? 10);
         setChaserType(fetchedChaserType);
         setDifficultyLevel(fetchedDifficultyLevel);
 
@@ -229,15 +229,15 @@ export default function CharacterSelectPage() {
 
         if (questionsError) {
           console.error("Error fetching questions count:", questionsError);
-          setTotalQuestions(15);
+          setTotalQuestions(10);
         } else {
-          const total = questionsCount || 15;
+          const total = questionsCount || 10;
           setTotalQuestions(total);
           if (!userSetQuestionCount) {
             if (data.question_count) {
               setQuestionCount(data.question_count);
             } else {
-              setQuestionCount(total <= 15 ? total : 15);
+              setQuestionCount(total <= 10 ? total : 10);
             }
           }
         }
