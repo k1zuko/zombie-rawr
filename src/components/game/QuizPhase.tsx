@@ -653,19 +653,6 @@ export default function QuizPhase({
             <Skull className="w-8 h-8 text-red-500 ml-3 animate-pulse" />
           </div>
 
-          {/* Peringatan Penalti Ketidakaktifan */}
-          {penaltyCountdown !== null && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="mb-4 text-red-500 font-mono text-sm md:text-base animate-pulse"
-            >
-              {t("inactivityWarning", { countdown: penaltyCountdown })}
-            </motion.div>
-          )}
-
           {/* 1-BAR INFO ROW */}
           <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40 font-mono text-xs md:text-sm">
             <div className="flex items-center gap-x-1">
