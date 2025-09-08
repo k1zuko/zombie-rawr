@@ -558,7 +558,7 @@ export default function HomePage() {
             className="text-center mb-8 mt-12 pt-12 sm:mt-0 sm:pt-0"
           >
             <h1
-              className="text-4xl sm:text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]"
+              className="text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]"
               style={{ textShadow: "0 0 15px rgba(239, 68, 68, 0.9), 0 0 20px rgba(0, 0, 0, 0.5)" }}
             >
               {t("title")}

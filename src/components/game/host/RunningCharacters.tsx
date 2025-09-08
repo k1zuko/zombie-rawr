@@ -68,7 +68,7 @@ const characterConfigs = [
     horizontalOffset: 0
   },
   { 
-    src: "/character/player/character1.gif", 
+    src: "/character/player/character1-crop.gif", 
     alt: "Karakter Biru", 
     type: "robot2", 
     name: "Biru", 
@@ -78,7 +78,7 @@ const characterConfigs = [
     horizontalOffset: 10
   },
   { 
-    src: "/character/player/character2.gif", 
+    src: "/character/player/character2-crop.gif", 
     alt: "Karakter Merah", 
     type: "robot3", 
     name: "Merah", 
@@ -88,7 +88,7 @@ const characterConfigs = [
     horizontalOffset: -10
   },
   { 
-    src: "/character/player/character3.gif", 
+    src: "/character/player/character3-crop.gif", 
     alt: "Karakter Ungu", 
     type: "robot4", 
     name: "Ungu", 
@@ -98,7 +98,7 @@ const characterConfigs = [
     horizontalOffset: 5
   },
   { 
-    src: "/character/player/character4.gif", 
+    src: "/character/player/character4-crop.gif", 
     alt: "Karakter Oranye", 
     type: "robot5", 
     name: "Oranye", 
@@ -128,7 +128,7 @@ const characterConfigs = [
     horizontalOffset: -15
   },
   { 
-    src: "/character/player/character7.gif", 
+    src: "/character/player/character7-crop.gif", 
     alt: "Karakter Pink", 
     type: "robot8", 
     name: "Pink", 
@@ -138,7 +138,7 @@ const characterConfigs = [
     horizontalOffset: 20
   },
   { 
-    src: "/character/player/character8.gif", 
+    src: "/character/player/character8-crop.gif", 
     alt: "Karakter Cokelat", 
     type: "robot9", 
     name: "Cokelat", 
@@ -148,7 +148,7 @@ const characterConfigs = [
     horizontalOffset: -20
   },
   { 
-    src: "/character/player/character9.gif", 
+    src: "/character/player/character9-crop.gif", 
     alt: "Karakter Emas", 
     type: "robot10", 
     name: "Emas", 

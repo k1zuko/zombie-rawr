@@ -872,15 +872,15 @@ export default function HostGamePage() {
       const status: { [key: string]: boolean } = {};
       const characterFiles = [
         "/character/player/character.gif",
-        "/character/player/character1.gif",
-        "/character/player/character2.gif",
-        "/character/player/character3.gif",
-        "/character/player/character4.gif",
+        "/character/player/character1-crop.gif",
+        "/character/player/character2-crop.gif",
+        "/character/player/character3-crop.gif",
+        "/character/player/character4-crop.gif",
         "/character/player/character5.gif",
         "/character/player/character6.gif",
-        "/character/player/character7.gif",
-        "/character/player/character8.gif",
-        "/character/player/character9.gif",
+        "/character/player/character7-crop.gif",
+        "/character/player/character8-crop.gif",
+        "/character/player/character9-crop.gif",
       ];
       for (const file of characterFiles) {
         const works = await testImageLoad(file);

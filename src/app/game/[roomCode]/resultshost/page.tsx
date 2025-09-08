@@ -67,16 +67,17 @@ interface PlayerResult {
 }
 
 const characterGifs = [
-  { src: "/character/player/character.gif", alt: "Karakter Hijau", color: "bg-green-600", type: "robot1", name: "Hijau" },
-  { src: "/character/player/character1.gif", alt: "Karakter Biru", color: "bg-blue-600", type: "robot2", name: "Biru" },
-  { src: "/character/player/character2.gif", alt: "Karakter Merah", color: "bg-red-600", type: "robot3", name: "Merah" },
-  { src: "/character/player/character3.gif", alt: "Karakter Ungu", color: "bg-purple-600", type: "robot4", name: "Ungu" },
-  { src: "/character/player/character4.gif", alt: "Karakter Oranye", color: "bg-orange-600", type: "robot5", name: "Oranye" },
-  { src: "/character/player/character5.gif", alt: "Karakter Kuning", color: "bg-yellow-600", type: "robot6", name: "Kuning" },
-  { src: "/character/player/character6.gif", alt: "Karakter Abu-abu", color: "bg-gray-600", type: "robot7", name: "Abu-abu" },
-  { src: "/character/player/character7.gif", alt: "Karakter Pink", color: "bg-pink-600", type: "robot8", name: "Pink" },
-  { src: "/character/player/character8.gif", alt: "Karakter Cokelat", color: "bg-amber-900", type: "robot9", name: "Cokelat" },
-  { src: "/character/player/character9.gif", alt: "Karakter Emas", color: "bg-yellow-700", type: "robot10", name: "Emas" },
+    { type: "robot1", name: "Hijau", src: "/character/player/character.gif", alt: "Karakter Hijau" },
+    { type: "robot2", name: "Biru", src: "/character/player/character1-crop.gif", alt: "Karakter Biru" },
+    { type: "robot3", name: "Merah", src: "/character/player/character2-crop.gif", alt: "Karakter Merah" },
+    { type: "robot4", name: "Ungu", src: "/character/player/character3-crop.gif", alt: "Karakter Ungu" },
+    { type: "robot5", name: "Oranye", src: "/character/player/character4-crop.gif", alt: "Karakter Oranye" },
+    { type: "robot6", name: "Kuning", src: "/character/player/character5.gif", alt: "Karakter Kuning" },
+    { type: "robot7", name: "Abu-abu", src: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
+    { type: "robot8", name: "Pink", src: "/character/player/character7-crop.gif", alt: "Karakter Pink" },
+    { type: "robot9", name: "Cokelat", src: "/character/player/character8-crop.gif", alt: "Karakter Cokelat" },
+    { type: "robot10", name: "Emas", src: "/character/player/character9-crop.gif", alt: "Karakter Emas" },
+
 ];
 
 export default function ResultsHostPage() {

@@ -737,7 +737,7 @@ export default function QuizPhase({
             </div>
           </Card>
         </div>
-        <ZombieFeedback isCorrect={isCorrect} isVisible={showFeedback} />
+        <ZombieFeedback isCorrect={isCorrect} isVisible={showFeedback} activeZombie={room.chaser_type} activePlayer={currentPlayer.character_type} />
       </div>
     </div>
   )
