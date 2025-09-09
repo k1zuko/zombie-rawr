@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
@@ -45,6 +46,15 @@ interface FloatingIcon {
   isSkull: boolean;
 }
 
+// Custom debounce function
+// const debounce = (func: Function, delay: number) => {
+//   let timeout: NodeJS.Timeout;
+//   return (...args: any[]) => {
+//     clearTimeout(timeout);
+//     timeout = setTimeout(() => func(...args), delay);
+//   };
+// };
+
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const [gameCode, setGameCode] = useState<string>("");
@@ -54,6 +64,8 @@ export default function HomePage() {
   const [isStartingTryout, setIsStartingTryout] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isClient, setIsClient] = useState<boolean>(false);
+  const [dripCount, setDripCount] = useState(8); // server fallback
+  const [iconCount, setIconCount] = useState(5); // server fallback
   const router = useRouter();
   const searchParams = useSearchParams();
   const [openHowToPlay, setOpenHowToPlay] = useState(false);
@@ -62,11 +74,8 @@ export default function HomePage() {
 
   // Atmosphere text
   const atmosphereText = t("atmosphereText");
-  const [dripCount, setDripCount] = useState(8);   // server fallback
-  const [iconCount, setIconCount] = useState(5);   // server fallback
 
-
-  // Efek tetes darah (dikurangi untuk mobile)
+  // Blood drip effects
   const bloodDrips = useMemo(() => {
     if (!isClient) return [];
     return Array.from({ length: dripCount }, (_, i) => ({
@@ -90,7 +99,7 @@ export default function HomePage() {
     []
   );
 
-  // Ikon mengambang (dikurangi untuk mobile)
+  // Floating icons
   const floatingIcons = useMemo(() => {
     if (!isClient) return [];
     return Array.from({ length: iconCount }, (_, i) => ({
@@ -104,6 +113,7 @@ export default function HomePage() {
     }));
   }, [isClient, iconCount]);
 
+  // Responsive drip and icon counts
   useEffect(() => {
     const update = () => {
       const mobile = window.innerWidth < 640;
@@ -127,37 +137,38 @@ export default function HomePage() {
       "Comet", "Glitch", "Vortex", "Wraith", "Slayer", "Bane",
       "Arcade", "Pixelz", "Mysterio", "Oblivion", "Hydra", "Titan"
     ];
-
     const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const randomNumber = Math.floor(Math.random() * 10000);
     const newNickname = `${randomPrefix}${randomNumber}`;
-
     setNickname(newNickname);
   }, []);
 
-  // Handler kode permainan dengan validasi regex
-  const handleGameCodeChange = useCallback((value: string) => {
-    let processedCode = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-    if (value.includes("http") && value.includes("?code=")) {
-      try {
-        const url = new URL(value);
-        const codeFromUrl = url.searchParams.get("code");
-        if (codeFromUrl) {
-          processedCode = codeFromUrl.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  // Game code handler with debouncing
+  const handleGameCodeChange = useCallback(
+    ((value: string) => {
+      let processedCode = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+      if (value.includes("http") && value.includes("?code=")) {
+        try {
+          const url = new URL(value);
+          const codeFromUrl = url.searchParams.get("code");
+          if (codeFromUrl) {
+            processedCode = codeFromUrl.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+          }
+        } catch (error) {
+          console.warn("URL tidak valid, diabaikan.");
+          return;
         }
-      } catch (error) {
-        console.warn("URL tidak valid, diabaikan.");
-        return;
       }
-    }
-    setGameCode(processedCode);
-  }, []);
+      setGameCode(processedCode);
+    }),
+    []
+  );
 
-  // Nickname handler
+  // Nickname handler with debouncing
   const handleNicknameChange = useCallback(
-    (value: string) => {
+    ((value: string) => {
       setNickname(value.slice(0, 20));
-    },
+    }),
     []
   );
 
@@ -176,12 +187,6 @@ export default function HomePage() {
       updates.code = null;
     }
 
-    // const langFromUrl = searchParams.get("lng");
-    // if (langFromUrl && i18n.language !== langFromUrl) {
-    //   handleLanguageChange(langFromUrl);
-    //   updates.lng = null;
-    // }
-
     if (searchParams.get("kicked") === "1") {
       toast.error(t("youWereKicked"));
       updates.kicked = null;
@@ -195,16 +200,16 @@ export default function HomePage() {
     if (Object.keys(updates).length > 0) {
       window.history.replaceState(null, "", "/");
     }
-  }, [searchParams, i18n.language, t]);
+  }, [searchParams, t]);
 
   // Set client-side flag
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  // Show How to Play dialog on first visit
   useEffect(() => {
     if (!isClient) return;
-
     const timer = setTimeout(() => {
       const seen = typeof window !== "undefined" ? localStorage.getItem("seenHowToPlay") : null;
       if (!seen) {
@@ -212,23 +217,21 @@ export default function HomePage() {
         localStorage.setItem("seenHowToPlay", "1");
       }
     }, 2500);
-
     return () => clearTimeout(timer);
   }, [isClient]);
 
   // Host game
   const handleHostGame = useCallback(() => {
     setIsCreating(true);
+    if (navigator.vibrate) navigator.vibrate(50);
     router.push("/quiz-select");
   }, [router]);
 
   // Join game
   const handleJoinGame = useCallback(async () => {
-    if (isJoining) return
-
+    if (isJoining) return;
     if (!gameCode || !nickname) {
       setErrorMessage(t("errorMessages.missingInput"));
-      setIsJoining(false);
       return;
     }
 
@@ -236,7 +239,6 @@ export default function HomePage() {
     setErrorMessage(null);
 
     try {
-      // Cari room berdasarkan kode
       const { data: room, error: roomError } = await supabase
         .from("game_rooms")
         .select("*")
@@ -249,7 +251,6 @@ export default function HomePage() {
         return;
       }
 
-      // Cek apakah nickname sudah ada di room ini
       const { data: existingPlayers, error: checkError } = await supabase
         .from("players")
         .select("nickname")
@@ -264,25 +265,12 @@ export default function HomePage() {
         return;
       }
 
-      // Jika nickname sudah ada, tampilkan error
       if (existingPlayers) {
         toast.error(t("errorMessages.nicknameTaken"));
         setIsJoining(false);
         return;
       }
 
-      // Cek jumlah pemain saat ini (jika diperlukan batasan jumlah pemain)
-      // const { count } = await supabase
-      //   .from("players")
-      //   .select("*", { count: "exact" })
-      //   .eq("room_id", room.id);
-
-      // if (count && count >= room.max_players) {
-      //   setErrorMessage(t("errorMessages.roomFull"));
-      //   return;
-      // }
-
-      // Tambahkan pemain baru
       const { error: playerError } = await supabase
         .from("players")
         .insert({
@@ -294,20 +282,18 @@ export default function HomePage() {
         .single();
 
       if (playerError) {
-        if (playerError.code === '23505') { // Error code untuk unique violation
+        if (playerError.code === "23505") {
           toast.error(t("errorMessages.nicknameTaken"));
         } else {
           toast.error(t("errorMessages.joinFailed"));
-        } 
+        }
         setIsJoining(false);
         return;
       }
 
-      // Simpan data ke localStorage
       localStorage.setItem("nickname", nickname);
       localStorage.setItem("roomCode", gameCode.toUpperCase());
-
-      // Redirect ke game
+      if (navigator.vibrate) navigator.vibrate(50);
       await router.push(`/game/${gameCode.toUpperCase()}`);
     } catch (error) {
       console.error("Error bergabung ke permainan:", error);
@@ -316,7 +302,7 @@ export default function HomePage() {
     }
   }, [gameCode, nickname, router, t, isJoining]);
 
-  // Start Tryout mode
+  // Start Play mode
   const handleStartTryout = useCallback(() => {
     if (!nickname) {
       setErrorMessage(t("errorMessages.missingNickname"));
@@ -335,6 +321,7 @@ export default function HomePage() {
     router.push("/questions");
   }, [router]);
 
+  // Logout handler
   const handleLogout = () => {
     setIsLogoutConfirmOpen(true);
   };
@@ -347,24 +334,9 @@ export default function HomePage() {
       console.error("Error logging out:", error);
     } else {
       toast.success(t("logoutSuccess"));
-      router.push('/login');
+      router.push("/login");
     }
   };
-
-  // if (loading) {
-  //   return (
-  //     <motion.div
-  //   animate={{ rotate: 360 }}
-  //   transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-  //   className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full"
-  // />
-  //   );
-  // }
-
-  // if (!user) {
-  //   router.push('/login');
-  //   return null; // Return null agar sisa komponen tidak di-render saat redirect
-  // }
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none">
@@ -406,7 +378,7 @@ export default function HomePage() {
           {floatingIcons.map((icon) => (
             <div
               key={icon.id}
-              className="absolute text-red-900/20 animate-float"
+              className="absolute text-red-900/20 animate-float sm:animate-float"
               style={{
                 left: `${icon.left}%`,
                 top: `${icon.top}%`,
@@ -473,7 +445,7 @@ export default function HomePage() {
                   <Tabs defaultValue="join" className="mt-4">
                     <TabsList className="grid w-full grid-cols-2 bg-black/50 border-red-500/50">
                       <TabsTrigger value="join" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">{t("join")}</TabsTrigger>
-                      <TabsTrigger value="tryout" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">{t("tryout")}</TabsTrigger>
+                      <TabsTrigger value="play" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">{t("play")}</TabsTrigger>
                     </TabsList>
                     <TabsContent value="join" asChild>
                       <motion.div
@@ -485,13 +457,15 @@ export default function HomePage() {
                       >
                         <h3 className="text-xl font-mono mb-2">{t("joinTitle")}</h3>
                         <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
-                          {(t("joinSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
-                            <li key={idx}>{step}</li>
-                          ))}
+                          {Array.isArray(t("joinSteps", { returnObjects: true }))
+                            ? (t("joinSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
+                                <li key={idx}>{step}</li>
+                              ))
+                            : <li>{t("errorMessages.noStepsAvailable", "No steps available.")}</li>}
                         </ol>
                       </motion.div>
                     </TabsContent>
-                    <TabsContent value="tryout" asChild>
+                    <TabsContent value="play" asChild>
                       <motion.div
                         className="mt-4"
                         initial={{ opacity: 0, x: 20 }}
@@ -499,11 +473,20 @@ export default function HomePage() {
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <h3 className="text-xl font-bold mb-2">{t("tryoutTitle")}</h3>
+                        <h3 className="text-xl font-bold mb-2">{t("playTitle")}</h3>
                         <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
-                          {(t("tryoutSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
-                            <li key={idx}>{step}</li>
-                          ))}
+                          {Array.isArray(t("playSteps", { returnObjects: true }))
+                            ? (t("playSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
+                                <li key={idx}>{step}
+                                {idx === 1 && (
+                                <ul className="list-disc list-outside pl-6 mt-1 space-y-1">
+                                  <li>{t("speedRuleCorrect")}</li>
+                                  <li>{t("speedRuleWrong")}</li>
+                                </ul>
+                              )}
+                                </li>
+                              ))
+                            : <li>{t("errorMessages.noStepsAvailable", "No steps available.")}</li>}
                         </ol>
                       </motion.div>
                     </TabsContent>
@@ -578,7 +561,7 @@ export default function HomePage() {
           </motion.div>
 
           <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
-            {/* Combined Join & Tryout Card */}
+            {/* Combined Join & Play Card */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -602,7 +585,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 sm:space-y-6 pt-0">
-                  {/* Tabs for Join vs Tryout */}
+                  {/* Tabs for Join vs Play */}
                   <Tabs defaultValue="join" className="w-full">
                     <TabsList className="grid w-full grid-cols-2 bg-black/50 border border-red-400 mb-4 sm:mb-6">
                       <TabsTrigger 
@@ -613,11 +596,11 @@ export default function HomePage() {
                         {t("joinGame")}
                       </TabsTrigger>
                       <TabsTrigger 
-                        value="tryout" 
+                        value="play" 
                         className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono text-sm sm:text-base transition-all duration-200"
                       >
                         <Gamepad2 className="w-4 h-4 mr-2" />
-                        {t("tryout")}
+                        {t("tryOut")}
                       </TabsTrigger>
                     </TabsList>
                     
@@ -677,12 +660,9 @@ export default function HomePage() {
                       </Button>
                     </TabsContent>
                     
-                    {/* Tryout Tab */}
-                    <TabsContent value="tryout" className="space-y-4 sm:space-y-6 mt-0">
+                    {/* Play Tab */}
+                    <TabsContent value="play" className="space-y-4 sm:space-y-6 mt-0">
                       <div>
-                        <p className="text-red-400/70 text-sm font-mono mb-4 text-center">
-                          {/* {t("tryoutInfo")} */}
-                        </p>
                         <div className="flex items-center space-x-2">
                           <Input
                             placeholder={t("nicknamePlaceholder")}
@@ -760,6 +740,7 @@ export default function HomePage() {
                     disabled={isCreating}
                     className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-base sm:text-lg py-3 sm:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 group"
                     aria-label={isCreating ? t("creatingRoom") : t("createRoomButton")}
+                    aria-disabled={isCreating}
                   >
                     <span className="relative z-10 flex items-center">
                       {isCreating ? (
@@ -828,8 +809,8 @@ export default function HomePage() {
         toastOptions={{
           duration: 2000,
           style: {
-            background: '#1a0000',      // hitam-merah gelap
-            color: '#ff4444',           // teks merah terang
+            background: '#1a0000',
+            color: '#ff4444',
             border: '1px solid #ff0000',
             borderRadius: '8px',
             fontFamily: 'monospace',
@@ -837,7 +818,7 @@ export default function HomePage() {
           success: {
             style: {
               background: '#1a0000',
-              color: '#44ff44',         // hijau neon untuk sukses
+              color: '#44ff44',
               border: '1px solid #44ff44',
             },
           },
