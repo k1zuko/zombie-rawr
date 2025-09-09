@@ -10,6 +10,7 @@ import ZombieCharacter from "@/components/game/host/ZombieCharacter";
 import RunningCharacters from "@/components/game/host/RunningCharacters";
 import { useHostGuard } from "@/lib/host-guard";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
 
 interface Player {
   id: string;
@@ -880,15 +881,15 @@ useEffect(() => {
       const status: { [key: string]: boolean } = {};
       const characterFiles = [
         "/character/player/character.gif",
-        "/character/player/character1.gif",
-        "/character/player/character2.gif",
-        "/character/player/character3.gif",
-        "/character/player/character4.gif",
+        "/character/player/character1-crop.gif",
+        "/character/player/character2-crop.gif",
+        "/character/player/character3-crop.gif",
+        "/character/player/character4-crop.gif",
         "/character/player/character5.gif",
         "/character/player/character6.gif",
-        "/character/player/character7.gif",
-        "/character/player/character8.gif",
-        "/character/player/character9.gif",
+        "/character/player/character7-crop.gif",
+        "/character/player/character8-crop.gif",
+        "/character/player/character9-crop.gif",
       ];
       for (const file of characterFiles) {
         const works = await testImageLoad(file);
@@ -1004,12 +1005,31 @@ useEffect(() => {
           })}
       </AnimatePresence> */}
 
-      <h6
+      {/* <h6
         className="text-2xl sm:text-2xl md:text-5xl font-bold font-mono tracking-wider text-red-600 drop-shadow-[0_0_10px_rgba(39,68,0)]"
         style={{ textShadow: "0 0 15px rgba(239, 68, 68, 0.9), 0 0 20px rgba(0, 0, 0, 0.5)" }}
       >
         {t("title")}
-      </h6>
+      </h6> */}
+      <motion.header
+                initial={{ opacity: 0, y: -50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
+                className="flex flex-col gap-3 mb-10 px-4"
+              >
+                <div className="flex justify-between items-center">
+                  <h1
+                    className="text-5xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                    style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+                  >
+                    {t("title")}
+                  </h1>
+      
+                  <div className="flex w-fit gap-2 items-center">
+                    <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} className="z-20" />
+                  </div>
+                </div>
+              </motion.header>
 
       <RunningCharacters
         players={activePlayers}

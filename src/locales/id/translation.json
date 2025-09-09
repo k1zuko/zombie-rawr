@@ -44,7 +44,8 @@
   "chaserNotSelected": "Belum dipilih",
   "chaserSelectTitle": "Pilih Pengejar",
   "selectedChaser": "Karakter Terpilih: {{name}}",
-  "startButton": "Mulai",
+  "save": "Simpan",
+  "saving": "Menyimpan",
   "warningText": "PERINGATAN: Permainan ini mengandung unsur horor yang mungkin tidak cocok untuk semua pemain",
   "chasers": {
     "zombie": {
@@ -84,7 +85,7 @@
     "saveSettingsFailed": "Gagal menyimpan pengaturan!"
   },
   "start": "Mulai Kuis",
-  "login": "Masuk dengan Supabase",
+  "login": "Masuk",
   "loading": "Memuat...",
   "selectQuizDescription": "Pilih kuis untuk memulai petualanganmu!",
   "characterSelectDescription": "Pilih pengejar dan atur pengaturan permainanmu!",
@@ -222,5 +223,28 @@
   "difficultyLevelLabel": "Tingkat Kesulitan",
   "difficulty.hard": "Susah",
   "difficulty.medium": "Sedang",
-  "difficulty.easy": "Mudah"
+  "difficulty.easy": "Mudah",
+
+  "loginTitle": "Masuk",
+  "loginDescription": "Masuk untuk memulai petualanganmu",
+  "loginSubDescription": "Masukkan kredensialmu atau gunakan Google untuk melanjutkan",
+  "loginButton": "Masuk",
+  "loggingIn": "Sedang Masuk...",
+  "googleLoginButton": "Masuk dengan Google",
+  "emailPlaceholder": "Masukkan email Anda",
+  "passwordPlaceholder": "Masukkan kata sandi Anda",
+  "or": "atau",
+  "errorMessagesLogin": {
+    "missingInput": "Harap isi email dan kata sandi",
+    "invalidCredentials": "Email atau kata sandi tidak valid",
+    "loginFailed": "Gagal masuk. Silakan coba lagi",
+    "googleLoginFailed": "Gagal masuk dengan Google. Silakan coba lagi"
+  },
+  "loginSuccess": "Berhasil masuk!",
+  "logoutConfirm": {
+    "title": "Konfirmasi Keluar",
+    "message": "Apakah Anda yakin ingin keluar?"
+  },
+  "logout": "Keluar",
+  "logoutSuccess": "Berhasil keluar!"
 }

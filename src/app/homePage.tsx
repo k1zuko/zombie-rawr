@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Gamepad2, Users, Play, Hash, Zap, Skull, Bone, RefreshCw, HelpCircle } from "lucide-react";
+import { Gamepad2, Users, Play, Hash, Zap, Skull, Bone, RefreshCw, HelpCircle, RotateCw, LogOut } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Types for TypeScript
 interface BloodDrip {
@@ -67,6 +68,8 @@ export default function HomePage() {
   const searchParams = useSearchParams();
   const [openHowToPlay, setOpenHowToPlay] = useState(false);
   const [showTooltipOnce, setShowTooltipOnce] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState<boolean>(false);
+  // const { user, loading } = useAuth()
 
   // Atmosphere text
   const atmosphereText = t("atmosphereText");
@@ -227,6 +230,7 @@ export default function HomePage() {
   const handleJoinGame = useCallback(async () => {
     if (!gameCode || !nickname) {
       setErrorMessage(t("errorMessages.missingInput"));
+      setIsJoining(false)
       return;
     }
 
@@ -242,6 +246,7 @@ export default function HomePage() {
 
       if (error || !room) {
         setErrorMessage(t("errorMessages.roomNotFound"));
+        setIsJoining(false)
         return;
       }
 
@@ -268,25 +273,11 @@ export default function HomePage() {
     } catch (error) {
       console.error("Error bergabung ke permainan:", error);
       setErrorMessage(t("errorMessages.joinFailed"));
-    } finally {
-      setIsJoining(false);
+      setIsJoining(false)
     }
   }, [gameCode, nickname, router, t]);
 
-  // Start Tryout mode
-  const handleStartTryout = useCallback(() => {
-    if (!nickname) {
-      setErrorMessage(t("errorMessages.missingNickname"));
-      return;
-    }
-
-    setIsStartingTryout(true);
-    localStorage.setItem("nickname", nickname);
-    if (navigator.vibrate) navigator.vibrate(50);
-    router.push("/quiz-select-tryout");
-  }, [nickname, router, t]);
-
-  // Settings navigation
+  // Navigasi pengaturan
   const handleSettingsClick = useCallback(() => {
     if (navigator.vibrate) navigator.vibrate(50);
     router.push("/questions");
@@ -440,7 +431,9 @@ export default function HomePage() {
           </AnimatePresence>
         </Dialog>
 
-        {/* Language selector */}
+
+
+        {/* Pemilih bahasa */}
         <div className="absolute top-4 right-4">
           <Select value={i18n.language} onValueChange={handleLanguageChange}>
             <SelectTrigger
@@ -469,6 +462,18 @@ export default function HomePage() {
               </SelectItem>
             </SelectContent>
           </Select>
+          {/* {user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg bg-red-800 text-white border-2 border-red-600 rounded-md"
+              aria-label="Logout"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          )} */}
+
         </div>
 
         <div className="w-full max-w-4xl">
@@ -479,7 +484,7 @@ export default function HomePage() {
             className="text-center mb-8 mt-12 pt-12 sm:mt-0 sm:pt-0"
           >
             <h1
-              className="text-4xl sm:text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]"
+              className="text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]"
               style={{ textShadow: "0 0 15px rgba(239, 68, 68, 0.9), 0 0 20px rgba(0, 0, 0, 0.5)" }}
             >
               {t("title")}
@@ -709,6 +714,45 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isLogoutConfirmOpen} onOpenChange={setIsLogoutConfirmOpen}>
+        <AnimatePresence>
+          {isLogoutConfirmOpen && (
+            <DialogContent forceMount className="bg-black/80 border-red-500 text-red-400 max-w-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+              >
+                <DialogHeader>
+                  <DialogTitle className="text-red-500 text-2xl font-mono text-center">
+                    {t("logoutConfirm.title")}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="mt-4 text-center text-red-400/80 font-mono">
+                  {t("logoutConfirm.message")}
+                </div>
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsLogoutConfirmOpen(false)}
+                    className="border-red-500/50 text-red-400 hover:bg-red-500/20 font-mono"
+                  >
+                    {t("cancel")}
+                  </Button>
+                  <Button
+                    onClick={confirmLogout}
+                    className="bg-red-800 hover:bg-red-700 text-white font-mono"
+                  >
+                    {t("logout")}
+                  </Button>
+                </div>
+              </motion.div>
+            </DialogContent>
+          )}
+        </AnimatePresence>
+      </Dialog>
+
 
       <Toaster position="top-center" />
 

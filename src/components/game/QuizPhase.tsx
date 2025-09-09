@@ -654,7 +654,7 @@ export default function QuizPhase({
           </div>
 
           {/* Peringatan Penalti Ketidakaktifan */}
-          {/* {penaltyCountdown !== null && (
+          {penaltyCountdown !== null && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -664,7 +664,7 @@ export default function QuizPhase({
             >
               {t("inactivityWarning", { countdown: penaltyCountdown })}
             </motion.div>
-          )} */}
+          )}
 
           {/* 1-BAR INFO ROW */}
           <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40 font-mono text-xs md:text-sm">
@@ -750,7 +750,7 @@ export default function QuizPhase({
             </div>
           </Card>
         </div>
-        <ZombieFeedback isCorrect={isCorrect} isVisible={showFeedback} />
+        <ZombieFeedback isCorrect={isCorrect} isVisible={showFeedback} activeZombie={room.chaser_type} activePlayer={currentPlayer.character_type} />
       </div>
     </div>
   )

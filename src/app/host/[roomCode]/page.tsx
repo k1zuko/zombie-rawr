@@ -349,22 +349,17 @@ export default function HostPage() {
 
   const copyRoomCode = async () => {
     if (typeof window === "undefined") return
-    const joinLink = `${window.location.origin}/?code=${roomCode}`
-    await navigator.clipboard.writeText(joinLink)
+    await navigator.clipboard.writeText(roomCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const copyRoomCode1 = async () => {
+  const copyLinkRoomCode = async () => {
     if (typeof window === "undefined") return;
 
     const joinLink = `${window.location.origin}/?code=${roomCode}`;
-    const inviteMessage = t("inviteMessage", {
-      roomCode: roomCode,
-      joinLink: joinLink,
-    });
+    await navigator.clipboard.writeText(joinLink);
 
-    await navigator.clipboard.writeText(inviteMessage);
     setCopied1(true);
     setTimeout(() => setCopied1(false), 2000);
   };
@@ -492,15 +487,15 @@ export default function HostPage() {
 
   const characterOptions = [
     { value: "robot1", name: "Hijau", gif: "/character/player/character.gif", alt: "Karakter Hijau" },
-    { value: "robot2", name: "Biru", gif: "/character/player/character1.gif", alt: "Karakter Biru" },
-    { value: "robot3", name: "Merah", gif: "/character/player/character2.gif", alt: "Karakter Merah" },
-    { value: "robot4", name: "Ungu", gif: "/character/player/character3.gif", alt: "Karakter Ungu" },
-    { value: "robot5", name: "Oranye", gif: "/character/player/character4.gif", alt: "Karakter Oranye" },
+    { value: "robot2", name: "Biru", gif: "/character/player/character1-crop.gif", alt: "Karakter Biru" },
+    { value: "robot3", name: "Merah", gif: "/character/player/character2-crop.gif", alt: "Karakter Merah" },
+    { value: "robot4", name: "Ungu", gif: "/character/player/character3-crop.gif", alt: "Karakter Ungu" },
+    { value: "robot5", name: "Oranye", gif: "/character/player/character4-crop.gif", alt: "Karakter Oranye" },
     { value: "robot6", name: "Kuning", gif: "/character/player/character5.gif", alt: "Karakter Kuning" },
     { value: "robot7", name: "Abu-abu", gif: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
-    { value: "robot8", name: "Pink", gif: "/character/player/character7.gif", alt: "Karakter Pink" },
-    { value: "robot9", name: "Cokelat", gif: "/character/player/character8.gif", alt: "Karakter Cokelat" },
-    { value: "robot10", name: "Emas", gif: "/character/player/character9.gif", alt: "Karakter Emas" },
+    { value: "robot8", name: "Pink", gif: "/character/player/character7-crop.gif", alt: "Karakter Pink" },
+    { value: "robot9", name: "Cokelat", gif: "/character/player/character8-crop.gif", alt: "Karakter Cokelat" },
+    { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.gif", alt: "Karakter Emas" },
   ]
 
   if (isLoading) {
@@ -758,7 +753,7 @@ export default function HostPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={copyRoomCode1}
+                    onClick={copyLinkRoomCode}
                     className="text-red-400 hover:bg-red-500/20 rounded-full p-2 pointer-events-auto"
                     aria-label={t("copyInvite")}
                   >
@@ -918,13 +913,17 @@ export default function HostPage() {
                               }}
                             >
                               {selectedCharacter ? (
-                                <img
-                                  src={selectedCharacter.gif}
-                                  alt={selectedCharacter.alt}
-                                  className="w-15 mx-auto"
-                                />
+                                <div className="h-24 w-full flex items-center justify-center mt-2">
+                                  <img
+                                    src={selectedCharacter.gif}
+                                    alt={selectedCharacter.alt}
+                                    className="max-h-full max-w-full object-contain"
+                                  />
+                                </div>
                               ) : (
-                                player.character_type
+                                <div className="h-24 w-full flex items-center justify-center mb-2 text-red-400 text-xs">
+                                  {player.character_type}
+                                </div>
                               )}
                             </motion.div>
                             <div className="text-red-500 font-medium text-sm truncate mb-1 font-mono">{player.nickname}</div>

@@ -77,16 +77,17 @@ interface PlayerData {
 }
 
 const characterGifs = [
-  "character/player/character.gif",
-  "character/player/character1.gif",
-  "character/player/character2.gif",
-  "character/player/character3.gif",
-  "character/player/character4.gif",
-  "character/player/character5.gif",
-  "character/player/character6.gif",
-  "character/player/character7.gif",
-  "character/player/character8.gif",
-  "character/player/character9.gif",
+  { value: "robot1", name: "Hijau", gif: "/character/player/character.gif", alt: "Karakter Hijau" },
+  { value: "robot2", name: "Biru", gif: "/character/player/character1-crop.gif", alt: "Karakter Biru" },
+  { value: "robot3", name: "Merah", gif: "/character/player/character2-crop.gif", alt: "Karakter Merah" },
+  { value: "robot4", name: "Ungu", gif: "/character/player/character3-crop.gif", alt: "Karakter Ungu" },
+  { value: "robot5", name: "Oranye", gif: "/character/player/character4-crop.gif", alt: "Karakter Oranye" },
+  { value: "robot6", name: "Kuning", gif: "/character/player/character5.gif", alt: "Karakter Kuning" },
+  { value: "robot7", name: "Abu-abu", gif: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
+  { value: "robot8", name: "Pink", gif: "/character/player/character7-crop.gif", alt: "Karakter Pink" },
+  { value: "robot9", name: "Cokelat", gif: "/character/player/character8-crop.gif", alt: "Karakter Cokelat" },
+  { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.gif", alt: "Karakter Emas" },
+
 ]
 
 export default function ResultsPage() {
@@ -198,11 +199,19 @@ export default function ResultsPage() {
           console.log("Data pemain diatur dari Supabase:", data)
 
           if (completionData.players?.character_type) {
-            const charIndex = Number.parseInt(completionData.players.character_type.replace("robot", "")) - 1
-            const gifPath = `/character/player/character${charIndex === 0 ? "" : charIndex}.gif`
-            setCharacterGif(gifPath)
-            console.log("Character GIF diatur:", gifPath)
+            // Cari karakter dalam daftar characterOptions
+            const selectedCharacter = characterGifs.find(char => char.value === completionData.players.character_type);
+
+            if (selectedCharacter) {
+              setCharacterGif(selectedCharacter.gif);
+              console.log("Character GIF diatur:", selectedCharacter.gif);
+            } else {
+              console.log("Karakter tidak ditemukan dalam daftar opsi");
+              // Atur default characterGif jika karakter tidak ditemukan
+              setCharacterGif(characterGifs[0].gif);
+            }
           }
+
         }
       } catch (err: any) {
         console.error("Terjadi kesalahan saat initializePlayerData:", err.message)
@@ -734,7 +743,7 @@ export default function ResultsPage() {
 
             <div className="flex w-fit gap-2 items-center">
               <img
-                src={`/logo/Gemini_Generated_Image_90360u90360u9036.png`}
+                src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`}
                 alt="Game for Smart Logo"
                 className="w-35 md:w-52 lg:w-64 h-auto mr-3"
               />
@@ -800,8 +809,8 @@ export default function ResultsPage() {
                 <div className="mb-6 flex justify-center">
                   <Image
                     src={characterGif || "/placeholder.svg"}
-                    width={120}
-                    height={120}
+                    width={80}
+                    height={80}
                     alt="Karakter"
                   />
                 </div>

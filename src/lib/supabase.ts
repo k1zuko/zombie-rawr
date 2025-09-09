@@ -1,9 +1,13 @@
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  // const supabaseUrlUtama = process.env.NEXT_PUBLIC_SUPABASE_URL_UTAMA!
+  // const supabaseAnonKeyUtama = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_UTAMA!
+
+  export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  // export const supabaseUtama = createClient(supabaseUrlUtama, supabaseAnonKeyUtama)
 
 export type GameRoom = {
   question_count: number; // Diperbaiki dari 'any' menjadi 'number' untuk konsistensi

@@ -271,7 +271,7 @@ export default function QuizSelectPage() {
       </div>
 
 
-      <div className="relative z-10 flex flex-col min-h-screen p-5">
+      <div className="relative z-10 flex flex-col min-h-screen p-10">
         <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}

@@ -8,12 +8,43 @@ import { useTranslation } from "react-i18next";
 interface ZombieFeedbackProps {
   isCorrect: boolean | null;
   isVisible: boolean;
+  activeZombie: string;
+  activePlayer: string;
 }
 
-export default function ZombieFeedback({ isCorrect, isVisible }: ZombieFeedbackProps) {
+export default function ZombieFeedback({ isCorrect, isVisible, activeZombie, activePlayer }: ZombieFeedbackProps) {
   const {t} = useTranslation()
   const [animationKey, setAnimationKey] = useState(0);
   const [showEffects, setShowEffects] = useState(false);
+
+  const zombieOptions = [
+  { value: "zombie",    gif: "/character/chaser/zombie.gif" },
+  { value: "monster1",  gif: "/character/chaser/monster1.gif" },
+  { value: "monster2",  gif: "/character/chaser/monster2.gif" },
+  { value: "monster3",  gif: "/character/chaser/monster3.gif" },
+  { value: "darknight", gif: "/character/chaser/darknight.gif" },
+];
+
+const playerOptions = [
+  { value: "robot1", name: "Hijau", gif: "/character/player/character.gif", alt: "Karakter Hijau" },
+  { value: "robot2", name: "Biru", gif: "/character/player/character1-crop.gif", alt: "Karakter Biru" },
+  { value: "robot3", name: "Merah", gif: "/character/player/character2-crop.gif", alt: "Karakter Merah" },
+  { value: "robot4", name: "Ungu", gif: "/character/player/character3-crop.gif", alt: "Karakter Ungu" },
+  { value: "robot5", name: "Oranye", gif: "/character/player/character4-crop.gif", alt: "Karakter Oranye" },
+  { value: "robot6", name: "Kuning", gif: "/character/player/character5.gif", alt: "Karakter Kuning" },
+  { value: "robot7", name: "Abu-abu", gif: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
+  { value: "robot8", name: "Pink", gif: "/character/player/character7-crop.gif", alt: "Karakter Pink" },
+  { value: "robot9", name: "Cokelat", gif: "/character/player/character8-crop.gif", alt: "Karakter Cokelat" },
+  { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.gif", alt: "Karakter Emas" },
+]
+
+  const zombieGif =
+    zombieOptions.find((z) => z.value === activeZombie)?.gif ??
+    zombieOptions[0].gif; // fallback
+
+  const playerGif =
+    playerOptions.find((p) => p.value === activePlayer)?.gif ??
+    playerOptions[0].gif; // fallback
 
   useEffect(() => {
     if (isVisible) {
@@ -52,7 +83,7 @@ export default function ZombieFeedback({ isCorrect, isVisible }: ZombieFeedbackP
             }}
           >
             <Image
-              src="/character/player/character.gif"
+              src={playerGif}
               alt="Karakter Pelari"
               width={70}
               height={70}
@@ -77,7 +108,7 @@ export default function ZombieFeedback({ isCorrect, isVisible }: ZombieFeedbackP
               }}
             >
               <Image
-                src="/character/chaser/zombie.gif"
+                src={zombieGif}
                 alt="Zombie Pengejar"
                 width={80}
                 height={80}

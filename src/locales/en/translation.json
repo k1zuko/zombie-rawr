@@ -44,7 +44,8 @@
   "chaserNotSelected": "Not selected",
   "chaserSelectTitle": "Choose Chaser",
   "selectedChaser": "Selected Chaser: {{name}}",
-  "startButton": "Start",
+  "save": "Save",
+  "saving": "Saving",
   "warningText": "WARNING: This game contains horror elements that may not be suitable for all players",
   "chasers": {
     "zombie": {
@@ -84,7 +85,7 @@
     "saveSettingsFailed": "Failed to save settings!"
   },
   "start": "Start Quiz",
-  "login": "Login with Supabase",
+  "login": "Login",
   "loading": "Loading...",
   "selectQuizDescription": "Choose a quiz to start your adventure!",
   "characterSelectDescription": "Select your chaser and configure your game settings!",
@@ -223,6 +224,28 @@
   "difficultyLevelLabel": "Difficulty Level",
   "difficulty.hard": "Hard",
   "difficulty.medium": "Medium",
-  "difficulty.easy": "Easy"
+  "difficulty.easy": "Easy",
 
+  "loginTitle": "Login",
+  "loginDescription": "Sign in to start your adventure",
+  "loginSubDescription": "Enter your credentials or use Google to continue",
+  "loginButton": "Sign In",
+  "loggingIn": "Logging In...",
+  "googleLoginButton": "Sign In with Google",
+  "emailPlaceholder": "Enter your email",
+  "passwordPlaceholder": "Enter your password",
+  "or": "or",
+  "errorMessagesLogin": {
+    "missingInput": "Please fill in both email and password",
+    "invalidCredentials": "Invalid email or password",
+    "loginFailed": "Failed to sign in. Please try again",
+    "googleLoginFailed": "Failed to sign in with Google. Please try again"
+  },
+  "loginSuccess": "Successfully signed in!",
+  "logoutConfirm": {
+    "title": "Confirm Logout",
+    "message": "Are you sure you want to log out?"
+  },
+  "logout": "Logout",
+  "logoutSuccess": "Successfully signed out!"
 }

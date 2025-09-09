@@ -6,6 +6,7 @@ import "./globals.css";
 import ClientProviders from "./ClientProviders";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang={i18n.language}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ClientProviders>{children}</ClientProviders>
+        <AuthProvider>
+          <ClientProviders>{children}</ClientProviders>
+        </AuthProvider>
       </body>
     </html>
   );

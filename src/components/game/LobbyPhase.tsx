@@ -42,15 +42,15 @@ interface LobbyPhaseProps {
 // Opsi karakter yang tersedia
 const characterOptions = [
   { value: "robot1", name: "Hijau", gif: "/character/player/character.gif", alt: "Karakter Hijau" },
-  { value: "robot2", name: "Biru", gif: "/character/player/character1.gif", alt: "Karakter Biru" },
-  { value: "robot3", name: "Merah", gif: "/character/player/character2.gif", alt: "Karakter Merah" },
-  { value: "robot4", name: "Ungu", gif: "/character/player/character3.gif", alt: "Karakter Ungu" },
-  { value: "robot5", name: "Oranye", gif: "/character/player/character4.gif", alt: "Karakter Oranye" },
+  { value: "robot2", name: "Biru", gif: "/character/player/character1-crop.gif", alt: "Karakter Biru" },
+  { value: "robot3", name: "Merah", gif: "/character/player/character2-crop.gif", alt: "Karakter Merah" },
+  { value: "robot4", name: "Ungu", gif: "/character/player/character3-crop.gif", alt: "Karakter Ungu" },
+  { value: "robot5", name: "Oranye", gif: "/character/player/character4-crop.gif", alt: "Karakter Oranye" },
   { value: "robot6", name: "Kuning", gif: "/character/player/character5.gif", alt: "Karakter Kuning" },
   { value: "robot7", name: "Abu-abu", gif: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
-  { value: "robot8", name: "Pink", gif: "/character//player/character7.gif", alt: "Karakter Pink" },
-  { value: "robot9", name: "Cokelat", gif: "/character/player/character8.gif", alt: "Karakter Cokelat" },
-  { value: "robot10", name: "Emas", gif: "/character/player/character9.gif", alt: "Karakter Emas" },
+  { value: "robot8", name: "Pink", gif: "/character/player/character7-crop.gif", alt: "Karakter Pink" },
+  { value: "robot9", name: "Cokelat", gif: "/character/player/character8-crop.gif", alt: "Karakter Cokelat" },
+  { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.gif", alt: "Karakter Emas" },
 ]
 
 export default function LobbyPhase({
@@ -407,13 +407,13 @@ export default function LobbyPhase({
               </h1>
             </Link>
             <Button
-            onClick={() => setIsExitDialogOpen(true)}
-            variant="ghost"
-            size="icon"
-            className="bg-red-600/80 hover:bg-red-700 text-white rounded-lg p-2 shadow-lg"
-          >
-            <LogOut className="w-5 h-5" />
-          </Button>
+              onClick={() => setIsExitDialogOpen(true)}
+              variant="ghost"
+              size="icon"
+              className="bg-red-600/80 hover:bg-red-700 text-white rounded-lg p-2 shadow-lg"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
           </div>
 
           <motion.div
