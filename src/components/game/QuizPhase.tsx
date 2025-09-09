@@ -216,13 +216,13 @@ export default function QuizPhase({
       const survivalDuration = calculateSurvivalDuration()
       const completionTime = new Date().toISOString()
 
-      // console.log(t("log.saveGameCompletion", {
-      //   nickname: currentPlayer.nickname,
-      //   health: finalHealth,
-      //   correct: finalCorrect,
-      //   eliminated: actuallyEliminated,
-      //   completion_type: actuallyEliminated ? "eliminated" : "completed"
-      // }))
+      console.log(t("log.saveGameCompletion", {
+        nickname: currentPlayer.nickname,
+        health: finalHealth,
+        correct: finalCorrect,
+        eliminated: actuallyEliminated,
+        completion_type: actuallyEliminated ? "eliminated" : "completed"
+      }))
 
       const { data, error } = await supabase.from("game_completions").upsert({
         player_id: currentPlayer.id,
@@ -239,7 +239,7 @@ export default function QuizPhase({
       if (error) {
         console.error(t("log.saveGameCompletionError", { error: error.message }))
       } else {
-        // console.log(t("log.saveGameCompletionSuccess", { data }))
+        console.log(t("log.saveGameCompletionSuccess", { data }))
       }
     } catch (error) {
       console.error(t("log.saveGameCompletionError", { error }))
@@ -278,7 +278,7 @@ export default function QuizPhase({
         .eq("room_id", room.id)
 
       setPlayerSpeed(newSpeed)
-      // console.log(t("log.playerSpeedAfterAnswer", { newSpeed }))
+      console.log(t("log.playerSpeedAfterAnswer", { newSpeed }))
 
       return true
     } catch (error) {
@@ -291,7 +291,7 @@ export default function QuizPhase({
 
   const syncHealthAndSpeedFromDatabase = async () => {
     if (!room?.id || !currentPlayer?.id) {
-      // console.log(t("log.skipSync"))
+      console.log(t("log.skipSync"))
       return
     }
     try {
@@ -306,7 +306,7 @@ export default function QuizPhase({
       }
 
       if (data !== null && data !== playerHealth) {
-        // console.log(t("log.syncHealth", { oldHealth: playerHealth, newHealth: data }))
+        console.log(t("log.syncHealth", { oldHealth: playerHealth, newHealth: data }))
         setPlayerHealth(data)
       }
 
@@ -323,7 +323,7 @@ export default function QuizPhase({
       }
 
       if (speedData && speedData.speed !== playerSpeed) {
-        // console.log(t("log.syncSpeed", { oldSpeed: playerSpeed, newSpeed: speedData.speed }))
+        console.log(t("log.syncSpeed", { oldSpeed: playerSpeed, newSpeed: speedData.speed }))
         setPlayerSpeed(speedData.speed)
       }
     } catch (error) {
@@ -333,7 +333,7 @@ export default function QuizPhase({
 
   const checkInactivityPenalty = async () => {
     if (!room?.id || !currentPlayer?.id || playerHealth <= 0 || isProcessingAnswer || isAnswered) {
-      // console.log(t("log.skipInactivityCheck"))
+      console.log(t("log.skipInactivityCheck"))
       setInactivityCountdown(null)
       setPenaltyCountdown(null)
       return
@@ -354,7 +354,7 @@ export default function QuizPhase({
       }
 
       if (!data.last_answer_time) {
-        // console.log(t("log.noLastAnswerTime"))
+        console.log(t("log.noLastAnswerTime"))
         await supabase
           .from("player_health_states")
           .update({ last_answer_time: new Date().toISOString() })
@@ -369,17 +369,17 @@ export default function QuizPhase({
       const currentTime = Date.now()
       const timeSinceLastAnswer = (currentTime - lastAnswerTime) / 1000
 
-      // console.log(t("log.inactivityCheck", { timeSinceLastAnswer, speed: data.speed }))
+      console.log(t("log.inactivityCheck", { timeSinceLastAnswer, speed: data.speed }))
 
       const warningThreshold = inactivityPenalty - 10 // Peringatan 10 detik sebelum penalti
       if (timeSinceLastAnswer >= warningThreshold && timeSinceLastAnswer < inactivityPenalty && data.speed > 20) {
         const countdown = Math.ceil(inactivityPenalty - timeSinceLastAnswer)
-        // console.log(t("log.startPenaltyCountdown", { countdown }))
+        console.log(t("log.startPenaltyCountdown", { countdown }))
         setInactivityCountdown(null)
         setPenaltyCountdown(countdown)
       } else if (timeSinceLastAnswer >= inactivityPenalty && data.speed > 20) {
         const newSpeed = Math.max(20, data.speed - 10)
-        // console.log(t("log.applyInactivityPenalty", { timeSinceLastAnswer, oldSpeed: data.speed, newSpeed }))
+        console.log(t("log.applyInactivityPenalty", { timeSinceLastAnswer, oldSpeed: data.speed, newSpeed }))
         await supabase
           .from("player_health_states")
           .update({ speed: newSpeed, last_answer_time: new Date().toISOString() })
@@ -390,7 +390,7 @@ export default function QuizPhase({
         setPenaltyCountdown(null)
       } else {
         if (inactivityCountdown !== null || penaltyCountdown !== null) {
-          // console.log(t("log.clearCountdowns"))
+          console.log(t("log.clearCountdowns"))
           setInactivityCountdown(null)
           setPenaltyCountdown(null)
         }
@@ -411,13 +411,13 @@ export default function QuizPhase({
   ) => {
     const actuallyEliminated = isEliminated || health <= 0
 
-    // console.log(t("log.redirectToResults", {
-    //   health,
-    //   correct,
-    //   total,
-    //   eliminated: actuallyEliminated,
-    //   perfect: isPerfect
-    // }))
+    console.log(t("log.redirectToResults", {
+      health,
+      correct,
+      total,
+      eliminated: actuallyEliminated,
+      perfect: isPerfect
+    }))
 
     if (timerRef.current) {
       clearInterval(timerRef.current)
@@ -485,7 +485,7 @@ export default function QuizPhase({
 
   useEffect(() => {
     if (playerHealth <= 0) {
-      // console.log(t("log.playerEliminated"))
+      console.log(t("log.playerEliminated"))
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null
@@ -500,10 +500,10 @@ export default function QuizPhase({
       const feedbackTimer = setTimeout(() => {
         setShowFeedback(false)
         if (playerHealth <= 0) {
-          // console.log(t("log.eliminatedDuringFeedback"))
+          console.log(t("log.eliminatedDuringFeedback"))
           redirectToResults(0, correctAnswers, currentQuestionIndex + 1, true)
         } else if (currentQuestionIndex + 1 >= totalQuestions) {
-          // console.log(t("log.allQuestionsAnswered"))
+          console.log(t("log.allQuestionsAnswered"))
           redirectToResults(playerHealth, correctAnswers, totalQuestions, false, correctAnswers === totalQuestions)
         } else {
           nextQuestion()
@@ -532,7 +532,7 @@ export default function QuizPhase({
       .maybeSingle()
 
     if (existing) {
-      // console.log(t("log.alreadyAnswered"))
+      console.log(t("log.alreadyAnswered"))
       return
     }
 
@@ -653,19 +653,6 @@ export default function QuizPhase({
             <Skull className="w-8 h-8 text-red-500 ml-3 animate-pulse" />
           </div>
 
-          {/* Peringatan Penalti Ketidakaktifan */}
-          {penaltyCountdown !== null && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="mb-4 text-red-500 font-mono text-sm md:text-base animate-pulse"
-            >
-              {t("inactivityWarning", { countdown: penaltyCountdown })}
-            </motion.div>
-          )}
-
           {/* 1-BAR INFO ROW */}
           <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40 font-mono text-xs md:text-sm">
             <div className="flex items-center gap-x-1">
@@ -750,7 +737,7 @@ export default function QuizPhase({
             </div>
           </Card>
         </div>
-        <ZombieFeedback isCorrect={isCorrect} isVisible={showFeedback} activeZombie={room.chaser_type} activePlayer={currentPlayer.character_type} />
+        <ZombieFeedback isCorrect={isCorrect} isVisible={showFeedback} activeZombie={""} activePlayer={""} />
       </div>
     </div>
   )
