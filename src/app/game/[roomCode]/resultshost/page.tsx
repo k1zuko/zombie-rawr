@@ -67,16 +67,16 @@ interface PlayerResult {
 }
 
 const characterGifs = [
-    { type: "robot1", name: "Hijau", src: "/character/player/character.gif", alt: "Karakter Hijau" },
-    { type: "robot2", name: "Biru", src: "/character/player/character1-crop.gif", alt: "Karakter Biru" },
-    { type: "robot3", name: "Merah", src: "/character/player/character2-crop.gif", alt: "Karakter Merah" },
-    { type: "robot4", name: "Ungu", src: "/character/player/character3-crop.gif", alt: "Karakter Ungu" },
-    { type: "robot5", name: "Oranye", src: "/character/player/character4-crop.gif", alt: "Karakter Oranye" },
-    { type: "robot6", name: "Kuning", src: "/character/player/character5.gif", alt: "Karakter Kuning" },
-    { type: "robot7", name: "Abu-abu", src: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
-    { type: "robot8", name: "Pink", src: "/character/player/character7-crop.gif", alt: "Karakter Pink" },
-    { type: "robot9", name: "Cokelat", src: "/character/player/character8-crop.gif", alt: "Karakter Cokelat" },
-    { type: "robot10", name: "Emas", src: "/character/player/character9-crop.gif", alt: "Karakter Emas" },
+  { type: "robot1", name: "Hijau", src: "/character/player/character.gif", alt: "Karakter Hijau" },
+  { type: "robot2", name: "Biru", src: "/character/player/character1-crop.gif", alt: "Karakter Biru" },
+  { type: "robot3", name: "Merah", src: "/character/player/character2-crop.gif", alt: "Karakter Merah" },
+  { type: "robot4", name: "Ungu", src: "/character/player/character3-crop.gif", alt: "Karakter Ungu" },
+  { type: "robot5", name: "Oranye", src: "/character/player/character4-crop.gif", alt: "Karakter Oranye" },
+  { type: "robot6", name: "Kuning", src: "/character/player/character5.gif", alt: "Karakter Kuning" },
+  { type: "robot7", name: "Abu-abu", src: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
+  { type: "robot8", name: "Pink", src: "/character/player/character7-crop.gif", alt: "Karakter Pink" },
+  { type: "robot9", name: "Cokelat", src: "/character/player/character8-crop.gif", alt: "Karakter Cokelat" },
+  { type: "robot10", name: "Emas", src: "/character/player/character9-crop.gif", alt: "Karakter Emas" },
 
 ];
 
@@ -505,7 +505,7 @@ export default function ResultsHostPage() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: showContent ? 1 : 0, scale: showContent ? 1 : 0.9 }}
         transition={{ duration: 1.2, ease: [0.6, -0.05, 0.01, 0.99] }}
-        className="relative z-10 container px-4 py-3 min-w-screen"
+        className="relative z-10 container p-7 min-w-screen"
       >
         <motion.header
           initial={{ opacity: 0, y: -50 }}

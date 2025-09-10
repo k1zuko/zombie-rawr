@@ -13,9 +13,9 @@ import {
 import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
 
 // Tipe untuk efek visual (sama seperti homepage)
@@ -189,7 +189,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-2 sm:p-4">
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-7">
         <div className="w-full max-w-md">
           <motion.div
             initial={{ opacity: 0, y: -50 }}
@@ -298,8 +298,6 @@ export default function LoginPage() {
           </motion.div>
         </div>
       </div>
-
-      <Toaster position="top-center" />
 
       <style jsx global>{`
         @keyframes float {

@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
+import Image from "next/image";
 
 export default function QuizSelectPage() {
   const { t, i18n } = useTranslation();
@@ -264,7 +265,7 @@ export default function QuizSelectPage() {
       </div>
 
 
-      <div className="relative z-10 flex flex-col min-h-screen p-10">
+      <div className="relative z-10 flex flex-col min-h-screen p-7">
         <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -280,16 +281,7 @@ export default function QuizSelectPage() {
                 {t("title")}
               </h1>
             </Link>
-            <motion.button
-              onClick={() => router.push("/")}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-              whileTap={{ scale: 0.95 }}
-              // Ganti padding & tambahkan aria-label
-              className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
-              aria-label={t("homeButton")} // Penting untuk aksesibilitas
-            >
-              <ArrowRight className="w-4 h-4" />
-            </motion.button>
+            <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} />
           </div>
 
           <motion.div
@@ -492,36 +484,6 @@ export default function QuizSelectPage() {
           )}
         </div>
       </div>
-
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-        gutter={8}
-        toastOptions={{
-          duration: 2000,
-          style: {
-            background: '#1a0000',      // hitam-merah gelap
-            color: '#ff4444',           // teks merah terang
-            border: '1px solid #ff0000',
-            borderRadius: '8px',
-            fontFamily: 'monospace',
-          },
-          success: {
-            style: {
-              background: '#1a0000',
-              color: '#44ff44',         // hijau neon untuk sukses
-              border: '1px solid #44ff44',
-            },
-          },
-          error: {
-            style: {
-              background: '#1a0000',
-              color: '#ff0000',
-              border: '1px solid #ff0000',
-            },
-          },
-        }}
-      />
 
       <style jsx global>{`
         @keyframes fall {

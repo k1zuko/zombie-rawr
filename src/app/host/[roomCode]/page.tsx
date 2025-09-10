@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse, Trash2, Maximize, Maximize2, CopyIcon, HelpCircle, ArrowRight } from "lucide-react";
+import { Users, Play, Copy, Check, Clock, Trophy, Zap, Wifi, Skull, Bone, HeartPulse, Trash2, Maximize, Maximize2, CopyIcon, HelpCircle, ArrowRight, List } from "lucide-react";
 import { supabase, type Player } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -13,7 +13,7 @@ import QRCode from "react-qr-code";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { syncServerTime, calculateCountdown } from "@/lib/server-time"
 import { useTranslation } from "react-i18next";
-import { Toaster, toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useHostGuard } from "@/lib/host-guard";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -366,7 +366,7 @@ export default function HostPage() {
 
   const startGame = async () => {
     if (!room || players.length === 0) {
-      alert("Gagal memulai game: Tidak ada ruangan atau pemain.")
+      toast.error("Gagal memulai game: Tidak ada ruangan atau pemain.")
       return
     }
 
@@ -468,14 +468,14 @@ export default function HostPage() {
           router.push(`/game/${roomCode}/host`)
         } catch (error) {
           console.error("Error memulai game:", error)
-          alert("Gagal memulai game: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"))
+          toast.error("Gagal memulai game: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"))
           setIsStarting(false)
           setCountdown(null)
         }
       }, 10000)
     } catch (error) {
       console.error("Error memulai countdown:", error)
-      alert("Gagal memulai countdown: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"))
+      toast.error("Gagal memulai countdown: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"))
       setIsStarting(false)
       setCountdown(null)
     }
@@ -600,7 +600,7 @@ export default function HostPage() {
         )}
       </AnimatePresence>
 
-      <div className={`relative z-10 mx-auto p-10 ${countdown !== null ? "hidden" : ""}`}>
+      <div className={`relative z-10 mx-auto p-7 ${countdown !== null ? "hidden" : ""}`}>
         <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -616,16 +616,7 @@ export default function HostPage() {
                 {t("title")}
               </h1>
             </Link>
-            <motion.button
-              onClick={() => router.push(`/character-select/${roomCode}`)}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-              whileTap={{ scale: 0.95 }}
-              // Ganti padding & tambahkan aria-label
-              className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
-              aria-label={t("homeButton")} // Penting untuk aksesibilitas
-            >
-              <ArrowRight className="w-4 h-4" />
-            </motion.button>
+            <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} />
           </div>
 
           <motion.div
@@ -685,7 +676,7 @@ export default function HostPage() {
             <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] justify-center">
               <CardContent>
                 <div className="flex items-center gap-6">
-                  <HelpCircle className="w-8 h-8 text-red-500 flex-shrink-0" />
+                  <List className="w-8 h-8 text-red-500 flex-shrink-0" />
                   <div>
                     <div className="text-4xl font-bold text-red-500 font-mono">{room.question_count || 20}</div>
                     {/* <div className="text-red-400 text-sm font-mono">{t("question")}</div> */}
@@ -967,8 +958,6 @@ export default function HostPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <Toaster position="top-right" toastOptions={{ style: { background: "#1a0000", color: "#ff4444", border: "1px solid #ff0000" } }} />
 
       <style jsx global>{`
         @keyframes fall {

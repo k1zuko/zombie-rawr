@@ -11,7 +11,7 @@ export function useHostGuard(roomCode: string) {
     if (typeof window === "undefined") return;
 
     const hostId = sessionStorage.getItem("currentHostId");
-    const redirectTo = sessionStorage.getItem("redirectTo") || `/game/${roomCode}` || `/game/${roomCode}/results`;
+    const redirectTo = sessionStorage.getItem("redirectTo") || "/" || `/game/${roomCode}` || `/game/${roomCode}/results`;
 
     if (!hostId && redirectTo == "/") {
       router.replace(`/?isHost=0`);

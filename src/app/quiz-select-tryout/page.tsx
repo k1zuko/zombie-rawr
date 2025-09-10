@@ -10,6 +10,8 @@ import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import Image from "next/image";
 
 export default function QuizSelectTryoutPage() {
   const { t, i18n } = useTranslation();
@@ -60,7 +62,7 @@ export default function QuizSelectTryoutPage() {
         setFilteredQuizzes(data || []);
       } catch (error) {
         console.error("Error fetching quizzes:", error);
-        alert(t("errorMessages.fetchQuizzesFailed"));
+        toast.error(t("errorMessages.fetchQuizzesFailed"));
       } finally {
         setIsLoading(false);
       }
@@ -115,7 +117,7 @@ export default function QuizSelectTryoutPage() {
       setFilteredQuizzes(data || []);
     } catch (error) {
       console.error("Error searching quizzes:", error);
-      alert(t("errorMessages.searchQuizzesFailed"));
+      toast.error(t("errorMessages.searchQuizzesFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -255,7 +257,7 @@ export default function QuizSelectTryoutPage() {
         <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
       </div>
 
-      <div className="relative z-10 flex flex-col min-h-screen p-5">
+      <div className="relative z-10 flex flex-col min-h-screen p-7">
         <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -271,15 +273,7 @@ export default function QuizSelectTryoutPage() {
                 {t("title")}
               </h1>
             </Link>
-            <motion.button
-              onClick={() => router.push("/")}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
-              aria-label={t("homeButton")}
-            >
-              <ArrowRight className="w-4 h-4" />
-            </motion.button>
+            <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} />
           </div>
 
           <motion.div
