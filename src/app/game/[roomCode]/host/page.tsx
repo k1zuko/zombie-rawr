@@ -121,7 +121,7 @@ export default function HostGamePage() {
 
   // Definisikan pengaturan berdasarkan difficulty_level
   const difficultySettings = {
-    easy: { zombieAttackCountdown: 25},
+    easy: { zombieAttackCountdown: 9999},
     medium: { zombieAttackCountdown: 10 },
     hard: { zombieAttackCountdown: 5 },
   };
@@ -350,7 +350,7 @@ export default function HostGamePage() {
       const playerState = playerStates[playerId];
       if (!playerState) return;
 
-      const newSpeed = Math.min(playerState.speed + 5, 100);
+      const newSpeed = Math.min(playerState.speed + 5, 90);
       const shouldResetCountdown = newSpeed <= 30;
 
       updatePlayerState(

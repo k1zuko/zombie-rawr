@@ -117,7 +117,7 @@ const CharacterItem = memo(function CharacterItem({
     >
       <div className="relative flex flex-col items-center">
         <div
-          className="absolute -top-1 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-black/90 rounded-full px-2.5 py-1 border border-white/10"
+          className="absolute -top-8 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-black/90 rounded-full px-2.5 py-1 border border-white/10"
           style={{ zIndex: 50 }}
         >
           <div className="flex gap-0.5">
