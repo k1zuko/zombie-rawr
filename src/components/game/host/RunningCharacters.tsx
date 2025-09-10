@@ -99,7 +99,7 @@ const CharacterItem = memo(function CharacterItem({
   const finalY = charY + attackShakeY;
 
   // ✅ Skip render jika di luar viewport
-  const isVisible = Math.abs(finalX - (centerX - window.innerWidth / 2)) < 900;
+  const isVisible = Math.abs(finalX - (centerX - window.innerWidth / 2)) < 1500;
   if (!isVisible) return null;
 
   const scale = isBeingAttacked ? 1.2 : gameMode === "panic" ? 1.3 : 1.1;
