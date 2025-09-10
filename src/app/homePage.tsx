@@ -17,7 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import {
   Dialog,
   DialogContent,
@@ -71,6 +71,7 @@ export default function HomePage() {
   const [openHowToPlay, setOpenHowToPlay] = useState(false);
   const [showTooltipOnce, setShowTooltipOnce] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState<boolean>(false);
+  const [tab, setTab] = useState<"join" | "play">("join");
 
   // Atmosphere text
   const atmosphereText = t("atmosphereText");
@@ -459,8 +460,8 @@ export default function HomePage() {
                         <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
                           {Array.isArray(t("joinSteps", { returnObjects: true }))
                             ? (t("joinSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
-                                <li key={idx}>{step}</li>
-                              ))
+                              <li key={idx}>{step}</li>
+                            ))
                             : <li>{t("errorMessages.noStepsAvailable", "No steps available.")}</li>}
                         </ol>
                       </motion.div>
@@ -477,15 +478,15 @@ export default function HomePage() {
                         <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
                           {Array.isArray(t("playSteps", { returnObjects: true }))
                             ? (t("playSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
-                                <li key={idx}>{step}
+                              <li key={idx}>{step}
                                 {idx === 1 && (
-                                <ul className="list-disc list-outside pl-6 mt-1 space-y-1">
-                                  <li>{t("speedRuleCorrect")}</li>
-                                  <li>{t("speedRuleWrong")}</li>
-                                </ul>
-                              )}
-                                </li>
-                              ))
+                                  <ul className="list-disc list-outside pl-6 mt-1 space-y-1">
+                                    <li>{t("speedRuleCorrect")}</li>
+                                    <li>{t("speedRuleWrong")}</li>
+                                  </ul>
+                                )}
+                              </li>
+                            ))
                             : <li>{t("errorMessages.noStepsAvailable", "No steps available.")}</li>}
                         </ol>
                       </motion.div>
@@ -498,7 +499,7 @@ export default function HomePage() {
         </Dialog>
 
         {/* Language selector */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-20">
           <Select value={i18n.language} onValueChange={handleLanguageChange}>
             <SelectTrigger
               className="bg-black/50 border-red-500/50 text-red-400 h-10 sm:h-12 text-sm sm:text-base focus:ring-0 focus:outline-none data-[state=open]:bg-black/80 data-[state=open]:border-red-500"
@@ -512,17 +513,17 @@ export default function HomePage() {
               <SelectItem value="id" className="focus:bg-red-500/20 focus:text-red-300 text-sm sm:text-base">
                 Indonesia
               </SelectItem>
-              <SelectItem value="gm" className="focus:bg-red-500/20 focus:text-red-300 text-sm sm:text-base">
-                German
+              <SelectItem value="de" className="focus:bg-red-500/20 focus:text-red-300 text-sm sm:text-base">
+                Deutsch
               </SelectItem>
-              <SelectItem value="fc" className="focus:bg-red-500/20 focus:text-red-300 text-sm sm:text-base">
-                France
+              <SelectItem value="fr" className="focus:bg-red-500/20 focus:text-red-300 text-sm sm:text-base">
+                Français
               </SelectItem>
-              <SelectItem value="jp" className="focus:bg-red-500/20 focus:text-red-300 text-sm sm:text-base">
-                Japan
+              <SelectItem value="ja" className="focus:bg-red-500/20 focus:text-red-300 text-sm sm:text-base">
+                日本語
               </SelectItem>
-              <SelectItem value="sp" className="focus:bg-red-500/20 focus:text-red-300 text-sm sm:text-base">
-                Spain
+              <SelectItem value="es" className="focus:bg-red-500/20 focus:text-red-300 text-sm sm:text-base">
+                Español
               </SelectItem>
             </SelectContent>
           </Select>
@@ -575,35 +576,39 @@ export default function HomePage() {
                     className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:shadow-[0_0_15px_rgba(239,68,68,0.7)] transition-all duration-300"
                     whileHover={{ rotate: -3 }}
                   >
-                    <Play className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" aria-hidden="true" />
+                    {tab === "join" ? (
+                      <Play className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
+                    ) : (
+                      <Gamepad2 className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
+                    )}
                   </motion.div>
                   <CardTitle className="text-2xl sm:text-3xl font-bold text-red-400 font-mono mb-2">
-                    {t("joinGame")}
+                    {tab === "join" ? t("joinGame") : t("tryOut")}
                   </CardTitle>
                   <CardDescription className="text-red-400/80 text-sm sm:text-lg font-mono">
-                    {t("joinDescription")}
+                    {tab === "join" ? t("joinDescription") : t("tryOutDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 sm:space-y-6 pt-0">
                   {/* Tabs for Join vs Play */}
-                  <Tabs defaultValue="join" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-black/50 border border-red-400 mb-4 sm:mb-6">
-                      <TabsTrigger 
-                        value="join" 
-                        className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono text-sm sm:text-base transition-all duration-200"
+                  <Tabs defaultValue="join" onValueChange={(val) => setTab(val as "join" | "play")} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-black/50 border border-red-400 mb-4 sm:mb-6 h-auto">
+                      <TabsTrigger
+                        value="join"
+                        className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono text-sm sm:text-base transition-all duration-200 w-full"
                       >
                         <Hash className="w-4 h-4 mr-2" />
                         {t("joinGame")}
                       </TabsTrigger>
-                      <TabsTrigger 
-                        value="play" 
+                      <TabsTrigger
+                        value="play"
                         className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono text-sm sm:text-base transition-all duration-200"
                       >
                         <Gamepad2 className="w-4 h-4 mr-2" />
                         {t("tryOut")}
                       </TabsTrigger>
                     </TabsList>
-                    
+
                     {/* Join Game Tab */}
                     <TabsContent value="join" className="space-y-4 sm:space-y-6 mt-0">
                       <div className="space-y-3 sm:space-y-4">
@@ -659,7 +664,7 @@ export default function HomePage() {
                         </span>
                       </Button>
                     </TabsContent>
-                    
+
                     {/* Play Tab */}
                     <TabsContent value="play" className="space-y-4 sm:space-y-6 mt-0">
                       <div>
@@ -687,7 +692,7 @@ export default function HomePage() {
                         onClick={handleStartTryout}
                         disabled={!nickname || isStartingTryout}
                         className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-base sm:text-lg py-3 sm:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
-                        aria-label={isStartingTryout ? t("startingTryout") : t("startTryoutButton")}
+                        aria-label={isStartingTryout ? t("starting") : t("start")}
                         aria-disabled={!nickname || isStartingTryout}
                       >
                         <span className="relative z-10 flex items-center">
@@ -702,7 +707,7 @@ export default function HomePage() {
                           ) : (
                             <Gamepad2 className="w-5 h-5 mr-2" aria-hidden="true" />
                           )}
-                          {isStartingTryout ? t("startingTryout") : t("startTryoutButton")}
+                          {isStartingTryout ? t("starting") : t("start")}
                         </span>
                       </Button>
                     </TabsContent>
@@ -801,36 +806,6 @@ export default function HomePage() {
           )}
         </AnimatePresence>
       </Dialog>
-
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-        gutter={8}
-        toastOptions={{
-          duration: 2000,
-          style: {
-            background: '#1a0000',
-            color: '#ff4444',
-            border: '1px solid #ff0000',
-            borderRadius: '8px',
-            fontFamily: 'monospace',
-          },
-          success: {
-            style: {
-              background: '#1a0000',
-              color: '#44ff44',
-              border: '1px solid #44ff44',
-            },
-          },
-          error: {
-            style: {
-              background: '#1a0000',
-              color: '#ff0000',
-              border: '1px solid #ff0000',
-            },
-          },
-        }}
-      />
 
       <style jsx global>{`
         @keyframes fall {

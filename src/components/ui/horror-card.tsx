@@ -28,7 +28,7 @@ const HorrorCard = forwardRef<HTMLDivElement, HorrorCardProps>(
           "backdrop-blur-sm transition-all duration-300 relative overflow-hidden group",
           variants[variant],
           glowing && "shadow-[0_0_20px_rgba(239,68,68,0.3)]",
-          animated && "hover:scale-105 hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]",
+          animated && "hover:scale-102 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]",
           className,
         )}
         {...props}

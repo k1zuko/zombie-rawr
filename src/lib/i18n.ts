@@ -5,29 +5,29 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import enTranslation from "../locales/en/translation.json";
 import idTranslation from "../locales/id/translation.json";
-import gmTranslation from "../locales/gm/translation.json";
-import fcTranslation from "../locales/fc/translation.json";
-import jpTranslation from "../locales/jp/translation.json";
-import spTranslation from "../locales/sp/translation.json";
+import deTranslation from "../locales/de/translation.json";
+import frTranslation from "../locales/fr/translation.json";
+import jaTranslation from "../locales/ja/translation.json";
+import esTranslation from '../locales/es/translation.json';
 
 const resources = {
-  en: {
+    en: {
     translation: enTranslation,
   },
-  id: {
+    id: {
     translation: idTranslation,
   },
-    gm: {
-    translation: gmTranslation,
+    de: {
+    translation: deTranslation,
   },
-    fc: {
-    translation: fcTranslation,
+    fr: {
+    translation: frTranslation,
   },
-    jp: {
-    translation: jpTranslation,
+    ja: {
+    translation: jaTranslation,
   },
-    sp: {
-    translation: spTranslation,
+    es: {
+    translation: esTranslation,
   },
 };
 
@@ -37,7 +37,7 @@ i18n
   .init({
     resources,
     fallbackLng: "en",
-    supportedLngs: ["en", "id","gm","fc","jp","sp"],
+    supportedLngs: ["en", "id","de","fr","ja","es"],
     interpolation: {
       escapeValue: false, // React handles XSS
     },

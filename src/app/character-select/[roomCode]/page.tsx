@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Skull, Bone, HeartPulse, Ghost, Zap, Clock, ArrowRight } from "lucide-react";
+import { Skull, Bone, HeartPulse, Ghost, Zap, Clock, ArrowRight, Settings, List } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { useHostGuard } from "@/lib/host-guard";
 import Link from "next/link";
-import { debounce } from "lodash";
+import toast from "react-hot-toast";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
 type ChaserType = typeof validChaserTypes[number];
@@ -140,7 +140,7 @@ export default function CharacterSelectPage() {
     return opts;
   }, [totalQuestions]);
 
-  const debouncedHandleDurationChange = debounce((value: number[]) => {
+  const handleDurationChange = (value: number[]) => {
     const newValue = value[0];
     if (newValue < 1 || newValue > 30) {
       setDurationError(t("durationError"));
@@ -148,31 +148,24 @@ export default function CharacterSelectPage() {
     }
     setDurationError(null);
     setGameDuration(newValue);
-    playSound("/sounds/select.mp3", 0.3);
-  }, 300);
-
-  const handleDurationChange = (value: number[]) => {
-    debouncedHandleDurationChange(value);
   };
+
 
   const handleQuestionCountChange = (value: number[]) => {
     const newValue = value[0];
     if (newValue >= 5 && newValue <= totalQuestions) {
       setQuestionCount(newValue);
       setUserSetQuestionCount(true);
-      playSound("/sounds/select.mp3", 0.3);
     }
   };
 
   const handleDifficultyChange = (value: string) => {
     setDifficultyLevel(value as DifficultyLevel);
-    playSound("/sounds/select.mp3", 0.3);
   };
 
   const handleChaserSelect = (chaser: typeof chaserOptions[number]) => {
     setChaserType(chaser.value);
     setSelectedChaser(chaser);
-    playSound("/sounds/select.mp3", 0.6);
   };
 
   const changeLanguage = (lng: string) => {
@@ -186,7 +179,7 @@ export default function CharacterSelectPage() {
 
   useEffect(() => {
     if (!roomCode || typeof roomCode !== "string") {
-      alert(t("errorMessages.invalidRoomCode"));
+      toast.error(t("errorMessages.invalidRoomCode"));
       router.push("/");
       return;
     }
@@ -202,14 +195,14 @@ export default function CharacterSelectPage() {
 
         if (error || !data) {
           console.error(t("errorMessages.roomNotFoundLog"), error?.message);
-          alert(t("errorMessages.roomNotFound"));
+          toast.error(t("errorMessages.roomNotFound"));
           router.push("/");
           return;
         }
 
         if (!data.quiz_id) {
           console.error(t("errorMessages.quizIdNotFoundLog"));
-          alert(t("errorMessages.quizIdNotFound"));
+          toast.error(t("errorMessages.quizIdNotFound"));
           router.push("/");
           return;
         }
@@ -243,7 +236,7 @@ export default function CharacterSelectPage() {
         }
       } catch (error) {
         console.error(t("errorMessages.fetchRoomFailedLog"), error);
-        alert(t("errorMessages.fetchRoomFailed"));
+        toast.error(t("errorMessages.fetchRoomFailed"));
         router.push("/");
       } finally {
         setIsLoading(false);
@@ -335,7 +328,7 @@ export default function CharacterSelectPage() {
       router.push(`/host/${roomCode}`);
     } catch (error) {
       console.error(t("errorMessages.saveSettingsFailedLog"), error);
-      alert(t("errorMessages.saveSettingsFailed"));
+      toast.error(t("errorMessages.saveSettingsFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -426,7 +419,7 @@ export default function CharacterSelectPage() {
 
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwTDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBMNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
 
-      <div className="relative z-10 mx-auto p-10">
+      <div className="relative z-10 mx-auto p-7">
         <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -442,16 +435,7 @@ export default function CharacterSelectPage() {
                 {t("title")}
               </h1>
             </Link>
-            <motion.button
-              onClick={() => router.push("/quiz-select")}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-              whileTap={{ scale: 0.95 }}
-              // Ganti padding & tambahkan aria-label
-              className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
-              aria-label={t("homeButton")} // Penting untuk aksesibilitas
-            >
-              <ArrowRight className="w-4 h-4" />
-            </motion.button>
+            <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} />
           </div>
 
           <motion.div
@@ -483,27 +467,20 @@ export default function CharacterSelectPage() {
           >
             <div className="bg-black/40 border border-red-900/50 p-6 rounded-lg backdrop-blur-sm">
               <div className="flex items-center mb-4">
-                <Clock className="w-5 h-5 text-red-500 mr-2" />
-                <h2 className="text-xl font-mono text-red-400">{t("gameSettingsTitle")}</h2>
+                <Settings className="w-5 h-5 text-red-500 mr-2" />
+                <h2 className="text-xl font-mono font-semibold text-red-400">{t("gameSettingsTitle")}</h2>
               </div>
 
               <div className="mb-6">
                 <Label htmlFor="duration" className="text-red-300 mb-2 block font-medium text-sm font-mono flex items-center">
                   {t("gameDurationLabel")}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Clock className="w-4 h-4 ml-2 text-red-500 cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-black/80 border-red-900 text-red-300">
-                      {t("durationTooltip")} (1-30 {t("minutes")})
-                    </TooltipContent>
-                  </Tooltip>
+                  <Clock className="w-4 h-4 ml-2 text-red-500" />
                 </Label>
                 <Slider
                   id="duration"
-                  min={1}
+                  min={5}
                   max={30}
-                  step={1}
+                  step={5}
                   value={[gameDuration]}
                   onValueChange={handleDurationChange}
                   className="w-full mb-4"
@@ -526,14 +503,7 @@ export default function CharacterSelectPage() {
               <div className="mb-6">
                 <Label htmlFor="questionCount" className="text-red-300 mb-2 block font-medium text-sm font-mono flex items-center">
                   {t("questionCountLabel")}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Zap className="w-4 h-4 ml-2 text-red-500 cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-black/80 border-red-900 text-red-300">
-                      {t("questionTooltip")} (Max: {totalQuestions})
-                    </TooltipContent>
-                  </Tooltip>
+                  <List className="w-4 h-4 ml-2 text-red-500" />
                 </Label>
                 <Slider
                   id="questionCount"
@@ -554,88 +524,45 @@ export default function CharacterSelectPage() {
               </div>
 
               <div>
-                <Label className="text-red-300 mb-2 block font-medium text-sm font-mono flex items-center">
+                <Label className="text-red-300 mb-3 block font-medium text-sm font-mono flex items-center">
                   {t("difficultyLevelLabel")}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Zap className="w-4 h-4 ml-2 text-red-500 cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-black/80 border-red-900 text-red-300">
-                 
-                    </TooltipContent>
-                  </Tooltip>
+                  <Skull className="w-4 h-4 ml-2 text-red-500" />
                 </Label>
-                <div className="flex space-x-4">  
+
+                <div className="flex space-x-4">
                   {difficultyOptions.map((option) => (
-                    <Tooltip key={option.value}>
-                      <TooltipTrigger asChild>
-                        <motion.label
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className={`flex-1 text-center p-3 rounded-lg cursor-pointer transition-all duration-200 border font-mono text-sm ${
-                            difficultyLevel === option.value
-                              ? "bg-red-900/50 border-red-500 shadow-[0_0_10px_rgba(255,0,0,0.5)] text-red-300"
-                              : "bg-black/60 border-red-900/50 text-red-400 hover:bg-red-900/30"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="difficultyLevel"
-                            value={option.value}
-                            checked={difficultyLevel === option.value}
-                            onChange={() => handleDifficultyChange(option.value)}
-                            className="sr-only"
-                          />
-                          {t(`difficulty.${option.value}`)}
-                        </motion.label>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-black/80 border-red-900 text-red-300">
-                  
-                      </TooltipContent>
-                    </Tooltip>
+                    <motion.label
+                      key={option.value}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`flex-1 text-center p-3 rounded-lg cursor-pointer transition-all duration-200 border font-mono text-sm ${difficultyLevel === option.value
+                        ? "bg-red-900/50 border-red-500 shadow-[0_0_10px_rgba(255,0,0,0.5)] text-red-300"
+                        : "bg-black/60 border-red-900/50 text-red-400 hover:bg-red-900/30"
+                        }`}
+                    >
+                      <input
+                        type="radio"
+                        name="difficultyLevel"
+                        value={option.value}
+                        checked={difficultyLevel === option.value}
+                        onChange={() => handleDifficultyChange(option.value)}
+                        className="sr-only"
+                      />
+                      {t(`difficulty.${option.value}`)}
+                    </motion.label>
                   ))}
                 </div>
               </div>
             </div>
-
-            <div className="bg-black/40 border border-red-900/50 p-6 rounded-lg backdrop-blur-sm">
-              <div className="flex items-center mb-4">
-                <Zap className="w-5 h-5 text-red-500 mr-2" />
-                <h2 className="text-xl font-mono text-red-400">{t("summaryTitle")}</h2>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between text-red-300 font-mono text-sm">
-                  <span>{t("gameDurationLabel")}</span>
-                  <span className="text-red-400">{t("gameDurationValue", { minutes: gameDuration })}</span>
-                </div>
-                <div className="flex justify-between text-red-300 font-mono text-sm">
-                  <span>{t("questionCountLabel")}</span>
-                  <span className="text-red-400">{t("questionCountValue", { count: questionCount })}</span>
-                </div>
-                <div className="flex justify-between text-red-300 font-mono text-sm">
-                  <span>{t("chaserLabel")}</span>
-                  <span className="text-red-400">
-                    {chaserOptions.find((c) => c.value === chaserType)?.name || t("chaserNotSelected")}
-                  </span>
-                </div>
-                <div className="flex justify-between text-red-300 font-mono text-sm">
-                  <span>{t("difficultyLevelLabel")}</span>
-                  <span className="text-red-400">
-                    {t(`difficulty.${difficultyLevel}`) || t("selectDifficulty")}
-                  </span>
-                </div>
-              </div>
-
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="mt-6">
-                <Button
-                  onClick={saveSettings}
-                  disabled={isSaving || !isFormValid}
-                  className={`w-full bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white rounded-lg font-mono text-lg py-6 shadow-lg shadow-red-900/30 transition-all ${!isFormValid || isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  {isSaving ? t("saving") : t("save")}
-                </Button>
-              </motion.div>
-            </div>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="mt-6">
+              <Button
+                onClick={saveSettings}
+                disabled={isSaving || !isFormValid}
+                className={`w-full bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white rounded-lg font-mono text-lg py-6 shadow-lg shadow-red-900/30 transition-all ${!isFormValid || isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                {isSaving ? t("continuing") : t("continue")}
+              </Button>
+            </motion.div>
           </motion.div>
 
           <motion.div
@@ -647,7 +574,7 @@ export default function CharacterSelectPage() {
             <div className="bg-black/40 border border-red-900/50 p-6 rounded-lg h-full backdrop-blur-sm">
               <div className="flex items-center mb-6">
                 <Ghost className="w-5 h-5 text-red-500 mr-2" />
-                <h2 className="text-xl font-mono text-red-400">{t("chaserSelectTitle")}</h2>
+                <h2 className="text-xl font-mono font-semibold text-red-400">{t("chaserSelectTitle")}</h2>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 overflow-y-auto custom-scrollbar pr-2">
@@ -679,7 +606,6 @@ export default function CharacterSelectPage() {
                         />
                       </div>
                       <span className="text-red-400 font-mono text-center font-bold mb-1">{chaser.name}</span>
-                      <span className="text-red-300 font-mono text-xs text-center opacity-80">{chaser.description}</span>
                       {chaserType === chaser.value && (
                         <motion.span
                           className="absolute top-2 right-2 text-red-400"
@@ -713,14 +639,6 @@ export default function CharacterSelectPage() {
           </motion.div>
         </div>
       </div>
-
-      <motion.div
-        className="absolute bottom-4 left-0 right-0 text-center text-red-900/50 font-mono text-xs"
-        animate={{ opacity: [0.3, 0.7, 0.3] }}
-        transition={{ duration: 5, repeat: Infinity }}
-      >
-        {t("warningText")}
-      </motion.div>
 
       <style jsx global>{`
         @keyframes fall {

@@ -232,7 +232,7 @@ export default function LobbyPhase({
       if (error) {
         console.error("❌ LobbyPhase: Gagal memperbarui karakter:", error)
         setSelectedCharacter(previousCharacter);
-        alert("Gagal memperbarui karakter: " + error.message)
+        toast.error("Gagal memperbarui karakter: " + error.message)
         return
       }
 
@@ -241,7 +241,7 @@ export default function LobbyPhase({
     } catch (error) {
       console.error("❌ LobbyPhase: Gagal memperbarui karakter:", error)
       setSelectedCharacter(previousCharacter);
-      alert("Gagal memperbarui karakter: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"))
+      toast.error("Gagal memperbarui karakter: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"))
     }
   }
 

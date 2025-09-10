@@ -684,17 +684,12 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
 
-
-      {/* ... sisa dari JSX (elemen dekoratif, dll.) tetap sama ... */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-red-900 rounded-full opacity-10 blur-xl" />
         <div className="absolute top-1/3 right-20 w-24 h-24 bg-red-900 rounded-full opacity-10 blur-xl" />
         <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-red-900 rounded-full opacity-10 blur-xl" />
         <div className="absolute bottom-1/3 right-1/4 w-20 h-20 bg-red-900 rounded-full opacity-10 blur-xl" />
       </div>
-
-
-
 
       <div className="absolute inset-0">
         {[...Array(30)].map((_, i) => (
@@ -722,12 +717,12 @@ export default function ResultsPage() {
         ))}
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-3">
+      <div className="relative z-10 mx-auto  p-4 md:p-7">
         <motion.header
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
-          className="flex flex-col gap-1 mb-10"
+          className="flex flex-col gap-1 mb-7 md:mb-10"
         >
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -778,7 +773,7 @@ export default function ResultsPage() {
           </motion.div>
         </motion.header>
 
-        {error && (
+        {/* {error && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -787,15 +782,15 @@ export default function ResultsPage() {
           >
             <p className="text-red-400 font-mono text-sm">{error}</p>
           </motion.div>
-        )}
+        )} */}
 
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <HorrorCard variant="blood" glowing animated className="max-w-2xl mx-auto mb-8">
-            <div className="p-8 text-center relative overflow-hidden">
+          <HorrorCard variant="blood" glowing animated className="max-w-4xl mx-auto mb-8 p-0">
+            <div className="p-7 text-center relative overflow-hidden">
               <div className="absolute top-0 left-1/4 w-1 h-16 bg-red-900/70" />
               <div className="absolute top-0 right-1/3 w-1 h-10 bg-red-900/70" />
 
@@ -815,7 +810,7 @@ export default function ResultsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="grid grid-cols-3 gap-3">
                   <div className="bg-gray-900/70 rounded-lg p-4 border border-red-900/50">
                     <Target className="w-6 h-6 text-green-400 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-white font-mono">{playerData.correct}</div>
@@ -847,7 +842,7 @@ export default function ResultsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            <HorrorCard variant="curse" glowing className="max-w-4xl mx-auto mb-8">
+            <HorrorCard variant="curse" glowing className="max-w-4xl mx-auto mb-8 p-0">
               <div className="p-6">
                 <h3 className="text-xl font-bold text-white mb-4 font-horror tracking-wider flex items-center">
                   <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
@@ -892,6 +887,42 @@ export default function ResultsPage() {
                         </div>
                       </motion.div>
                     ))}
+
+                    {/* ====== TAMPILKAN PLAYER SENDIRI (jika di luar 10) ====== */}
+                    {(() => {
+                      const myRank = playerStats.find(p => p.nickname === playerData.nickname)?.rank;
+                      if (!myRank || myRank <= 10) return null;
+
+                      const me = playerStats.find(p => p.nickname === playerData.nickname)!;
+
+                      return (
+                        <motion.div
+                          key="me-outside-top10"
+                          initial={{ opacity: 0, x: -50 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 50 }}
+                          transition={{ duration: 0.3, delay: 1 }}
+                          className="flex items-center justify-between p-3 rounded-lg border bg-purple-900/30 border-purple-700 ring-2 ring-purple-500"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold bg-purple-600 text-white">
+                              {me.rank}
+                            </div>
+                            <div>
+                              <div className="text-white font-mono tracking-wider">{me.nickname}</div>
+                              <div className="text-xs text-gray-400">
+                                {t("result.correct", { count: me.correct_answers })}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-white font-mono">{me.score}</div>
+                            <div className="text-xs text-gray-400 tracking-widest">{t("result.points")}</div>
+                          </div>
+                        </motion.div>
+                      );
+                    })()}
                   </AnimatePresence>
                 </div>
               </div>
@@ -900,7 +931,7 @@ export default function ResultsPage() {
         )}
 
         <motion.div
-          className="mt-12 text-center text-gray-500 text-xs font-mono tracking-widest"
+          className="mt-5 text-center text-gray-500 text-xs font-mono tracking-widest"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.2 }}
