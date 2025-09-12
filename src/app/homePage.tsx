@@ -73,6 +73,12 @@ export default function HomePage() {
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState<boolean>(false);
   const [tab, setTab] = useState<"join" | "play">("join");
 
+  // State untuk debug mode
+  const [debugMode, setDebugMode] = useState(false);
+  const [massJoinInProgress, setMassJoinInProgress] = useState(false);
+  const [massJoinStatus, setMassJoinStatus] = useState("");
+  const [joinCount, setJoinCount] = useState(0);
+
   // Atmosphere text
   const atmosphereText = t("atmosphereText");
 
@@ -172,6 +178,94 @@ export default function HomePage() {
     }),
     []
   );
+
+  // // Fungsi untuk melakukan join massal (70x)
+  // const handleMassJoin = useCallback(async () => {
+  //   if (!gameCode || !nickname) {
+  //     toast.error("Game code dan nickname harus diisi!");
+  //     return;
+  //   }
+
+  //   setMassJoinInProgress(true);
+  //   setJoinCount(0);
+    
+  //   for (let i = 0; i < 12; i++) {
+  //     try {
+  //       // Generate nickname unik untuk setiap join
+  //       const uniqueNickname = `${nickname}_${i + 1}`;
+        
+  //       // Proses join game (sama seperti handleJoinGame)
+  //       const { data: room, error: roomError } = await supabase
+  //         .from("game_rooms")
+  //         .select("*")
+  //         .eq("room_code", gameCode.toUpperCase())
+  //         .single();
+
+  //       if (roomError || !room) {
+  //         setMassJoinStatus(`Gagal ${i+1}: Room tidak ditemukan`);
+  //         continue;
+  //       }
+
+  //       // Check if nickname is already taken
+  //       const { data: existingPlayers, error: checkError } = await supabase
+  //         .from("players")
+  //         .select("nickname")
+  //         .eq("room_id", room.id)
+  //         .eq("nickname", uniqueNickname)
+  //         .maybeSingle();
+
+  //       if (checkError) {
+  //         setMassJoinStatus(`Gagal ${i+1}: Error cek nickname`);
+  //         continue;
+  //       }
+
+  //       if (existingPlayers) {
+  //         setMassJoinStatus(`Gagal ${i+1}: Nickname sudah digunakan`);
+  //         continue;
+  //       }
+
+  //       // Insert player
+  //       const { error: playerError } = await supabase
+  //         .from("players")
+  //         .insert({
+  //           room_id: room.id,
+  //           nickname: uniqueNickname,
+  //           character_type: `robot${Math.floor(Math.random() * 10) + 1}`,
+  //         });
+
+  //       if (playerError) {
+  //         setMassJoinStatus(`Gagal ${i+1}: ${playerError.message}`);
+  //         continue;
+  //       }
+
+  //       setJoinCount(prev => prev + 1);
+  //       setMassJoinStatus(`Berhasil join ke-${i+1} dengan nickname: ${uniqueNickname}`);
+        
+  //       // Delay antar request untuk menghindari rate limiting
+  //       await new Promise(resolve => setTimeout(resolve, 500));
+        
+  //     } catch (error) {
+  //       console.error(`Error pada join ke-${i+1}:`, error);
+  //       setMassJoinStatus(`Error pada join ke-${i+1}`);
+  //     }
+  //   }
+    
+  //   setMassJoinInProgress(false);
+  //   toast.success(`Proses selesai! Berhasil join ${joinCount} dari 70 kali.`);
+  // }, [gameCode, nickname, joinCount]);
+
+  //  // Kombinasi keyboard untuk mengaktifkan debug mode (Ctrl+Shift+D)
+  // useEffect(() => {
+  //   const handleKeyDown = (e: KeyboardEvent) => {
+  //     if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+  //       setDebugMode(prev => !prev);
+  //       toast.success(`Debug mode ${!debugMode ? 'diaktifkan' : 'dinonaktifkan'}`);
+  //     }
+  //   };
+
+  //   window.addEventListener('keydown', handleKeyDown);
+  //   return () => window.removeEventListener('keydown', handleKeyDown);
+  // }, [debugMode]);
 
   // Language change handler
   const handleLanguageChange = (value: string) => {
@@ -768,6 +862,28 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Tombol Debug Mode (hanya muncul jika debugMode true) */}
+      {/*
+      {debugMode && (
+        <div className="fixed bottom-4 right-4 z-50 bg-black/80 p-4 rounded-lg border border-red-500">
+          <h3 className="text-red-500 font-bold mb-2">Debug Mode</h3>
+          <Button 
+            onClick={handleMassJoin} 
+            disabled={massJoinInProgress}
+            className="w-full mb-2 bg-red-700 hover:bg-red-600"
+          >
+            {massJoinInProgress ? `Joining... (${joinCount}/70)` : 'Join 70x'}
+          </Button>
+          {massJoinStatus && (
+            <p className="text-red-400 text-xs mt-2">{massJoinStatus}</p>
+          )}
+          <p className="text-red-400 text-xs mt-2">
+            Tekan Ctrl+Shift+D untuk menyembunyikan
+          </p>
+        </div>
+      )}
+      */}
 
       <Dialog open={isLogoutConfirmOpen} onOpenChange={setIsLogoutConfirmOpen}>
         <AnimatePresence>

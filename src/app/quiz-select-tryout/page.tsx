@@ -27,6 +27,10 @@ export default function QuizSelectTryoutPage() {
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalQuizzes, setTotalQuizzes] = useState(0);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [selectedQuiz, setSelectedQuiz] = useState<any | null>(null);
+  const [numQuestions, setNumQuestions] = useState(10); // Nilai default
+  const [duration, setDuration] = useState(300); // Nilai default dalam detik (5 menit)
   const quizzesPerPage = 15;
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -142,15 +146,24 @@ export default function QuizSelectTryoutPage() {
   );
 
   // ---- QUIZ SELECTION ----
-  const handleQuizSelect = useCallback(
-    (quizId: string) => {
-      setIsSelectingQuiz(true);
-      setTimeout(() => {
-        router.push(`/tryout/${quizId}`);
-      }, 500); // Brief delay to show loading state
-    },
-    [router]
-  );
+  // Ganti fungsi handleQuizSelect yang lama
+  const handleOpenSettings = useCallback((quiz: any) => {
+    setSelectedQuiz(quiz);
+    setIsSettingsModalOpen(true);
+  }, []);
+
+  const handleStartQuiz = useCallback(() => {
+    if (!selectedQuiz) return;
+    setIsSelectingQuiz(true); // Gunakan state loading yang sudah ada
+    localStorage.setItem("quizConfig", JSON.stringify({
+      questions: numQuestions,
+      duration: duration,
+    }));
+    // Redirect dengan parameter URL
+    setTimeout(() => {
+      router.push(`/tryout/${selectedQuiz.id}`);
+    }, 500);
+  }, [router, selectedQuiz, numQuestions, duration]);
 
   const handleBackClick = useCallback(() => {
     router.push("/");
@@ -345,14 +358,13 @@ export default function QuizSelectTryoutPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className={`mt-4 grid gap-4 grid-cols-1 ${
-                  {
-                    1: "md:grid-cols-1",
-                    2: "md:grid-cols-2",
-                    3: "md:grid-cols-3",
-                    4: "md:grid-cols-4",
-                  }[Math.min(filteredQuizzes.length, 5)] || "md:grid-cols-5"
-                }`}
+                className={`mt-4 grid gap-4 grid-cols-1 ${{
+                  1: "md:grid-cols-1",
+                  2: "md:grid-cols-2",
+                  3: "md:grid-cols-3",
+                  4: "md:grid-cols-4",
+                }[Math.min(filteredQuizzes.length, 5)] || "md:grid-cols-5"
+                  }`}
               >
                 {filteredQuizzes.map((quiz) => (
                   <motion.div
@@ -365,10 +377,10 @@ export default function QuizSelectTryoutPage() {
                     <Card
                       className="bg-black/40 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full flex flex-col"
                       style={{ minHeight: "150px", maxHeight: "200px" }}
-                      onClick={() => handleQuizSelect(quiz.id)}
+                      onClick={() => handleOpenSettings(quiz)}
                       tabIndex={0}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") handleQuizSelect(quiz.id);
+                        if (e.key === "Enter" || e.key === " ") handleOpenSettings(quiz);
                       }}
                       aria-label={t("selectQuiz", { theme: quiz.theme })}
                     >
@@ -400,14 +412,13 @@ export default function QuizSelectTryoutPage() {
             ) : (
               <div className="flex flex-col flex-1 gap-7">
                 <div
-                  className={`mt-4 grid gap-4 grid-cols-1 ${
-                    {
-                      1: "md:grid-cols-1",
-                      2: "md:grid-cols-2",
-                      3: "md:grid-cols-3",
-                      4: "md:grid-cols-4",
-                    }[Math.min(filteredQuizzes.length, 5)] || "md:grid-cols-5"
-                  }`}
+                  className={`mt-4 grid gap-4 grid-cols-1 ${{
+                    1: "md:grid-cols-1",
+                    2: "md:grid-cols-2",
+                    3: "md:grid-cols-3",
+                    4: "md:grid-cols-4",
+                  }[Math.min(filteredQuizzes.length, 5)] || "md:grid-cols-5"
+                    }`}
                 >
                   {filteredQuizzes.map((quiz) => (
                     <motion.div
@@ -421,10 +432,10 @@ export default function QuizSelectTryoutPage() {
                       <Card
                         className="bg-black/50 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full flex flex-col"
                         style={{ minHeight: "150px", maxHeight: "200px" }}
-                        onClick={() => handleQuizSelect(quiz.id)}
+                        onClick={() => handleOpenSettings(quiz)}
                         tabIndex={0}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") handleQuizSelect(quiz.id);
+                          if (e.key === "Enter" || e.key === " ") handleOpenSettings(quiz);
                         }}
                         aria-label={t("selectQuiz", { theme: quiz.theme })}
                       >
@@ -467,6 +478,66 @@ export default function QuizSelectTryoutPage() {
                 </motion.div>
               </div>
             )
+          )}
+          {/* MODAL PENGATURAN KUIS */}
+          {isSettingsModalOpen && selectedQuiz && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+              onClick={() => setIsSettingsModalOpen(false)} // Menutup modal saat klik di luar
+            >
+              <motion.div
+                initial={{ y: -50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -50, opacity: 0 }}
+                className="bg-gray-900 border border-red-500/50 rounded-lg p-8 w-full max-w-md font-mono text-red-400 relative"
+                onClick={(e) => e.stopPropagation()} // Mencegah modal tertutup saat klik di dalam
+              >
+                <h2 className="text-2xl font-bold mb-2 text-red-500">{t("settingsTitle")}</h2>
+                <p className="text-gray-300 mb-6">{selectedQuiz.theme}</p>
+
+                {/* Pengaturan Jumlah Soal */}
+                <div className="mb-4">
+                  <label htmlFor="numQuestions" className="block mb-2">{t("selectQuestionCount")}: <span className="text-white font-bold">{numQuestions}</span></label>
+                  <Input
+                    id="numQuestions"
+                    type="range"
+                    min="5"
+                    max="25" // Anda bisa sesuaikan max ini
+                    step="5"
+                    value={numQuestions}
+                    onChange={(e) => setNumQuestions(Number(e.target.value))}
+                    className="w-full h-2 bg-red-900/50 rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+
+                {/* Pengaturan Durasi */}
+                <div className="mb-8">
+                  <label htmlFor="duration" className="block mb-2">{t("duration")}: <span className="text-white font-bold">{Math.floor(duration / 60)} {t("minutes")}</span></label>
+                  <Input
+                    id="duration"
+                    type="range"
+                    min="300" // 1 menit
+                    max="1800" // 30 menit
+                    step="300"
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                    className="w-full h-2 bg-red-900/50 rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <Button variant="outline" className="border-red-500/50 hover:bg-red-900/20" onClick={() => setIsSettingsModalOpen(false)}>
+                    {t("cancel")}
+                  </Button>
+                  <Button className="bg-red-700 hover:bg-red-600 text-white" onClick={handleStartQuiz}>
+                    {t("start")} <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
           )}
         </div>
       </div>

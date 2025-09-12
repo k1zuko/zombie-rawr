@@ -13,6 +13,8 @@ import { useTranslation } from "react-i18next";
 interface QuizPhaseProps {
   quizId: string;
   nickname: string;
+  questionsCount: number;
+  durationInSeconds: number;
 }
 
 interface Question {
@@ -25,7 +27,7 @@ interface Question {
   correct_answer: string;
 }
 
-export default function QuizPhase({ quizId, nickname }: QuizPhaseProps) {
+export default function QuizPhase({ quizId, nickname, questionsCount, durationInSeconds  }: QuizPhaseProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -51,7 +53,7 @@ export default function QuizPhase({ quizId, nickname }: QuizPhaseProps) {
           .from("quiz_questions")
           .select("id, quiz_id, question_text, question_type, image_url, options, correct_answer")
           .eq("quiz_id", quizId)
-          .order("id", { ascending: true });
+          .limit(questionsCount)
 
         if (error) {
           console.error("Supabase error fetching quiz_questions:", error.message);

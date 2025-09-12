@@ -8,19 +8,34 @@ import { motion } from "framer-motion";
 export default function TryoutPage() {
   const router = useRouter();
   const { quizId } = useParams();
+
   const [nickname, setNickname] = useState<string | null>(null);
+  const [questionsCount, setQuestionsCount] = useState("10");
+  const [durationInSeconds, setDurationInSeconds] = useState("300");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch nickname from localStorage only on the client
     const storedNickname = localStorage.getItem("nickname");
-    setNickname(storedNickname);
-    setIsLoading(false);
+    const quizConfig = localStorage.getItem("quizConfig");
 
-    // Redirect to home if no nickname is found
+    setNickname(storedNickname);
+
     if (!storedNickname) {
       router.push("/");
+      return;
     }
+
+    if (quizConfig) {
+      try {
+        const parsed = JSON.parse(quizConfig);
+        setQuestionsCount(String(parsed.questions || "10"));
+        setDurationInSeconds(String(parsed.duration || "300"));
+      } catch (err) {
+        console.error("Failed to parse quiz config from localStorage", err);
+      }
+    }
+
+    setIsLoading(false);
   }, [router]);
 
   if (isLoading) {
@@ -30,7 +45,7 @@ export default function TryoutPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-red-500 font-mono text-xl animate-pulse"
-        > 
+        >
           Loading...
         </motion.div>
       </div>
@@ -41,5 +56,12 @@ export default function TryoutPage() {
     return null; // Render nothing while redirecting
   }
 
-  return <QuizPhase quizId={quizId as string} nickname={nickname} />;
+  return (
+    <QuizPhase
+      quizId={quizId as string}
+      nickname={nickname}
+      questionsCount={parseInt(questionsCount, 10)}
+      durationInSeconds={parseInt(durationInSeconds, 10)}
+    />
+  )
 }
