@@ -159,45 +159,45 @@ export default function QuizSelectTryoutPage() {
 
   // Fetch total questions when selectedQuiz changes
   // Fetch total questions when selectedQuiz changes
-useEffect(() => {
-  if (!selectedQuiz) return;
+  useEffect(() => {
+    if (!selectedQuiz) return;
 
-  const fetchTotalQuestions = async () => {
-    try {
-      const { count: questionsCount, error: questionsError } = await supabase
-        .from("quiz_questions")
-        .select("*", { count: "exact", head: true })
-        .eq("quiz_id", selectedQuiz.id);
+    const fetchTotalQuestions = async () => {
+      try {
+        const { count: questionsCount, error: questionsError } = await supabase
+          .from("quiz_questions")
+          .select("*", { count: "exact", head: true })
+          .eq("quiz_id", selectedQuiz.id);
 
-      if (questionsError) {
-        console.error("Error fetching questions count:", questionsError);
-        setTotalQuestions(25); 
-        setNumQuestions(10);   // fallback default
-        return;
+        if (questionsError) {
+          console.error("Error fetching questions count:", questionsError);
+          setTotalQuestions(25);
+          setNumQuestions(10);   // fallback default
+          return;
+        }
+
+        const total = questionsCount || 25;
+        setTotalQuestions(total);
+
+        // reset / adjust numQuestions sekali aja di sini
+        setNumQuestions((prev) => {
+          if (!prev || prev === 10) {
+            return Math.min(10, total);  // default awal
+          }
+          if (prev > total) {
+            return total;                // sesuaikan kalau kebanyakan
+          }
+          return prev;                   // biarin kalau masih valid
+        });
+      } catch (error) {
+        console.error("Failed to fetch total questions:", error);
+        setTotalQuestions(25);
+        setNumQuestions(10);
       }
+    };
 
-      const total = questionsCount || 25;
-      setTotalQuestions(total);
-
-      // reset / adjust numQuestions sekali aja di sini
-      setNumQuestions((prev) => {
-        if (!prev || prev === 10) {
-          return Math.min(10, total);  // default awal
-        }
-        if (prev > total) {
-          return total;                // sesuaikan kalau kebanyakan
-        }
-        return prev;                   // biarin kalau masih valid
-      });
-    } catch (error) {
-      console.error("Failed to fetch total questions:", error);
-      setTotalQuestions(25);
-      setNumQuestions(10);
-    }
-  };
-
-  fetchTotalQuestions();
-}, [selectedQuiz]);
+    fetchTotalQuestions();
+  }, [selectedQuiz]);
 
 
   // Handler for duration slider
@@ -285,24 +285,26 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none flex flex-col">
       {isSelectingQuiz && (
-        <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden z-20">
-          <div className="absolute inset-0 bg-[url('/images/static-noise.gif')] opacity-20 pointer-events-none" />
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-            className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full relative z-10"
-          >
-            <div className="absolute inset-0 rounded-full border-4 border-red-900 border-l-transparent border-r-transparent animate-ping" />
-          </motion.div>
-          <motion.p
-            className="absolute bottom-1/3 text-red-400 font-mono text-sm"
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            {t("loading")}
-          </motion.p>
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-20">
+          <div className="flex flex-col items-center">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full relative z-10"
+            >
+              <div className="absolute inset-0 rounded-full border-4 border-red-900 border-l-transparent border-r-transparent animate-ping" />
+            </motion.div>
+            <motion.p
+              className="mt-4 text-red-400 font-mono text-sm"
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {t("loading")}
+            </motion.p>
+          </div>
         </div>
       )}
+
 
       {isClient &&
         bloodDrips.map((drip) => (
