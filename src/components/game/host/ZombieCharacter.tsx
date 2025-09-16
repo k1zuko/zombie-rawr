@@ -23,7 +23,7 @@ interface ZombieCharacterProps {
 
 const chaserImages = {
   zombie: {
-    src: "/character/chaser/zombie.gif",
+    src: "/character/chaser/zombie.webp",
     alt: "Zombie",
     width: 150,
     height: 50,
@@ -31,7 +31,7 @@ const chaserImages = {
     horizontalOffset: -150,
   },
   monster1: {
-    src: "/character/chaser/monster1.gif",
+    src: "/character/chaser/monster1.webp",
     alt: "Mutant Gila",
     width: 150,
     height: 60,
@@ -39,7 +39,7 @@ const chaserImages = {
     horizontalOffset: -150,
   },
   monster2: {
-    src: "/character/chaser/monster2.gif",
+    src: "/character/chaser/monster2.webp",
     alt: "Monster Rawa",
     width: 150,
     height: 75,
@@ -47,7 +47,7 @@ const chaserImages = {
     horizontalOffset: -150,
   },
   monster3: {
-    src: "/character/chaser/monster3.gif",
+    src: "/character/chaser/monster3.webp",
     alt: "Samurai Gila",
     width: 150,
     height: 65,
@@ -55,7 +55,7 @@ const chaserImages = {
     horizontalOffset: -150,
   },
   darknight: {
-    src: "/character/chaser/darknight.gif",
+    src: "/character/chaser/darknight.webp",
     alt: "Ksatria Gelap",
     width: 150,
     height: 70,

@@ -36,16 +36,16 @@ interface RunningCharactersProps {
 }
 
 const characterConfigs = [
-  { src: "/character/player/character.gif", alt: "Hijau", type: "robot1", width: 20, height: 48, verticalOffset: 85, horizontalOffset: 10 },
-  { src: "/character/player/character1-crop.gif", alt: "Biru", type: "robot2", width: 20, height: 50, verticalOffset: 58, horizontalOffset: 10 },
-  { src: "/character/player/character2-crop.gif", alt: "Merah", type: "robot3", width: 20, height: 46, verticalOffset: 32, horizontalOffset: -10 },
-  { src: "/character/player/character3-crop.gif", alt: "Ungu", type: "robot4", width: 20, height: 48, verticalOffset: 10, horizontalOffset: 5 },
-  { src: "/character/player/character4-crop.gif", alt: "Oranye", type: "robot5", width: 20, height: 50, verticalOffset: -4, horizontalOffset: -5 },
-  { src: "/character/player/character5.gif", alt: "Kuning", type: "robot6", width: 20, height: 48, verticalOffset: 24, horizontalOffset: 15 },
-  { src: "/character/player/character6.gif", alt: "Abu-abu", type: "robot7", width: 20, height: 46, verticalOffset: 62, horizontalOffset: -15 },
-  { src: "/character/player/character7-crop.gif", alt: "Pink", type: "robot8", width: 20, height: 50, verticalOffset: 82, horizontalOffset: 20 },
-  { src: "/character/player/character8-crop.gif", alt: "Cokelat", type: "robot9", width: 20, height: 48, verticalOffset: 10, horizontalOffset: -20 },
-  { src: "/character/player/character9-crop.gif", alt: "Emas", type: "robot10", width: 20, height: 52, verticalOffset: 70, horizontalOffset: 25 },
+  { src: "/character/player/character.webp", alt: "Hijau", type: "robot1", width: 20, height: 48, verticalOffset: 85, horizontalOffset: 10 },
+  { src: "/character/player/character1-crop.webp", alt: "Biru", type: "robot2", width: 20, height: 50, verticalOffset: 58, horizontalOffset: 10 },
+  { src: "/character/player/character2-crop.webp", alt: "Merah", type: "robot3", width: 20, height: 46, verticalOffset: 32, horizontalOffset: -10 },
+  { src: "/character/player/character3-crop.webp", alt: "Ungu", type: "robot4", width: 20, height: 48, verticalOffset: 10, horizontalOffset: 5 },
+  { src: "/character/player/character4-crop.webp", alt: "Oranye", type: "robot5", width: 20, height: 50, verticalOffset: -4, horizontalOffset: -5 },
+  { src: "/character/player/character5.webp", alt: "Kuning", type: "robot6", width: 20, height: 48, verticalOffset: 24, horizontalOffset: 15 },
+  { src: "/character/player/character6.webp", alt: "Abu-abu", type: "robot7", width: 20, height: 46, verticalOffset: 62, horizontalOffset: -15 },
+  { src: "/character/player/character7-crop.webp", alt: "Pink", type: "robot8", width: 20, height: 50, verticalOffset: 82, horizontalOffset: 20 },
+  { src: "/character/player/character8-crop.webp", alt: "Cokelat", type: "robot9", width: 20, height: 48, verticalOffset: 10, horizontalOffset: -20 },
+  { src: "/character/player/character9-crop.webp", alt: "Emas", type: "robot10", width: 20, height: 52, verticalOffset: 70, horizontalOffset: 25 },
 ];
 
 // ✅ Memoisasi per karakter — hanya update jika props berubah

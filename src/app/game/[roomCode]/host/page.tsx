@@ -802,27 +802,27 @@ export default function HostGamePage() {
     const testAllImages = async () => {
       const status: { [key: string]: boolean } = {};
       const characterFiles = [
-        "/character/player/character.gif",
-        "/character/player/character1-crop.gif",
-        "/character/player/character2-crop.gif",
-        "/character/player/character3-crop.gif",
-        "/character/player/character4-crop.gif",
-        "/character/player/character5.gif",
-        "/character/player/character6.gif",
-        "/character/player/character7-crop.gif",
-        "/character/player/character8-crop.gif",
-        "/character/player/character9-crop.gif",
+        "/character/player/character.webp",
+        "/character/player/character1-crop.webp",
+        "/character/player/character2-crop.webp",
+        "/character/player/character3-crop.webp",
+        "/character/player/character4-crop.webp",
+        "/character/player/character5.webp",
+        "/character/player/character6.webp",
+        "/character/player/character7-crop.webp",
+        "/character/player/character8-crop.webp",
+        "/character/player/character9-crop.webp",
       ];
       for (const file of characterFiles) {
         const works = await testImageLoad(file);
         status[file] = works;
       }
       const chaserFiles = [
-        "/character/chaser/zombie.gif",
-        "/character/chaser/monster1.gif",
-        "/character/chaser/monster2.gif",
-        "/character/chaser/monster3.gif",
-        "/character/chaser/darknight.gif",
+        "/character/chaser/zombie.webp",
+        "/character/chaser/monster1.webp",
+        "/character/chaser/monster2.webp",
+        "/character/chaser/monster3.webp",
+        "/character/chaser/darknight.webp",
       ];
       for (const file of chaserFiles) {
         const works = await testImageLoad(file);

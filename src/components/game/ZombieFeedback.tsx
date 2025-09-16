@@ -18,24 +18,24 @@ export default function ZombieFeedback({ isCorrect, isVisible, activeZombie, act
   const [showEffects, setShowEffects] = useState(false);
 
   const zombieOptions = [
-  { value: "zombie",    gif: "/character/chaser/zombie.gif" },
-  { value: "monster1",  gif: "/character/chaser/monster1.gif" },
-  { value: "monster2",  gif: "/character/chaser/monster2.gif" },
-  { value: "monster3",  gif: "/character/chaser/monster3.gif" },
-  { value: "darknight", gif: "/character/chaser/darknight.gif" },
+  { value: "zombie",    gif: "/character/chaser/zombie.webp" },
+  { value: "monster1",  gif: "/character/chaser/monster1.webp" },
+  { value: "monster2",  gif: "/character/chaser/monster2.webp" },
+  { value: "monster3",  gif: "/character/chaser/monster3.webp" },
+  { value: "darknight", gif: "/character/chaser/darknight.webp" },
 ];
 
 const playerOptions = [
-  { value: "robot1", name: "Hijau", gif: "/character/player/character.gif", alt: "Karakter Hijau" },
-  { value: "robot2", name: "Biru", gif: "/character/player/character1-crop.gif", alt: "Karakter Biru" },
-  { value: "robot3", name: "Merah", gif: "/character/player/character2-crop.gif", alt: "Karakter Merah" },
-  { value: "robot4", name: "Ungu", gif: "/character/player/character3-crop.gif", alt: "Karakter Ungu" },
-  { value: "robot5", name: "Oranye", gif: "/character/player/character4-crop.gif", alt: "Karakter Oranye" },
-  { value: "robot6", name: "Kuning", gif: "/character/player/character5.gif", alt: "Karakter Kuning" },
-  { value: "robot7", name: "Abu-abu", gif: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
-  { value: "robot8", name: "Pink", gif: "/character/player/character7-crop.gif", alt: "Karakter Pink" },
-  { value: "robot9", name: "Cokelat", gif: "/character/player/character8-crop.gif", alt: "Karakter Cokelat" },
-  { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.gif", alt: "Karakter Emas" },
+  { value: "robot1", name: "Hijau", gif: "/character/player/character.webp", alt: "Karakter Hijau" },
+  { value: "robot2", name: "Biru", gif: "/character/player/character1-crop.webp", alt: "Karakter Biru" },
+  { value: "robot3", name: "Merah", gif: "/character/player/character2-crop.webp", alt: "Karakter Merah" },
+  { value: "robot4", name: "Ungu", gif: "/character/player/character3-crop.webp", alt: "Karakter Ungu" },
+  { value: "robot5", name: "Oranye", gif: "/character/player/character4-crop.webp", alt: "Karakter Oranye" },
+  { value: "robot6", name: "Kuning", gif: "/character/player/character5.webp", alt: "Karakter Kuning" },
+  { value: "robot7", name: "Abu-abu", gif: "/character/player/character6.webp", alt: "Karakter Abu-abu" },
+  { value: "robot8", name: "Pink", gif: "/character/player/character7-crop.webp", alt: "Karakter Pink" },
+  { value: "robot9", name: "Cokelat", gif: "/character/player/character8-crop.webp", alt: "Karakter Cokelat" },
+  { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.webp", alt: "Karakter Emas" },
 ]
 
   const zombieGif =

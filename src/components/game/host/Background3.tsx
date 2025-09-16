@@ -15,7 +15,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map2/1.png')",
+              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map2/1.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + -25px)",
               backgroundRepeat: "no-repeat",
@@ -24,7 +24,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map2/1.png')",
+              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map2/1.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + -25px)",
               backgroundRepeat: "no-repeat",
@@ -36,7 +36,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/1.png')",
+              backgroundImage: "url('/map6/1.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 25px)",
               backgroundRepeat: "no-repeat",
@@ -45,7 +45,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/1.png')",
+              backgroundImage: "url('/map6/1.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 25px)",
               backgroundRepeat: "no-repeat",
@@ -57,7 +57,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/3.png')",
+              backgroundImage: "url('/map6/3.webp')",
               backgroundSize: "106%",
               backgroundPosition: "center calc(100% + 103px)",
               backgroundRepeat: "no-repeat",
@@ -66,7 +66,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/3.png')",
+              backgroundImage: "url('/map6/3.webp')",
               backgroundSize: "106%",
               backgroundPosition: "center calc(100% + 103px)",
               backgroundRepeat: "scaleX(-1)"
@@ -78,7 +78,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/4.png')",
+              backgroundImage: "url('/map6/4.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",
@@ -87,7 +87,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/4.png')",
+              backgroundImage: "url('/map6/4.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",
@@ -99,7 +99,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/5.png')",
+              backgroundImage: "url('/map6/5.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",
@@ -108,7 +108,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/5.png')",
+              backgroundImage: "url('/map6/5.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",
@@ -121,7 +121,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/6.png')",
+              backgroundImage: "url('/map6/6.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",
@@ -130,7 +130,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/6.png')",
+              backgroundImage: "url('/map6/6.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",
@@ -143,7 +143,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/7.png')",
+              backgroundImage: "url('/map6/7.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",
@@ -152,7 +152,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/7.png')",
+              backgroundImage: "url('/map6/7.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",
@@ -165,7 +165,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/8.png')",
+              backgroundImage: "url('/map6/8.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",
@@ -174,7 +174,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           <div
             className="background-image"
             style={{
-              backgroundImage: "url('/map6/8.png')",
+              backgroundImage: "url('/map6/8.webp')",
               backgroundSize: "100%",
               backgroundPosition: "center calc(100% + 10px)",
               backgroundRepeat: "no-repeat",

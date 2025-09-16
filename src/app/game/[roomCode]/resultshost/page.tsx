@@ -67,16 +67,16 @@ interface PlayerResult {
 }
 
 const characterGifs = [
-  { type: "robot1", name: "Hijau", src: "/character/player/character.gif", alt: "Karakter Hijau" },
-  { type: "robot2", name: "Biru", src: "/character/player/character1-crop.gif", alt: "Karakter Biru" },
-  { type: "robot3", name: "Merah", src: "/character/player/character2-crop.gif", alt: "Karakter Merah" },
-  { type: "robot4", name: "Ungu", src: "/character/player/character3-crop.gif", alt: "Karakter Ungu" },
-  { type: "robot5", name: "Oranye", src: "/character/player/character4-crop.gif", alt: "Karakter Oranye" },
-  { type: "robot6", name: "Kuning", src: "/character/player/character5.gif", alt: "Karakter Kuning" },
-  { type: "robot7", name: "Abu-abu", src: "/character/player/character6.gif", alt: "Karakter Abu-abu" },
-  { type: "robot8", name: "Pink", src: "/character/player/character7-crop.gif", alt: "Karakter Pink" },
-  { type: "robot9", name: "Cokelat", src: "/character/player/character8-crop.gif", alt: "Karakter Cokelat" },
-  { type: "robot10", name: "Emas", src: "/character/player/character9-crop.gif", alt: "Karakter Emas" },
+  { type: "robot1", name: "Hijau", src: "/character/player/character.webp", alt: "Karakter Hijau" },
+  { type: "robot2", name: "Biru", src: "/character/player/character1-crop.webp", alt: "Karakter Biru" },
+  { type: "robot3", name: "Merah", src: "/character/player/character2-crop.webp", alt: "Karakter Merah" },
+  { type: "robot4", name: "Ungu", src: "/character/player/character3-crop.webp", alt: "Karakter Ungu" },
+  { type: "robot5", name: "Oranye", src: "/character/player/character4-crop.webp", alt: "Karakter Oranye" },
+  { type: "robot6", name: "Kuning", src: "/character/player/character5.webp", alt: "Karakter Kuning" },
+  { type: "robot7", name: "Abu-abu", src: "/character/player/character6.webp", alt: "Karakter Abu-abu" },
+  { type: "robot8", name: "Pink", src: "/character/player/character7-crop.webp", alt: "Karakter Pink" },
+  { type: "robot9", name: "Cokelat", src: "/character/player/character8-crop.webp", alt: "Karakter Cokelat" },
+  { type: "robot10", name: "Emas", src: "/character/player/character9-crop.webp", alt: "Karakter Emas" },
 
 ];
 
@@ -511,18 +511,22 @@ export default function ResultsHostPage() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
-          className="flex flex-col gap-3 mb-10 px-4"
+          className="flex flex-col gap-5 mb-10 px-4"
         >
           <div className="flex justify-between items-center">
             <h1
-              className="text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+              className="text-xl md:text-3xl lg:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("title")}
             </h1>
 
             <div className="flex w-fit gap-2 items-center">
-              <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} className="mr-3" />
+              <img
+                src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`}
+                alt="Game for Smart Logo"
+                className="w-36 md:w-52 lg:w-64 h-auto mr-3"
+              />
               {/* Tombol Home */}
               <motion.button
                 onClick={() => router.push("/")}
@@ -567,14 +571,14 @@ export default function ResultsHostPage() {
             transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
             className="flex justify-center items-center text-center"
           >
-            <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
+            <HeartPulse className="md:w-12 h-12 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-7xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-3xl sm:text-5xl lg:text-7xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.titleLeaderboard")}
             </h1>
-            <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
+            <HeartPulse className="md:w-12 h-12 text-red-500 ml-4 animate-pulse" />
           </motion.div>
         </motion.header>
 
@@ -585,7 +589,7 @@ export default function ResultsHostPage() {
           animate="show"
           className="max-w-none mx-auto"
         >
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 px-7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 px-7">
             <AnimatePresence mode="popLayout">
               {playerResults.map((player, idx) => {
                 const character = getCharacterByType(player.character_type);
