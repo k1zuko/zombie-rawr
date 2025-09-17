@@ -71,12 +71,25 @@ export function getSyncedServerTime(): number {
 /**
  * Menghitung countdown yang akurat menggunakan server time
  */
-export function calculateCountdown(countdownStartTime: string | number, durationMs = 10000): number {
-  const startTime = typeof countdownStartTime === "string" ? new Date(countdownStartTime).getTime() : countdownStartTime
+// export function calculateCountdown(countdownStartTime: string | number, durationMs = 10000): number {
+//   const startTime = typeof countdownStartTime === "string" ? new Date(countdownStartTime).getTime() : countdownStartTime
 
-  const currentServerTime = getSyncedServerTime()
-  const elapsed = currentServerTime - startTime
-  const remaining = Math.max(0, durationMs - elapsed)
+//   const currentServerTime = getSyncedServerTime()
+//   const elapsed = currentServerTime - startTime
+//   const remaining = Math.max(0, durationMs - elapsed)
 
-  return Math.ceil(remaining / 1000)
+//   return Math.ceil(remaining / 1000)
+// }
+export function calculateCountdown(countdownStartTime: string | number | null, durationMs = 10000): number {
+  if (countdownStartTime === null) {
+    return 0; // Kembalikan 0 jika countdownStartTime adalah null
+  }
+
+  const startTime = typeof countdownStartTime === "string" ? new Date(countdownStartTime).getTime() : countdownStartTime;
+
+  const currentServerTime = getSyncedServerTime();
+  const elapsed = currentServerTime - startTime;
+  const remaining = Math.max(0, durationMs - elapsed);
+
+  return Math.ceil(remaining / 1000);
 }

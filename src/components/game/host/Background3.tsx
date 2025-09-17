@@ -10,27 +10,7 @@ export default function Background1({ isFlashing }: Background1Props) {
       <div
         className={`absolute inset-0 blood-background ${isFlashing ? "flash-effect" : ""}`}
       >
-        {/* Container untuk 1.png (langit) */}
-        {/* <div className="background-container-ground">
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map2/1.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + -25px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/map2/1.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + -25px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-        </div> */}
+
         {/* Container untuk 2.png (awan) */}
         <div className="background-container-groundtiga">
           <div
@@ -117,26 +97,7 @@ export default function Background1({ isFlashing }: Background1Props) {
         </div>
 
 
-         {/* <div className="background-container-ground">
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/6.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/6.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-        </div> */}
+
 
 
                  <div className="background-container-ground">

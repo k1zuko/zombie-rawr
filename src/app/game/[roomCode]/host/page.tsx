@@ -5,19 +5,57 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Background3 from "@/components/game/host/Background3";
 import GameUI from "@/components/game/host/GameUI";
-import { motion } from "framer-motion"; // Hapus AnimatePresence jika tidak dipakai
+import { motion } from "framer-motion";
 import ZombieCharacter from "@/components/game/host/ZombieCharacter";
 import RunningCharacters from "@/components/game/host/RunningCharacters";
 import { useHostGuard } from "@/lib/host-guard";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
-import { throttle } from "lodash"; // ✅ Tambahkan throttle
+import { throttle } from "lodash";
 import React from "react";
 
-// Memoisasi komponen statis
+// ✅ [PERUBAHAN 1] — PINDAHKAN SEMUA MEMO KE LUAR KOMPONEN
+// Ini penting agar React.memo tidak dibuat ulang setiap render — yang akan menghancurkan optimisasi
+
 const MemoizedBackground3 = React.memo(Background3);
 const MemoizedGameUI = React.memo(GameUI);
 
+// ✅ [PERUBAHAN 2] — Memoisasi RunningCharacters dengan custom comparator
+// ❗ Tidak membandingkan `animationTime` agar tidak trigger re-render tiap frame
+const MemoizedRunningCharacters = React.memo(
+  RunningCharacters,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.players === nextProps.players &&
+      prevProps.playerStates === nextProps.playerStates &&
+      prevProps.zombieState.targetPlayerId === nextProps.zombieState.targetPlayerId &&
+      prevProps.gameMode === nextProps.gameMode &&
+      prevProps.centerX === nextProps.centerX &&
+      prevProps.completedPlayers === nextProps.completedPlayers
+    );
+  }
+);
+
+// ✅ [PERUBAHAN 3] — Memoisasi ZombieCharacter dengan custom comparator
+// ❗ Hanya bandingkan prop yang memengaruhi logika/visual, abaikan animationTime
+const MemoizedZombieCharacter = React.memo(
+  ZombieCharacter,
+  (prevProps, nextProps) => {
+    const prevZ = prevProps.zombieState;
+    const nextZ = nextProps.zombieState;
+    return (
+      prevZ.isAttacking === nextZ.isAttacking &&
+      prevZ.targetPlayerId === nextZ.targetPlayerId &&
+      prevZ.attackProgress === nextZ.attackProgress &&
+      prevProps.gameMode === nextProps.gameMode &&
+      prevProps.centerX === nextProps.centerX &&
+      prevProps.chaserType === nextProps.chaserType &&
+      prevProps.players === nextProps.players
+    );
+  }
+);
+
+// ✅ Interfaces tetap sama — tidak ada perubahan
 interface Player {
   id: string;
   nickname: string;
@@ -121,7 +159,7 @@ export default function HostGamePage() {
 
   // Definisikan pengaturan berdasarkan difficulty_level
   const difficultySettings = {
-    easy: { zombieAttackCountdown: 25},
+    easy: { zombieAttackCountdown: 25 },
     medium: { zombieAttackCountdown: 10 },
     hard: { zombieAttackCountdown: 5 },
   };
@@ -168,6 +206,18 @@ export default function HostGamePage() {
     },
     [zombieAttackCountdown]
   );
+
+  // ✅ [PERUBAHAN 4] — Memoisasi zombieState hanya untuk prop yang relevan
+  // Agar custom comparator di MemoizedZombieCharacter bisa bekerja efektif (karena objek stabil)
+  const memoizedZombieState = useMemo(() => ({
+    isAttacking: zombieState.isAttacking,
+    targetPlayerId: zombieState.targetPlayerId,
+    attackProgress: zombieState.attackProgress,
+    // ❗ Tidak perlu basePosition & currentPosition jika ZombieCharacter tidak menggunakannya untuk logika comparator
+    // Tapi tetap disertakan jika dibutuhkan untuk rendering
+    basePosition: zombieState.basePosition,
+    currentPosition: zombieState.currentPosition,
+  }), [zombieState.isAttacking, zombieState.targetPlayerId, zombieState.attackProgress]);
 
   // Centralized function to update player state
   const updatePlayerState = useCallback(
@@ -425,7 +475,6 @@ export default function HostGamePage() {
   const managePlayerStatus = useCallback(() => {
     if (!gameRoom) return;
 
-    // ✅ Early return: tidak ada pemain aktif
     const hasActivePlayers = players.some((p) => {
       const state = playerStates[p.id];
       const isCompleted = completedPlayers.some((cp) => cp.id === p.id);
@@ -440,7 +489,6 @@ export default function HostGamePage() {
       return;
     }
 
-    // ✅ Early return: tidak ada countdown atau attack
     const hasCountdown = Object.values(playerStates).some(
       (state) => state.countdown !== undefined && state.countdown > 0
     );
@@ -783,7 +831,7 @@ export default function HostGamePage() {
       supabase.removeChannel(completionChannel);
       supabase.removeChannel(playerChannel);
     };
-  }, [gameRoom?.id, throttledHandleCorrectAnswer, throttledHandleWrongAnswer, players, router, roomCode, zombieAttackCountdown, t]); // ✅ Gunakan gameRoom.id
+  }, [gameRoom?.id, throttledHandleCorrectAnswer, throttledHandleWrongAnswer, players, router, roomCode, zombieAttackCountdown, t]);
 
   // Initialize game data
   useEffect(() => {
@@ -856,7 +904,7 @@ export default function HostGamePage() {
   useEffect(() => {
     const interval = setInterval(() => setAnimationTime((prev) => prev + 1), gameMode === "panic" ? 30 : 100);
     return () => clearInterval(interval);
-  }, [gameMode]); // ❗ Hanya gameMode
+  }, [gameMode]);
 
   // Check Supabase connection
   useEffect(() => {
@@ -898,7 +946,7 @@ export default function HostGamePage() {
   if (!isClient || isLoading) {
     return (
       <div className="relative w-full h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">{loadingError ? loadingError : t("loadingChase")}</div>
+        <div className="text-white text-xl">{loadingError ? loadingError : t("")}</div>
       </div>
     );
   }
@@ -907,7 +955,7 @@ export default function HostGamePage() {
     return null;
   }
 
-  // ✅ Render akhir
+  // ✅ Render akhir — gunakan komponen yang sudah dimemoisasi
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden">
       <MemoizedBackground3 isFlashing={backgroundFlash} />
@@ -932,22 +980,25 @@ export default function HostGamePage() {
         </div>
       </motion.header>
 
-      <RunningCharacters
+      {/* ✅ Gunakan MemoizedRunningCharacters */}
+      <MemoizedRunningCharacters
         players={activePlayers}
         playerStates={playerStates}
-        zombieState={zombieState}
+        zombieState={zombieState}  // Boleh pakai zombieState langsung karena comparator hanya bandingkan targetPlayerId
         animationTime={animationTime}
         gameMode={gameMode}
         centerX={centerX}
         completedPlayers={completedPlayers}
       />
-      <ZombieCharacter
-        zombieState={zombieState}
-        animationTime={animationTime}
+
+      {/* ✅ Gunakan MemoizedZombieCharacter dengan memoizedZombieState */}
+      {/* ❗ Tidak perlu kirim animationTime jika tidak dipakai di dalam komponen */}
+      <MemoizedZombieCharacter
+        zombieState={memoizedZombieState}
         gameMode={gameMode}
         centerX={centerX}
         chaserType={chaserType}
-        players={activePlayers}
+        players={activePlayers} animationTime={0}        // animationTime={animationTime} — dihapus karena tidak dibandingkan di comparator & tidak perlu
       />
 
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">

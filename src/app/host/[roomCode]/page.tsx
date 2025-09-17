@@ -18,7 +18,6 @@ import { useHostGuard } from "@/lib/host-guard";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 
-
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const
 type ChaserType = (typeof validChaserTypes)[number]
 
@@ -48,7 +47,6 @@ function QRModal({
   onClose: () => void
   roomCode: string
 }) {
-  // lock body scroll
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
@@ -56,7 +54,6 @@ function QRModal({
     return () => { document.body.style.overflow = prev }
   }, [open])
 
-  // esc to close
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
@@ -74,14 +71,11 @@ function QRModal({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
-      {/* backdrop */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden
       />
-
-      {/* modal content (centered, max-h so QR can fill height) */}
       <motion.section
         initial={{ y: 20, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}
@@ -91,12 +85,9 @@ function QRModal({
         role="dialog"
         aria-modal="true"
       >
-        {/* layout: left = QR (flex-1, will fill height), right = info column */}
         <div className="h-full flex flex-col md:flex-row gap-4" style={{ minHeight: 400 }}>
-          {/* LEFT: QR wrapper — will expand to modal height */}
           <div className="flex-1 flex items-center justify-center p-2 md:p-4">
             <div className="w-full h-full bg-white rounded-lg p-3 flex items-center justify-center">
-              {/* Make the SVG stretch to fill available area while preserving aspect ratio */}
               <div className="w-full h-full flex items-center justify-center">
                 <QRCode
                   value={`${window.location.origin}/?code=${roomCode}`}
@@ -112,7 +103,6 @@ function QRModal({
     document.body
   )
 }
-
 
 export default function HostPage() {
   const { t } = useTranslation()
@@ -131,70 +121,65 @@ export default function HostPage() {
   const [flickerText, setFlickerText] = useState(true)
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([])
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
-  const [kickDialogOpen, setKickDialogOpen] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; nickname: string } | null>(null);
+  const [kickDialogOpen, setKickDialogOpen] = useState(false)
+  const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; nickname: string } | null>(null)
 
   useHostGuard(roomCode)
 
   const kickPlayer = async (playerId: string, nickname: string) => {
-    console.log("Kick player called for:", playerId, nickname);
-    setSelectedPlayer({ id: playerId, nickname });
-    setKickDialogOpen(true);
-    console.log("kickDialogOpen set to:", true);
-  };
+    console.log("Kick player called for:", playerId, nickname)
+    setSelectedPlayer({ id: playerId, nickname })
+    setKickDialogOpen(true)
+    console.log("kickDialogOpen set to:", true)
+  }
 
   const confirmKickPlayer = async () => {
     if (!selectedPlayer || !selectedPlayer.id) {
-      toast.error(t("kickPlayerError"));
-      setKickDialogOpen(false);
-      setSelectedPlayer(null);
-      return;
+      toast.error(t("kickPlayerError"))
+      setKickDialogOpen(false)
+      setSelectedPlayer(null)
+      return
     }
     try {
-      console.log("Attempting to kick player:", selectedPlayer);
+      console.log("Attempting to kick player:", selectedPlayer)
       const { error } = await supabase
         .from("players")
         .delete()
-        .eq("id", selectedPlayer.id);
+        .eq("id", selectedPlayer.id)
       if (error) {
-        console.error("Supabase error:", error);
-        toast.error(t("kickPlayerError"));
+        console.error("Supabase error:", error)
+        toast.error(t("kickPlayerError"))
       } else {
-        toast.success(t("kickPlayerSuccess", { nickname: selectedPlayer.nickname }));
-        // Panggil fetchPlayers secara manual setelah kick berhasil
+        toast.success(t("kickPlayerSuccess", { nickname: selectedPlayer.nickname }))
         if (room?.id) {
-          await fetchPlayers(room.id);
+          await fetchPlayers(room.id)
+          setTimeout(() => {
+            if (room?.id) fetchPlayers(room.id)
+          }, 500)
         }
-        // Tunggu sebentar untuk memastikan real-time sync
-        setTimeout(() => {
-          if (room?.id) fetchPlayers(room.id);
-        }, 500);
       }
     } catch (error) {
-      console.error("Kick player error:", error);
-      toast.error(t("kickPlayerError"));
+      console.error("Kick player error:", error)
+      toast.error(t("kickPlayerError"))
     } finally {
-      setKickDialogOpen(false);
-      setSelectedPlayer(null);
+      setKickDialogOpen(false)
+      setSelectedPlayer(null)
     }
-  };
+  }
 
   const fetchRoom = useCallback(async () => {
     if (!roomCode) return
-
     try {
       const { data, error } = await supabase
         .from("game_rooms")
         .select("*, chaser_type, countdown_start")
         .eq("room_code", roomCode)
         .single()
-
       if (error || !data) {
         console.error("Room tidak ditemukan:", error)
         router.push("/")
         return
       }
-
       const fetchedChaserType = validChaserTypes.includes(data.chaser_type) ? data.chaser_type : "zombie"
       setRoom({ ...data, chaser_type: fetchedChaserType })
       return data
@@ -211,12 +196,10 @@ export default function HostPage() {
         .select("*")
         .eq("room_id", roomId)
         .order("joined_at", { ascending: true })
-
       if (error) {
         console.error("Error mengambil pemain:", error)
         return
       }
-
       setPlayers(data || [])
     } catch (error) {
       console.error("Error mengambil pemain:", error)
@@ -232,13 +215,11 @@ export default function HostPage() {
       }
       setIsLoading(false)
     }
-
     initializeData()
   }, [fetchRoom, fetchPlayers])
 
   useEffect(() => {
     if (!room?.id) return
-
     const channel = supabase
       .channel(`room_${room.id}_host`)
       .on(
@@ -279,7 +260,6 @@ export default function HostPage() {
           setConnectionStatus("connecting")
         }
       })
-
     return () => {
       channel.unsubscribe()
     }
@@ -292,12 +272,11 @@ export default function HostPage() {
         left: Math.random() * 100,
         speed: 2 + Math.random() * 1.5,
         delay: Math.random() * 3,
-      }));
-      setBloodDrips(newBlood);
-    };
-
-    generateBlood();
-  }, []);
+      }))
+      setBloodDrips(newBlood)
+    }
+    generateBlood()
+  }, [])
 
   useEffect(() => {
     const flickerInterval = setInterval(
@@ -306,17 +285,59 @@ export default function HostPage() {
       },
       100 + Math.random() * 150,
     )
-
     return () => {
       clearInterval(flickerInterval)
     }
   }, [])
+
+  // Fungsi preload untuk aset dan halaman berikutnya
+  const preloadResources = () => {
+    const resources = [
+      `/game/${roomCode}/host`,
+      "/character/player/character.webp",
+      "/character/player/character1-crop.webp",
+      "/character/player/character2-crop.webp",
+      "/character/player/character3-crop.webp",
+      "/character/player/character4-crop.webp",
+      "/character/player/character5.webp",
+      "/character/player/character6.webp",
+      "/character/player/character7-crop.webp",
+      "/character/player/character8-crop.webp",
+      "/character/player/character9-crop.webp",
+      "/character/chaser/zombie.webp",
+      "/character/chaser/monster1.webp",
+      "/character/chaser/monster2.webp",
+      "/character/chaser/monster3.webp",
+      "/character/chaser/darknight.webp",
+ 
+      "/map6/1.webp",
+
+      "/map6/3.webp",
+      "/map6/4.webp",
+      "/map6/5.webp",
+      "/map6/7.webp",
+      "/map6/8.webp",
+
+    ]
+
+    resources.forEach((resource) => {
+      const link = document.createElement("link")
+      link.rel = "preload"
+      link.as = resource.endsWith(".webp") ? "image" : "fetch"
+      link.href = resource
+      link.crossOrigin = "anonymous"
+      document.head.appendChild(link)
+    })
+  }
 
   useEffect(() => {
     if (!room?.countdown_start) {
       setCountdown(null)
       return
     }
+
+    // Panggil preload saat countdown dimulai
+    preloadResources()
 
     const updateCountdown = () => {
       const remaining = calculateCountdown(room.countdown_start, 10000)
@@ -331,21 +352,23 @@ export default function HostPage() {
       return true
     }
 
-    // Update immediately
     if (updateCountdown()) {
-      // Use 100ms intervals for smooth countdown
       const timer = setInterval(() => {
         if (!updateCountdown()) {
           clearInterval(timer)
         }
       }, 100)
 
-      return () => clearInterval(timer)
+      return () => {
+        clearInterval(timer)
+        // Bersihkan tag preload
+        document.querySelectorAll('link[rel="preload"]').forEach((link) => link.remove())
+      }
     } else {
       setCountdown(null)
       setIsStarting(false)
     }
-  }, [room?.countdown_start])
+  }, [room?.countdown_start, roomCode])
 
   const copyRoomCode = async () => {
     if (typeof window === "undefined") return
@@ -355,14 +378,12 @@ export default function HostPage() {
   }
 
   const copyLinkRoomCode = async () => {
-    if (typeof window === "undefined") return;
-
-    const joinLink = `${window.location.origin}/?code=${roomCode}`;
-    await navigator.clipboard.writeText(joinLink);
-
-    setCopied1(true);
-    setTimeout(() => setCopied1(false), 2000);
-  };
+    if (typeof window === "undefined") return
+    const joinLink = `${window.location.origin}/?code=${roomCode}`
+    await navigator.clipboard.writeText(joinLink)
+    setCopied1(true)
+    setTimeout(() => setCopied1(false), 2000)
+  }
 
   const startGame = async () => {
     if (!room || players.length === 0) {
@@ -373,17 +394,13 @@ export default function HostPage() {
     setIsStarting(true)
 
     try {
-      // Sync server time before starting countdown
       await syncServerTime()
-
-      // Use server RPC to set countdown_start with server time
       const { error: countdownError } = await supabase.rpc("set_countdown_start", {
         room_id: room.id,
       })
 
       if (countdownError) {
         console.warn("RPC failed, using fallback:", countdownError)
-        // Fallback to client time if RPC fails
         const { error: fallbackError } = await supabase
           .from("game_rooms")
           .update({
@@ -397,13 +414,10 @@ export default function HostPage() {
         }
       }
 
-      // Set initial countdown display
       setCountdown(10)
 
-      // Wait for countdown to complete, then start the game
       setTimeout(async () => {
         try {
-          // ... existing game start logic ...
           const { data: questions, error: quizError } = await supabase
             .from("quiz_questions")
             .select("id, question_type, question_text, image_url, options, correct_answer")
@@ -480,7 +494,7 @@ export default function HostPage() {
       setCountdown(null)
     }
   }
-  // 
+
   useEffect(() => {
     syncServerTime()
   }, [])
@@ -643,7 +657,7 @@ export default function HostPage() {
             className="grid grid-cols-1 col-span-1 gap-4"
           >
             <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] justify-center">
-              <CardContent className="r">
+              <CardContent>
                 <div className="flex items-center gap-6">
                   <Users className="w-8 h-8 text-red-500 flex-shrink-0" />
                   <div>
@@ -655,7 +669,6 @@ export default function HostPage() {
                     >
                       {players.length}
                     </motion.div>
-                    {/* <div className="text-red-400 text-sm font-mono">{t("players")}</div> */}
                   </div>
                 </div>
               </CardContent>
@@ -668,7 +681,6 @@ export default function HostPage() {
                     <div className="text-4xl font-bold text-red-500 font-mono">
                       {Math.floor((room.duration || 600) / 60)}:{((room.duration || 600) % 60).toString().padStart(2, "0")}
                     </div>
-                    {/* <div className="text-red-400 text-sm font-mono">{t("duration")}</div> */}
                   </div>
                 </div>
               </CardContent>
@@ -679,7 +691,6 @@ export default function HostPage() {
                   <List className="w-8 h-8 text-red-500 flex-shrink-0" />
                   <div>
                     <div className="text-4xl font-bold text-red-500 font-mono">{room.question_count || 20}</div>
-                    {/* <div className="text-red-400 text-sm font-mono">{t("question")}</div> */}
                   </div>
                 </div>
               </CardContent>
@@ -691,7 +702,6 @@ export default function HostPage() {
             transition={{ delay: 0.3 }}
             className="relative flex items-center bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] col-span-4"
           >
-
             <motion.div
               className="w-[40%] h-auto bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform"
               onClick={() => setIsQrModalOpen(true)}
@@ -712,9 +722,7 @@ export default function HostPage() {
               <Maximize2 className="w-5 h-5" />
             </Button>
             <div className="grid gap-4 w-full">
-              {/* big code box — copy di pojok kanan atas */}
               <div className="relative w-full max-w-[90%] mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
-                {/* tombol copy fixed top-right */}
                 <div className="absolute top-2 right-2 z-20">
                   <Button
                     variant="ghost"
@@ -728,17 +736,12 @@ export default function HostPage() {
                     </motion.div>
                   </Button>
                 </div>
-
-                {/* konten tetap centered */}
                 <div className="flex flex-col items-center">
-                  {/* <div className="text-red-400 font-mono mb-1">{t("roomCode")}</div> */}
                   <div className="text-5xl font-mono font-bold text-red-500 tracking-widest break-words select-text">
                     {roomCode}
                   </div>
                 </div>
               </div>
-
-              {/* small join link box — copy di pojok kanan atas */}
               <div className="relative w-full max-w-[90%] mx-auto bg-black/50 p-4 rounded-2xl border border-red-500/30">
                 <div className="absolute top-2 right-2 z-20">
                   <Button
@@ -753,7 +756,6 @@ export default function HostPage() {
                     </motion.div>
                   </Button>
                 </div>
-
                 <div className="flex flex-col items-center">
                   <div className="text-red-400 font-mono mb-1">{t("joinLink")}</div>
                   <div className="text-lg font-mono font-bold text-red-500 text-center break-words">
@@ -761,8 +763,6 @@ export default function HostPage() {
                   </div>
                 </div>
               </div>
-
-              {/* start button moved here */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -830,7 +830,6 @@ export default function HostPage() {
                   >
                     <motion.div
                       animate={{
-                        // scale: [1, 1.1, 1],
                         opacity: [0.5, 1, 0.5],
                       }}
                       transition={{
@@ -839,7 +838,6 @@ export default function HostPage() {
                         ease: "easeInOut",
                       }}
                     >
-                      {/* <Users className="w-12 h-12 md:w-16 md:h-16 text-red-900/50 mx-auto mb-4" /> */}
                       <p className="text-red-400 text-lg font-mono">{t("waitingHost")}</p>
                       <p className="text-red-400/80 text-sm font-mono">{t("shareCode")}</p>
                     </motion.div>
@@ -854,8 +852,7 @@ export default function HostPage() {
                       {players.map((player, index) => {
                         const selectedCharacter = characterOptions.find(
                           (char) => char.value === player.character_type
-                        );
-
+                        )
                         return (
                           <motion.div
                             key={player.id}
@@ -875,7 +872,6 @@ export default function HostPage() {
                             }}
                             className="bg-black/40 border border-red-900/50 rounded-lg p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative"
                           >
-                            {/* Kick Button in Top-Left Corner */}
                             {!player.is_host && (
                               <Button
                                 variant="ghost"
@@ -888,7 +884,6 @@ export default function HostPage() {
                                 <span className="absolute inset-0" style={{ zIndex: -1 }} />
                               </Button>
                             )}
-
                             <motion.div
                               className="mb-2"
                               animate={{
@@ -921,7 +916,7 @@ export default function HostPage() {
                               </Badge>
                             )}
                           </motion.div>
-                        );
+                        )
                       })}
                     </AnimatePresence>
                   </motion.div>
