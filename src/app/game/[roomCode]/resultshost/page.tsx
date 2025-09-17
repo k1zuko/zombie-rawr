@@ -523,7 +523,7 @@ export default function ResultsHostPage() {
 
             <div className="flex w-fit gap-2 items-center">
               <img
-                src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`}
+                src={`/logo/gameforsmartlogo-horror.png`}
                 alt="Game for Smart Logo"
                 className="w-36 md:w-52 lg:w-64 h-auto mr-3"
               />

@@ -630,7 +630,7 @@ export default function HostPage() {
                 {t("title")}
               </h1>
             </Link>
-            <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} />
+            <Image src={`/logo/gameforsmartlogo-horror.png`} alt="" width={254} height={0} />
           </div>
 
           <motion.div

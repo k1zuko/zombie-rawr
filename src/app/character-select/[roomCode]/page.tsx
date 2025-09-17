@@ -238,39 +238,6 @@ export default function CharacterSelectPage() {
   }, [roomCode, router, t]);
 
   useEffect(() => {
-    const whisper = new Audio("/sounds/whisper.mp3");
-    const heartbeat = new Audio("/sounds/heartbeat.mp3");
-    setSounds({ whisper, heartbeat });
-
-    return () => {
-      whisper.pause();
-      whisper.src = "";
-      heartbeat.pause();
-      heartbeat.src = "";
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleUserInteraction = () => {
-      setIsAudioInitialized(true);
-      window.removeEventListener("click", handleUserInteraction);
-    };
-    window.addEventListener("click", handleUserInteraction);
-    return () => window.removeEventListener("click", handleUserInteraction);
-  }, []);
-
-  useEffect(() => {
-    if (isAudioInitialized && selectedChaser) {
-      sounds.whisper?.play().catch((e) => console.log("Autoplay prevented:", e));
-      sounds.heartbeat?.play().catch((e) => console.log("Autoplay prevented:", e));
-    }
-    return () => {
-      sounds.whisper?.pause();
-      sounds.heartbeat?.pause();
-    };
-  }, [selectedChaser, sounds, isAudioInitialized]);
-
-  useEffect(() => {
     const generateBlood = () => {
       const newBlood = Array.from({ length: 5 }, (_, i) => ({
         id: i,
@@ -328,7 +295,6 @@ export default function CharacterSelectPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/images/static-noise.gif')] opacity-20 pointer-events-none" />
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
@@ -350,7 +316,6 @@ export default function CharacterSelectPage() {
   if (!room) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/images/static-noise.gif')] opacity-15 pointer-events-none" />
         <div className="text-red-400 text-xl font-mono relative z-10 text-center p-6 border border-red-900/50 bg-black/60 backdrop-blur-sm">
           <Skull className="w-12 h-12 mx-auto mb-4 animate-pulse" />
           <p>{t("roomNotFound")}</p>
@@ -426,7 +391,11 @@ export default function CharacterSelectPage() {
                 {t("title")}
               </h1>
             </Link>
-            <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} />
+            <img
+                src={`/logo/gameforsmartlogo-horror.png`}
+                alt="Game for Smart Logo"
+                className="w-36 md:w-52 lg:w-64 h-auto mr-3"
+              />
           </div>
 
           <motion.div

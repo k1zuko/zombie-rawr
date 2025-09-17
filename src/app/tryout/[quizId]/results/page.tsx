@@ -54,6 +54,11 @@ export default function TryoutResultsPage() {
       "nickname"]
       .forEach(k => localStorage.removeItem(k));
 
+  const getPercentage = (correct: number, total: number) => {
+    if (!total) return "0%";
+    return ((correct / total) * 100).toFixed(0) + "%";
+  };
+
   if (!result) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -92,7 +97,7 @@ export default function TryoutResultsPage() {
 
             <div className="flex w-fit gap-2 items-center">
               <img
-                src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`}
+                src={`/logo/gameforsmartlogo-horror.png`}
                 alt="Game for Smart Logo"
                 className="w-36 md:w-52 lg:w-64 h-auto"
               />
@@ -144,7 +149,7 @@ export default function TryoutResultsPage() {
                 <div className="bg-gray-900/70 rounded-lg p-4 border border-purple-900/50">
                   <Zap className="w-6 h-6 text-purple-400 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-white font-mono">
-                    {((result.correctAnswers / result.totalQuestions) * 100).toFixed(0)}%
+                    {getPercentage(result.correctAnswers, result.totalQuestions)}
                   </div>
                   <div className="text-xs text-gray-400 tracking-widest">{t("accuracy")}</div>
                 </div>

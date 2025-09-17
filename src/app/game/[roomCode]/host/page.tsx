@@ -975,7 +975,7 @@ export default function HostGamePage() {
           </h1>
 
           <div className="flex w-fit gap-2 items-center">
-            <Image src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`} alt="" width={254} height={0} className="z-20" />
+            <Image src={`/logo/gameforsmartlogo-horror.png`} alt="" width={254} height={0} className="z-20" />
           </div>
         </div>
       </motion.header>

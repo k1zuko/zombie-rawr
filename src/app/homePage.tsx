@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { preloadGlobalAssets } from "@/lib/preloadAssets";
 
 // Types for TypeScript
 interface BloodDrip {
@@ -82,6 +83,10 @@ export default function HomePage() {
   // Atmosphere text
   const atmosphereText = t("atmosphereText");
 
+  useEffect(() => {
+    preloadGlobalAssets()
+  }, []);
+
   // Blood drip effects
   const bloodDrips = useMemo(() => {
     if (!isClient) return [];
@@ -93,32 +98,6 @@ export default function HomePage() {
       opacity: 0.7 + Math.random() * 0.3,
     }));
   }, [isClient, dripCount]);
-
-  // Blood spots
-  const bloodSpots = useMemo(
-    () =>
-      Array.from({ length: 5 }, (_, i) => ({
-        id: i,
-        left: i * 20 + 5,
-        top: i * 20 + 5,
-        opacity: 0.3 + (i % 4) * 0.1,
-      })),
-    []
-  );
-
-  // Floating icons
-  const floatingIcons = useMemo(() => {
-    if (!isClient) return [];
-    return Array.from({ length: iconCount }, (_, i) => ({
-      id: i,
-      left: i * 20 + 10,
-      top: i * 20 + 10,
-      fontSize: 2 + (i % 3),
-      animationDelay: i * 0.5,
-      animationDuration: 15 + (i % 5),
-      isSkull: i % 2 === 0,
-    }));
-  }, [isClient, iconCount]);
 
   // Responsive drip and icon counts
   useEffect(() => {

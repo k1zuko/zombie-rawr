@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
 import Image from "next/image";
+import { preloadHostAssets } from "@/lib/preloadAssets";
 
 export default function QuizSelectPage() {
   const { t, i18n } = useTranslation();
@@ -39,6 +40,10 @@ export default function QuizSelectPage() {
     ],
     [t]
   );
+
+  useEffect(() => {
+    preloadHostAssets()
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -282,7 +287,7 @@ export default function QuizSelectPage() {
               </h1>
             </Link>
             <img
-              src={`/logo/Gemini_Generated_Image_90360u90360u9036-removebg-preview.png`}
+              src={`/logo/gameforsmartlogo-horror.png`}
               alt="Game for Smart Logo"
               className="w-40 md:w-52 lg:w-64 h-auto"
             />
