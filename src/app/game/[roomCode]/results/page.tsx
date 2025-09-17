@@ -635,7 +635,6 @@ export default function ResultsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/map1/tombstone.png')] bg-no-repeat bg-center bg-cover opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
         <div className="text-center z-10">
           <Skull className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
@@ -650,7 +649,6 @@ export default function ResultsPage() {
   if (!playerData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/map1/tombstone.png')] bg-no-repeat bg-center bg-cover opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
         <div className="text-center z-10 p-4">
           <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />

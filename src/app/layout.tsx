@@ -68,25 +68,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang={isClient ? i18n.language : "en"}>
-      <head>
-        {/* ✅ PRELOAD SEMUA GAMBAR KARAKTER & CHASER */}
-        {characterImages.map((src, index) => (
-          <link
-            key={index}
-            rel="preload"
-            as="image"
-            href={src}
-            crossOrigin="anonymous"
-          />
-        ))}
-
-        {/* ✅ Optional: Preload audio files */}
-        <link rel="preload" as="audio" href="/musics/zombies.mp3" />
-        <link rel="preload" as="audio" href="/musics/background-music.mp3" />
-
-        {/* ✅ Optional: Preconnect ke CDN jika kamu pakai external asset */}
-        {/* <link rel="preconnect" href="https://cdn.yourdomain.com" /> */}
-      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <ClientProviders>
@@ -122,27 +103,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             />
           </ClientProviders>
         </AuthProvider>
-
-        {/* ✅ Lazy load audio via script (opsional tapi direkomendasikan) */}
-        <Script id="lazy-audio" strategy="afterInteractive">
-          {`
-            // Lazy load audio setelah interaksi
-            document.addEventListener('click', function initAudio() {
-              const bgAudio = new Audio('/musics/background-music.mp3');
-              const zombieAudio = new Audio('/musics/zombies.mp3');
-              bgAudio.loop = true;
-              bgAudio.volume = 0.3;
-              zombieAudio.volume = 0.5;
-
-              // Coba play, jika gagal (karena browser policy), diam saja
-              bgAudio.play().catch(() => {});
-              zombieAudio.play().catch(() => {});
-
-              // Hapus listener setelah pertama kali
-              document.removeEventListener('click', initAudio);
-            }, { once: true });
-          `}
-        </Script>
       </body>
     </html>
   );

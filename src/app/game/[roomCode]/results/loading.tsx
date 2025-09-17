@@ -3,7 +3,6 @@ import { Skull } from "lucide-react"
 export default function Loading() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('/images/church-silhouette.png')] bg-no-repeat bg-center bg-cover opacity-20" />
       <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
       <div className="text-center z-10">
         <Skull className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
