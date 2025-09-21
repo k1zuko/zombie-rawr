@@ -76,9 +76,9 @@ export default function QuizPhase({
 
   // Definisikan pengaturan berdasarkan difficulty_level
   const difficultySettings = {
-    easy: { inactivityPenalty: 30 },
-    medium: { inactivityPenalty: 15 },
-    hard: { inactivityPenalty: 10 },
+    easy: { inactivityPenalty: 45 },
+    medium: { inactivityPenalty: 30 },
+    hard: { inactivityPenalty: 20 },
   }
   const inactivityPenalty = roomInfo && ["easy", "medium", "hard"].includes(roomInfo.difficulty_level)
     ? difficultySettings[roomInfo.difficulty_level as keyof typeof difficultySettings].inactivityPenalty

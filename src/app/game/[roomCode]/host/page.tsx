@@ -159,9 +159,9 @@ export default function HostGamePage() {
 
   // Definisikan pengaturan berdasarkan difficulty_level
   const difficultySettings = {
-    easy: { zombieAttackCountdown: 25 },
-    medium: { zombieAttackCountdown: 10 },
-    hard: { zombieAttackCountdown: 5 },
+    easy: { zombieAttackCountdown: 35 },
+    medium: { zombieAttackCountdown: 20 },
+    hard: { zombieAttackCountdown: 10 },
   };
   const zombieAttackCountdown = gameRoom && ["easy", "medium", "hard"].includes(gameRoom.difficulty_level)
     ? difficultySettings[gameRoom.difficulty_level as keyof typeof difficultySettings].zombieAttackCountdown
