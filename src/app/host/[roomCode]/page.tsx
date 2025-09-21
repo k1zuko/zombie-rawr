@@ -290,54 +290,11 @@ export default function HostPage() {
     }
   }, [])
 
-  // Fungsi preload untuk aset dan halaman berikutnya
-  const preloadResources = () => {
-    const resources = [
-      `/game/${roomCode}/host`,
-      "/character/player/character.webp",
-      "/character/player/character1-crop.webp",
-      "/character/player/character2-crop.webp",
-      "/character/player/character3-crop.webp",
-      "/character/player/character4-crop.webp",
-      "/character/player/character5.webp",
-      "/character/player/character6.webp",
-      "/character/player/character7-crop.webp",
-      "/character/player/character8-crop.webp",
-      "/character/player/character9-crop.webp",
-      "/character/chaser/zombie.webp",
-      "/character/chaser/monster1.webp",
-      "/character/chaser/monster2.webp",
-      "/character/chaser/monster3.webp",
-      "/character/chaser/darknight.webp",
- 
-      "/map6/1.webp",
-
-      "/map6/3.webp",
-      "/map6/4.webp",
-      "/map6/5.webp",
-      "/map6/7.webp",
-      "/map6/8.webp",
-
-    ]
-
-    resources.forEach((resource) => {
-      const link = document.createElement("link")
-      link.rel = "preload"
-      link.as = resource.endsWith(".webp") ? "image" : "fetch"
-      link.href = resource
-      link.crossOrigin = "anonymous"
-      document.head.appendChild(link)
-    })
-  }
-
   useEffect(() => {
     if (!room?.countdown_start) {
       setCountdown(null)
       return
     }
-
-    // Panggil preload saat countdown dimulai
-    preloadResources()
 
     const updateCountdown = () => {
       const remaining = calculateCountdown(room.countdown_start, 10000)
@@ -361,8 +318,7 @@ export default function HostPage() {
 
       return () => {
         clearInterval(timer)
-        // Bersihkan tag preload
-        document.querySelectorAll('link[rel="preload"]').forEach((link) => link.remove())
+        
       }
     } else {
       setCountdown(null)
