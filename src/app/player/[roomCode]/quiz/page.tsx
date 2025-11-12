@@ -819,11 +819,11 @@ export default function QuizPage() {
     const normalizedCorrectAnswer = currentQuestion?.correct_answer ? currentQuestion.correct_answer.trim().toLowerCase() : '';
     const normalizedSelectedAnswer = selectedAnswer ? selectedAnswer.trim().toLowerCase() : null;
 
-    // console.log("getAnswerButtonClass Debug for option:", option);
-    // console.log("  normalizedOption:", normalizedOption);
-    // console.log("  normalizedCorrectAnswer:", normalizedCorrectAnswer);
-    // console.log("  normalizedSelectedAnswer:", normalizedSelectedAnswer);
-    // console.log("  isAnswered:", isAnswered);
+    console.log("getAnswerButtonClass Debug for option:", option);
+    console.log("  normalizedOption:", normalizedOption);
+    console.log("  normalizedCorrectAnswer:", normalizedCorrectAnswer);
+    console.log("  normalizedSelectedAnswer:", normalizedSelectedAnswer);
+    console.log("  isAnswered:", isAnswered);
 
     if (!isAnswered) {
       console.log("  Returning: bg-gray-800 (not answered)");
