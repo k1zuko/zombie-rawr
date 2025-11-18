@@ -151,7 +151,6 @@ export default function HostPage() {
   const [copied, setCopied] = useState(false)
   const [copied1, setCopied1] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
   const [connectionStatus, setConnectionStatus] = useState<"connected" | "connecting" | "disconnected">("connecting")
   const [countdown, setCountdown] = useState<number | null>(null)
   const [flickerText, setFlickerText] = useState(true)
@@ -260,9 +259,7 @@ export default function HostPage() {
 
   useEffect(() => {
     const initializeData = async () => {
-      setIsLoading(true)
       await fetchRoom()
-      setIsLoading(false)
     }
     initializeData()
   }, [fetchRoom])
@@ -492,18 +489,6 @@ useEffect(() => {
     { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.webp", alt: "Karakter Emas" },
   ]
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full"
-        />
-      </div>
-    )
-  }
-
   if (!room) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
@@ -690,18 +675,17 @@ useEffect(() => {
             transition={{ delay: 0.3 }}
             className="relative flex flex-col lg:flex-row items-stretch lg:items-center bg-black/40 border border-red-900/50 rounded-lg p-4 lg:p-6 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] lg:col-span-4 gap-4 lg:gap-6"
           >
-            <motion.div
-              className="w-full lg:w-[25%] h-40 sm:h-48 lg:h-auto bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center mx-auto order-last lg:order-first"
-              onClick={() => setIsQrModalOpen(true)}
-            >
-              <QRCode
-                value={`${window.location.origin}/?code=${roomCode}`}
-                size={256}
-                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                viewBox={`0 0 256 256`}
-              />
-            </motion.div>
-            <div className="grid gap-3 w-full flex-1 lg:pl-4">
+                      <motion.div
+                        className="w-full lg:w-[25%] h-auto max-h-[40vh] aspect-square bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center mx-auto order-last lg:order-first"
+                        onClick={() => setIsQrModalOpen(true)}
+                      >
+                        <QRCode
+                          value={`${window.location.origin}/?code=${roomCode}`}
+                          size={256}
+                          style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                          viewBox={`0 0 256 256`}
+                        />
+                      </motion.div>            <div className="grid gap-3 w-full flex-1 lg:pl-4">
               <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30">
                 <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
                   <Button

@@ -4,10 +4,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientProviders from "./ClientProviders";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script"; // ✅ Tambahkan ini
+import LoadingScreen from "@/components/LoadingScreen";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,7 +72,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <ClientProviders>
-            {children}
+            <Suspense fallback={<LoadingScreen />}>
+              {children}
+            </Suspense>
             <Toaster
               position="top-center"
               reverseOrder={false}
