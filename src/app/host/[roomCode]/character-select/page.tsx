@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { useHostGuard } from "@/lib/host-guard";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
 type ChaserType = typeof validChaserTypes[number];
@@ -58,11 +59,9 @@ export default function CharacterSelectPage() {
   const params = useParams();
   const router = useRouter();
   const roomCode = params.roomCode as string;
-
-  const [room, setRoom] = useState<GameRoom | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [room, setRoom] = useState<GameRoom | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isAudioInitialized, setIsAudioInitialized] = useState(false);
   const [gameDuration, setGameDuration] = useState<number>(10);
   const [durationError, setDurationError] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(20);
@@ -72,10 +71,6 @@ export default function CharacterSelectPage() {
   const [difficultyLevel, setDifficultyLevel] = useState<DifficultyLevel>("medium");
   const [flickerText, setFlickerText] = useState(true);
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([]);
-  const [sounds, setSounds] = useState<{ whisper: HTMLAudioElement | null; heartbeat: HTMLAudioElement | null }>({
-    whisper: null,
-    heartbeat: null,
-  });
   const [currentChaserIndex, setCurrentChaserIndex] = useState(0); // For carousel
 
   useHostGuard(roomCode);
@@ -192,7 +187,7 @@ export default function CharacterSelectPage() {
 
     const fetchRoom = async () => {
       try {
-        setIsLoading(true);
+
         // Adjusted: Fetch room with embedded_questions JSONB directly (no join to quizzes)
         const { data, error } = await supabase
           .from("game_rooms")
@@ -205,7 +200,6 @@ export default function CharacterSelectPage() {
 
         if (error || !data) {
           console.error(t("errorMessages.roomNotFoundLog"), error?.message);
-          toast.error(t("errorMessages.roomNotFound"));
           router.push("/");
           return;
         }
@@ -259,7 +253,7 @@ export default function CharacterSelectPage() {
         toast.error(t("errorMessages.fetchRoomFailed"));
         router.push("/");
       } finally {
-        setIsLoading(false);
+     
       }
     };
 
@@ -321,36 +315,10 @@ export default function CharacterSelectPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full relative z-10"
-        >
-          <div className="absolute inset-0 rounded-full border-4 border-red-900 border-l-transparent border-r-transparent animate-ping" />
-        </motion.div>
-        <motion.p
-          className="absolute bottom-1/4 text-red-400 font-mono text-sm"
-          animate={{ opacity: [0.3, 1, 0.3] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          {t("loading")}
-        </motion.p>
-      </div>
-    );
-  }
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="text-red-400 text-xl font-mono relative z-10 text-center p-6 border border-red-900/50 bg-black/60 backdrop-blur-sm">
-          <Skull className="w-12 h-12 mx-auto mb-4 animate-pulse" />
-          <p>{t("roomNotFound")}</p>
-          <p className="text-sm mt-2 text-red-300">{t("backToLobby")}</p>
-        </div>
-      </div>
+      <LoadingScreen />
     );
   }
 

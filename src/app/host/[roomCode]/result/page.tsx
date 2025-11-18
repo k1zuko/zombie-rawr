@@ -533,6 +533,17 @@ export default function ResultsHostPage() {
                   <RotateCw className="w-4 h-4" />
                 )}
               </motion.button>
+
+              {/* Tombol New Game */}
+              <motion.button
+                onClick={() => router.push('/host/quiz-select')}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(59, 130, 246, 0.7)" }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-blue-600 text-white p-2 border-2 border-blue-500 rounded-md"
+                aria-label={t("newGameButton")}
+              >
+                <Zap className="w-4 h-4" />
+              </motion.button>
             </div>
           </div>
 

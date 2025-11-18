@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 import { useHostGuard } from "@/lib/host-guard";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const
 type ChaserType = (typeof validChaserTypes)[number]
@@ -145,7 +146,7 @@ export default function HostPage() {
   const params = useParams()
   const router = useRouter()
   const roomCode = params.roomCode as string
-
+  const [isLoading, setIsLoading] = useState(true);
   const [room, setRoom] = useState<GameRoom | null>(null)
   const [players, setPlayers] = useState<EmbeddedPlayer[]>([])
   const [copied, setCopied] = useState(false)
@@ -259,7 +260,9 @@ export default function HostPage() {
 
   useEffect(() => {
     const initializeData = async () => {
+      setIsLoading(true)
       await fetchRoom()
+      setIsLoading(false)
     }
     initializeData()
   }, [fetchRoom])
@@ -489,10 +492,16 @@ useEffect(() => {
     { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.webp", alt: "Karakter Emas" },
   ]
 
+  if (isLoading) {
+    return (
+      <LoadingScreen />
+    )
+  }
+
   if (!room) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="text-red-400 text-xl font-mono text-center">Room tidak ditemukan</div>
+        
       </div>
     )
   }
