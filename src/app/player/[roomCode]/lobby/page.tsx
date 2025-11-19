@@ -527,7 +527,7 @@ export default function LobbyPage() {
                   >
                     {selectedCharacter === character.value && (
                       <div className="absolute inset-0 bg-red-600/50 z-10 flex items-center justify-center">
-                        <CheckCircle2 className="w-12 h-12 text-white" />
+                        
                       </div>
                     )}
                     <Image src={character.gif} alt={character.name} fill unoptimized className="object-cover" />

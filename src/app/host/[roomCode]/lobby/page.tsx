@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Play, Copy, Check, Clock, List, Skull, Bone, HeartPulse, Trash2, Maximize2 } from "lucide-react";
+import { Users, Play, Copy, Check, Clock, List, Skull, Bone, HeartPulse, Trash2, Maximize2, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -67,7 +67,7 @@ interface GameRoom {
   players: EmbeddedPlayer[]  // JSONB per schema
 }
 
-function QRModal({
+function FullscreenQrOverlay({
   open,
   onClose,
   roomCode
@@ -77,67 +77,54 @@ function QRModal({
   roomCode: string
 }) {
   useEffect(() => {
-    if (!open) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    return () => { document.body.style.overflow = prev }
+    if (open) document.body.style.overflow = "hidden"
+    return () => { document.body.style.overflow = "unset" }
   }, [open])
 
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, [open, onClose])
-
-  if (typeof document === "undefined") return null
   if (!open) return null
 
-  return createPortal(
+  const joinUrl = `${window.location.origin}/?code=${roomCode}`
+
+return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
+      onClick={onClose}
     >
-      <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden
-      />
-      <motion.section
-        initial={{ y: 20, scale: 0.98 }}
-        animate={{ y: 0, scale: 1 }}
-        exit={{ y: 10, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 240, damping: 28 }}
-        className="relative z-10 w-full max-w-sm sm:max-w-md bg-black/95 text-white rounded-2xl p-4 sm:p-6 overflow-hidden shadow-[0_0_60px_rgba(255,0,0,0.45)] max-h-[90vh] overflow-y-auto"
-        role="dialog"
-        aria-modal="true"
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+
+      <motion.div
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.8 }}
+        className="relative bg-white p-12 rounded-3xl shadow-2xl max-w-[90vw] max-h-[90vh]"
+        onClick={e => e.stopPropagation()}
       >
-        <div className="flex flex-col items-center justify-center gap-4 py-4" style={{ minHeight: 300 }}>
-          <div className="w-full bg-white rounded-lg p-2 sm:p-3 flex items-center justify-center">
-            <div className="w-40 h-40 flex items-center justify-center sm:w-48 sm:h-48 md:w-64 md:h-64">
-              <QRCode
-                value={`${window.location.origin}/?code=${roomCode}`}
-                style={{ width: "100%", height: "100%" }}
-                viewBox="0 0 256 256"
-              />
-            </div>
-          </div>
-          <div className="text-center text-sm sm:text-base text-red-400">
-            <p>Scan QR Code untuk bergabung</p>
-          </div>
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white border-red-600"
-          >
-            Tutup
-          </Button>
+        {/* Tombol Close */}
+        <Button
+          onClick={onClose}
+          variant="ghost"
+          size="icon"
+          className="absolute -top-16 -right-16 text-white hover:bg-white/20 rounded-full"
+        >
+          <X className="w-12 h-12" />
+        </Button>
+
+        {/* QR Super Besar */}
+        <QRCode
+          value={joinUrl}
+          size={524}                 // ukuran raksasa
+          level="H"
+          className="mx-auto"
+        />
+
+        <div className="mt-10 text-center">
+          <p className="text-black text-5xl font-bold tracking-widest">{roomCode}</p>
         </div>
-      </motion.section>
-    </motion.div>,
-    document.body
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -156,10 +143,10 @@ export default function HostPage() {
   const [countdown, setCountdown] = useState<number | null>(null)
   const [flickerText, setFlickerText] = useState(true)
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([])
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [kickDialogOpen, setKickDialogOpen] = useState(false)
   const [selectedPlayer, setSelectedPlayer] = useState<{ player_id: string; nickname: string } | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const [isFullscreenQrOpen, setIsFullscreenQrOpen] = useState(false)   // Tambahkan baris ini
 
   useHostGuard(roomCode)
 
@@ -672,9 +659,20 @@ useEffect(() => {
                 transition={{ delay: 0.3 }}
                 className="relative flex flex-col lg:flex-row items-stretch lg:items-center bg-black/40 border border-red-900/50 rounded-lg p-4 lg:p-6 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] lg:col-span-4 gap-4 lg:gap-6"
               >
+                {/* QR CODE KECIL — KLIK BUKA FULLSCREEN */}
                 <motion.div
-                  className="w-full lg:w-[25%] h-auto max-h-[40vh] aspect-square bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center mx-auto order-last lg:order-first"
-                  onClick={() => setIsQrModalOpen(true)}
+                  className="w-full lg:w-[25%] h-auto max-h-[40vh] aspect-square bg-white border border-red-900/50 rounded overflow-hidden p-2 
+                            cursor-pointer hover:scale-105 transition-transform 
+                            flex items-center justify-center mx-auto order-last lg:order-first
+                            md:cursor-pointer lg:cursor-pointer 
+                            max-md:pointer-events-none"  // Ini kuncinya: disable di mobile
+                
+                  onClick={() => {
+                    // Hanya jalankan di desktop (bisa juga pakai state, tapi ini cukup)
+                    if (window.innerWidth >= 768) {
+                      setIsFullscreenQrOpen(true)
+                    }
+                  }}
                 >
                   <QRCode
                     value={`${window.location.origin}/?code=${roomCode}`}
@@ -682,7 +680,8 @@ useEffect(() => {
                     style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                     viewBox={`0 0 256 256`}
                   />
-                </motion.div>            <div className="grid gap-3 w-full flex-1 lg:pl-4">
+                </motion.div>
+                 <div className="grid gap-3 w-full flex-1 lg:pl-4">
                   <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30">
                     <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
                       <Button
@@ -763,11 +762,6 @@ useEffect(() => {
               </motion.div>
             </div>
 
-            <QRModal
-              open={isQrModalOpen}
-              onClose={() => setIsQrModalOpen(false)}
-              roomCode={roomCode}
-            />
 
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -936,6 +930,12 @@ useEffect(() => {
           overflow: hidden;
         }
       `}</style>
+      {/* FULLSCREEN QR — TARUH SEBELUM PENUTUP DIV UTAMA */}
+        <FullscreenQrOverlay
+          open={isFullscreenQrOpen}
+          onClose={() => setIsFullscreenQrOpen(false)}
+          roomCode={roomCode}
+        />
         </div>
       )}
     </LoadingScreen>
