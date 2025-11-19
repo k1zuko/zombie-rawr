@@ -492,442 +492,430 @@ useEffect(() => {
     { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.webp", alt: "Karakter Emas" },
   ]
 
-  if (isLoading) {
-    return (
-      <LoadingScreen />
-    )
-  }
-
-  if (!room) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden select-none">
-      <div className="absolute top-4 left-4 z-20 hidden md:block">
-        <Link href={"/"}>
-          <h1
-            className="text-3xl md:text-5xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
-            style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-          >
-            {t("title")} {/* QuizRush */}
-          </h1>
-        </Link>
-      </div>
-      <div className="absolute top-4 right-4 z-20 hidden md:block">
-        <img
-        src={`/logo/gameforsmartlogo-horror.png`}
-          alt="Game for Smart Logo"
-          className="w-40 md:w-48 lg:w-56 h-auto"
-        />
-      </div>
-      <audio src="/musics/background-music-room.mp3" autoPlay loop muted />
-      <div className="absolute inset-0 z-0" style={{ backgroundImage: "url('/background/21.gif')", backgroundSize: "cover", backgroundPosition: "center" }}></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 via-black to-purple-900/5">
-        <div className="absolute inset-0 opacity-20">
-          {[...Array(10)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-red-900 rounded-full mix-blend-multiply blur-xl"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                opacity: 0.3 + Math.random() * 0.4,
-              }}
+    <LoadingScreen isReady={!isLoading && !!room}>
+      {room && (
+        <div className="min-h-screen bg-black relative overflow-hidden select-none">
+          <div className="absolute top-4 left-4 z-20 hidden md:block">
+            <Image
+              src="/logo/quizrushlogo.png"
+              alt="QuizRush Logo"
+              width={140}   // turunin sedikit biar proporsional
+              height={35}   // sesuaikan tinggi
+              className="w-32 md:w-40 lg:w-48 h-auto"   // ini yang paling berpengaruh
+              unoptimized
+            />
+          </div>
+          <div className="absolute top-4 right-4 z-20 hidden md:block">
+            <img
+              src={`/logo/gameforsmartlogo-horror.png`}
+              alt="Game for Smart Logo"
+              className="w-40 md:w-48 lg:w-56 h-auto"
+            />
+          </div>
+          <audio src="/musics/background-music-room.mp3" autoPlay loop muted />
+          <div className="absolute inset-0 z-0" style={{ backgroundImage: "url('/background/21.gif')", backgroundSize: "cover", backgroundPosition: "center" }}></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 via-black to-purple-900/5">
+            <div className="absolute inset-0 opacity-20">
+              {[...Array(10)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-red-900 rounded-full mix-blend-multiply blur-xl"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    opacity: 0.3 + Math.random() * 0.4,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {bloodDrips.map((drip) => (
+            <motion.div
+              key={drip.id}
+              initial={{ y: -100 }}
+              animate={{ y: "100vh" }}
+              transition={{ duration: drip.speed, delay: drip.delay, ease: "linear", repeat: Infinity }}
+              className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
+              style={{ left: `${drip.left}%`, opacity: 0.6 + Math.random() * 0.2 }}
             />
           ))}
-        </div>
-      </div>
 
-      {bloodDrips.map((drip) => (
-        <motion.div
-          key={drip.id}
-          initial={{ y: -100 }}
-          animate={{ y: "100vh" }}
-          transition={{ duration: drip.speed, delay: drip.delay, ease: "linear", repeat: Infinity }}
-          className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
-          style={{ left: `${drip.left}%`, opacity: 0.6 + Math.random() * 0.2 }}
-        />
-      ))}
-
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute text-red-900/20 animate-float hidden sm:block"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              fontSize: `${2 + Math.random() * 3}rem`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${15 + Math.random() * 20}s`,
-            }}
-          >
-            {Math.random() > 0.5 ? <Skull /> : <Bone />}
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute text-red-900/20 animate-float hidden sm:block"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  fontSize: `${2 + Math.random() * 3}rem`,
+                  animationDelay: `${Math.random() * 5}s`,
+                  animationDuration: `${15 + Math.random() * 20}s`,
+                }}
+              >
+                {Math.random() > 0.5 ? <Skull /> : <Bone />}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwLDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBLNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwLDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBLNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
 
-      <div className="absolute top-0 left-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
-        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
-      </div>
-      <div className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
-        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
-      </div>
-      <div className="absolute bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
-        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
-      </div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
-        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
-      </div>
+          <div className="absolute top-0 left-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
+            <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
+          </div>
+          <div className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
+            <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
+          </div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
+            <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
+          </div>
+          <div className="absolute bottom-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
+            <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
+          </div>
 
-      <AnimatePresence>
-        {countdown !== null && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-              className="text-[8rem] sm:text-[12rem] md:text-[16rem] lg:text-[20rem] xl:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)] flex-shrink-0"
+          <AnimatePresence>
+            {countdown !== null && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                  className="text-[8rem] sm:text-[12rem] md:text-[16rem] lg:text-[20rem] xl:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)] flex-shrink-0"
+                >
+                  {countdown}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className={`relative z-10 mx-auto p-4 sm:p-6 lg:p-7 ${countdown !== null ? "hidden" : ""}`}>
+            <motion.header
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
+              className="flex flex-col gap-2 sm:gap-4 mb-6 sm:mb-10 max-w-7xl mx-auto"
             >
-              {countdown}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      <div className={`relative z-10 mx-auto p-4 sm:p-6 lg:p-7 ${countdown !== null ? "hidden" : ""}`}>
-        <motion.header
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
-          className="flex flex-col gap-2 sm:gap-4 mb-6 sm:mb-10 max-w-7xl mx-auto"
-        >
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
-            className="flex justify-center items-center text-center mt-10"
-          >
-           
-            <h1
-              className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-6xl font-bold font-mono tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse ${flickerText ? 'opacity-100' : 'opacity-50'}`}
-              style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-            >
-              {t("hostRoomTitle")}
-            </h1>
-           
-          </motion.div>
-        </motion.header>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
+                className="flex justify-center items-center text-center mt-10"
+              >
 
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-6 lg:mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="grid grid-cols-3 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-4 lg:col-span-1"
-          >
-            <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-              <CardContent>
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
-                  <div>
-                    <motion.div
-                      key={players.length}
-                      initial={{ scale: 1.2 }}
-                      animate={{ scale: 1 }}
-                      className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl font-bold text-red-500 font-mono"
-                    >
-                      {players.length}
-                    </motion.div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-              <CardContent>
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
-                  <div>
-                    <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl font-bold text-red-500 font-mono">
-                      {Math.floor((room.duration || 600) / 60)}:{((room.duration || 600) % 60).toString().padStart(2, "0")}
+                <h1
+                  className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-6xl font-bold font-mono tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse ${flickerText ? 'opacity-100' : 'opacity-50'}`}
+                  style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+                >
+                  {t("hostRoomTitle")}
+                </h1>
+
+              </motion.div>
+            </motion.header>
+
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-6 lg:mb-8">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="grid grid-cols-3 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-4 lg:col-span-1"
+              >
+                <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                  <CardContent>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
+                      <div>
+                        <motion.div
+                          key={players.length}
+                          initial={{ scale: 1.2 }}
+                          animate={{ scale: 1 }}
+                          className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl font-bold text-red-500 font-mono"
+                        >
+                          {players.length}
+                        </motion.div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                  <CardContent>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <Clock className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
+                      <div>
+                        <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl font-bold text-red-500 font-mono">
+                          {Math.floor((room.duration || 600) / 60)}:{((room.duration || 600) % 60).toString().padStart(2, "0")}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                  <CardContent>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <List className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
+                      <div>
+                        <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl font-bold text-red-500 font-mono">{room.question_count || 20}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="relative flex flex-col lg:flex-row items-stretch lg:items-center bg-black/40 border border-red-900/50 rounded-lg p-4 lg:p-6 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] lg:col-span-4 gap-4 lg:gap-6"
+              >
+                <motion.div
+                  className="w-full lg:w-[25%] h-auto max-h-[40vh] aspect-square bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center mx-auto order-last lg:order-first"
+                  onClick={() => setIsQrModalOpen(true)}
+                >
+                  <QRCode
+                    value={`${window.location.origin}/?code=${roomCode}`}
+                    size={256}
+                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                    viewBox={`0 0 256 256`}
+                  />
+                </motion.div>            <div className="grid gap-3 w-full flex-1 lg:pl-4">
+                  <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30">
+                    <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={copyRoomCode}
+                        className="text-red-400 hover:bg-red-500/20 rounded-full p-1 sm:p-2 pointer-events-auto"
+                        aria-label={t("copyInvite")}
+                      >
+                        <motion.div key={copied ? "check" : "copy"} initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                          {copied ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Copy className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        </motion.div>
+                      </Button>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold text-red-500 tracking-widest break-words select-text">
+                        {roomCode}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-              <CardContent>
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <List className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
-                  <div>
-                    <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl font-bold text-red-500 font-mono">{room.question_count || 20}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="relative flex flex-col lg:flex-row items-stretch lg:items-center bg-black/40 border border-red-900/50 rounded-lg p-4 lg:p-6 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] lg:col-span-4 gap-4 lg:gap-6"
-          >
-                      <motion.div
-                        className="w-full lg:w-[25%] h-auto max-h-[40vh] aspect-square bg-white border border-red-900/50 rounded overflow-hidden p-2 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center mx-auto order-last lg:order-first"
-                        onClick={() => setIsQrModalOpen(true)}
+                  <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30">
+                    <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={copyLinkRoomCode}
+                        className="text-red-400 hover:bg-red-500/20 rounded-full p-1 sm:p-2 pointer-events-auto"
+                        aria-label={t("copyInvite")}
                       >
-                        <QRCode
-                          value={`${window.location.origin}/?code=${roomCode}`}
-                          size={256}
-                          style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                          viewBox={`0 0 256 256`}
-                        />
-                      </motion.div>            <div className="grid gap-3 w-full flex-1 lg:pl-4">
-              <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30">
-                <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={copyRoomCode}
-                    className="text-red-400 hover:bg-red-500/20 rounded-full p-1 sm:p-2 pointer-events-auto"
-                    aria-label={t("copyInvite")}
-                  >
-                    <motion.div key={copied ? "check" : "copy"} initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                      {copied ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Copy className="w-4 h-4 sm:w-5 sm:h-5" />}
-                    </motion.div>
-                  </Button>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold text-red-500 tracking-widest break-words select-text">
-                    {roomCode}
+                        <motion.div key={copied1 ? "check" : "copy"} initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                          {copied1 ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Copy className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        </motion.div>
+                      </Button>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <div className="text-red-400 font-mono mb-1 text-xs sm:text-sm md:text-base">{t("joinLink")}</div>
+                      <div className="text-sm sm:text-base md:text-lg font-mono font-bold text-red-500 text-center break-words px-2">
+                        {`${window.location.origin}/?code=${roomCode}`}
+                      </div>
+                    </div>
                   </div>
+                  <Card className="bg-black/20 border border-red-900/50">
+                    <CardContent className="p-4">
+                      <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                        className="flex justify-center"
+                      >
+                        <Button
+                          onClick={startGame}
+                          disabled={players.length === 0 || isStarting || countdown !== null}
+                          className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-sm sm:text-base md:text-lg lg:text-xl px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4 lg:py-6 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
+                        >
+                          <span className="relative z-10 flex items-center justify-center">
+                            {isStarting || countdown !== null ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                                className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2"
+                              >
+                                <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                              </motion.div>
+                            ) : (
+                              <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2" />
+                            )}
+                            <span className="hidden sm:inline">{isStarting
+                              ? t("startGame.starting")
+                              : t("startGame.start")}</span>
+                          </span>
+                          <span className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                          <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 animate-pulse" />
+                        </Button>
+                      </motion.div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
-              <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30">
-                <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={copyLinkRoomCode}
-                    className="text-red-400 hover:bg-red-500/20 rounded-full p-1 sm:p-2 pointer-events-auto"
-                    aria-label={t("copyInvite")}
-                  >
-                    <motion.div key={copied1 ? "check" : "copy"} initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                      {copied1 ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Copy className="w-4 h-4 sm:w-5 sm:h-5" />}
-                    </motion.div>
-                  </Button>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="text-red-400 font-mono mb-1 text-xs sm:text-sm md:text-base">{t("joinLink")}</div>
-                  <div className="text-sm sm:text-base md:text-lg font-mono font-bold text-red-500 text-center break-words px-2">
-                    {`${window.location.origin}/?code=${roomCode}`}
-                  </div>
-                </div>
-              </div>
-              <Card className="bg-black/20 border border-red-900/50">
-                <CardContent className="p-4">
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="flex justify-center"
-                  >
-                    <Button
-                      onClick={startGame}
-                      disabled={players.length === 0 || isStarting || countdown !== null}
-                      className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-sm sm:text-base md:text-lg lg:text-xl px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4 lg:py-6 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
-                    >
-                      <span className="relative z-10 flex items-center justify-center">
-                        {isStarting || countdown !== null ? (
-                            <motion.div
-                              animate={{ rotate: 360 }} 
-                              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                              className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2"
-                            >
-                              <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-                            </motion.div>
-                          ) : (
-                            <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2" />
-                          )}
-                        <span className="hidden sm:inline">{isStarting
-                          ? t("startGame.starting")
-                          : t("startGame.start")}</span>
-                      </span>
-                      <span className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-                      <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 animate-pulse" />
-                    </Button>
-                  </motion.div>
+              </motion.div>
+            </div>
+
+            <QRModal
+              open={isQrModalOpen}
+              onClose={() => setIsQrModalOpen(false)}
+              roomCode={roomCode}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="max-w-7xl mx-auto"
+            >
+              <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-red-500 text-base sm:text-lg md:text-xl lg:text-2xl font-mono flex items-center gap-2 sm:gap-3">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                    {t("players")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <AnimatePresence mode="popLayout">
+                    {players.length === 0 ? (
+                      <motion.div
+                        key="empty"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="text-center py-8 sm:py-10"
+                      >
+                        <motion.div
+                          animate={{
+                            opacity: [0.5, 1, 0.5],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Number.POSITIVE_INFINITY,
+                            ease: "easeInOut",
+                          }}
+                        >
+                          <p className="text-red-400 text-sm sm:text-base md:text-lg font-mono">{t("waitingHost")}</p>
+                          <p className="text-red-400/80 text-xs sm:text-sm font-mono mt-2">{t("shareCode")}</p>
+                        </motion.div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="players"
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3 md:gap-4 lg:gap-6"
+                        transition={{ layout: { type: "spring", stiffness: 200, damping: 20 } }}
+                      >
+                        <AnimatePresence>
+                          {players.map((player, index) => {
+                            const selectedCharacter = characterOptions.find(
+                              (char) => char.value === player.character_type
+                            )
+                            return (
+                              <motion.div
+                                key={player.player_id}
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{
+                                  opacity: 0,
+                                  scale: 0.5,
+                                  x: Math.random() > 0.5 ? 100 : -100,
+                                  rotate: Math.random() * 180,
+                                  transition: { duration: 0.3, ease: "easeIn" },
+                                }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 200,
+                                  damping: 20,
+                                  delay: index * 0.05,
+                                }}
+                                className="bg-black/40 border border-red-900/50 rounded-lg p-2 sm:p-3 md:p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative group"
+                              >
+                                {!player.is_host && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => kickPlayer(player.player_id, player.nickname)}
+                                    className="absolute z-10 top-1 left-1 sm:top-2 sm:left-2 bg-black/60 text-red-500 hover:bg-red-700/60 p-1 sm:p-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-label={t("kickPlayer", { nickname: player.nickname })}
+                                  >
+                                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  </Button>
+                                )}
+                                <motion.div
+                                  className="mb-1 sm:mb-2"
+                                  animate={{
+                                    rotate: [0, 5, -5, 0],
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    repeat: Number.POSITIVE_INFINITY,
+                                    delay: index * 0.1,
+                                  }}
+                                >
+                                  {selectedCharacter ? (
+                                    <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mt-1 sm:mt-2">
+                                      <img
+                                        src={selectedCharacter.gif}
+                                        alt={selectedCharacter.alt}
+                                        className="max-h-full max-w-full object-contain"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mb-1 sm:mb-2 text-red-400 text-xs sm:text-sm">
+                                      {player.character_type}
+                                    </div>
+                                  )}
+                                </motion.div>
+                                <div className="text-red-500 font-medium text-xs sm:text-sm truncate mb-1 font-mono line-clamp-1">{player.nickname}</div>
+                                {player.is_host && (
+                                  <Badge variant="secondary" className="text-xs bg-red-900 text-red-400 font-mono">
+                                    {t("host")}
+                                  </Badge>
+                                )}
+                              </motion.div>
+                            )
+                          })}
+                        </AnimatePresence>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </CardContent>
               </Card>
-            </div>
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
+          <Dialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
+            <DialogContent className="bg-black/95 border border-red-600/70 text-red-400 rounded-xl shadow-[0_0_30px_rgba(255,0,0,0.4)] max-w-sm sm:max-w-md mx-auto">
+              <DialogHeader>
+                <DialogTitle className="text-base sm:text-lg font-bold text-red-500">
+                  {t("kickPlayerConfirm", { nickname: selectedPlayer?.nickname })}
+                </DialogTitle>
+              </DialogHeader>
+              <DialogFooter className="mt-4 flex justify-end space-x-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setKickDialogOpen(false)}
+                  className="text-gray-400 hover:text-red-400 hover:bg-red-950/40 px-3 py-2"
+                >
+                  {t("cancel")}
+                </Button>
+                <Button
+                  onClick={confirmKickPlayer}
+                  className="bg-red-600 hover:bg-red-700 text-white shadow-[0_0_10px_rgba(255,0,0,0.6)] px-4 py-2"
+                >
+                  {t("confirm")}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-        <QRModal
-          open={isQrModalOpen}
-          onClose={() => setIsQrModalOpen(false)}
-          roomCode={roomCode}
-        />
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="max-w-7xl mx-auto"
-        >
-          <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-red-500 text-base sm:text-lg md:text-xl lg:text-2xl font-mono flex items-center gap-2 sm:gap-3">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-                {t("players")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <AnimatePresence mode="popLayout">
-                {players.length === 0 ? (
-                  <motion.div
-                    key="empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-center py-8 sm:py-10"
-                  >
-                    <motion.div
-                      animate={{
-                        opacity: [0.5, 1, 0.5],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      <p className="text-red-400 text-sm sm:text-base md:text-lg font-mono">{t("waitingHost")}</p>
-                      <p className="text-red-400/80 text-xs sm:text-sm font-mono mt-2">{t("shareCode")}</p>
-                    </motion.div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="players"
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3 md:gap-4 lg:gap-6"
-                    transition={{ layout: { type: "spring", stiffness: 200, damping: 20 } }}
-                  >
-                    <AnimatePresence>
-                      {players.map((player, index) => {
-                        const selectedCharacter = characterOptions.find(
-                          (char) => char.value === player.character_type
-                        )
-                        return (
-                          <motion.div
-                            key={player.player_id}
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{
-                              opacity: 0,
-                              scale: 0.5,
-                              x: Math.random() > 0.5 ? 100 : -100,
-                              rotate: Math.random() * 180,
-                              transition: { duration: 0.3, ease: "easeIn" },
-                            }}
-                            transition={{
-                              type: "spring",
-                              stiffness: 200,
-                              damping: 20,
-                              delay: index * 0.05,
-                            }}
-                            className="bg-black/40 border border-red-900/50 rounded-lg p-2 sm:p-3 md:p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative group"
-                          >
-                            {!player.is_host && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => kickPlayer(player.player_id, player.nickname)}
-                                className="absolute z-10 top-1 left-1 sm:top-2 sm:left-2 bg-black/60 text-red-500 hover:bg-red-700/60 p-1 sm:p-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                                aria-label={t("kickPlayer", { nickname: player.nickname })}
-                              >
-                                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                              </Button>
-                            )}
-                            <motion.div
-                              className="mb-1 sm:mb-2"
-                              animate={{
-                                rotate: [0, 5, -5, 0],
-                              }}
-                              transition={{
-                                duration: 3,
-                                repeat: Number.POSITIVE_INFINITY,
-                                delay: index * 0.1,
-                              }}
-                            >
-                              {selectedCharacter ? (
-                                <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mt-1 sm:mt-2">
-                                  <img
-                                    src={selectedCharacter.gif}
-                                    alt={selectedCharacter.alt}
-                                    className="max-h-full max-w-full object-contain"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mb-1 sm:mb-2 text-red-400 text-xs sm:text-sm">
-                                  {player.character_type}
-                                </div>
-                              )}
-                            </motion.div>
-                            <div className="text-red-500 font-medium text-xs sm:text-sm truncate mb-1 font-mono line-clamp-1">{player.nickname}</div>
-                            {player.is_host && (
-                              <Badge variant="secondary" className="text-xs bg-red-900 text-red-400 font-mono">
-                                {t("host")}
-                              </Badge>
-                            )}
-                          </motion.div>
-                        )
-                      })}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-      <Dialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
-        <DialogContent className="bg-black/95 border border-red-600/70 text-red-400 rounded-xl shadow-[0_0_30px_rgba(255,0,0,0.4)] max-w-sm sm:max-w-md mx-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base sm:text-lg font-bold text-red-500">
-              {t("kickPlayerConfirm", { nickname: selectedPlayer?.nickname })}
-            </DialogTitle>
-          </DialogHeader>
-          <DialogFooter className="mt-4 flex justify-end space-x-2">
-            <Button
-              variant="ghost"
-              onClick={() => setKickDialogOpen(false)}
-              className="text-gray-400 hover:text-red-400 hover:bg-red-950/40 px-3 py-2"
-            >
-              {t("cancel")}
-            </Button>
-            <Button
-              onClick={confirmKickPlayer}
-              className="bg-red-600 hover:bg-red-700 text-white shadow-[0_0_10px_rgba(255,0,0,0.6)] px-4 py-2"
-            >
-              {t("confirm")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <style jsx global>{`
+          <style jsx global>{`
         @keyframes fall {
           to {
             transform: translateY(100vh);
@@ -948,6 +936,8 @@ useEffect(() => {
           overflow: hidden;
         }
       `}</style>
-    </div>
+        </div>
+      )}
+    </LoadingScreen>
   )
 }

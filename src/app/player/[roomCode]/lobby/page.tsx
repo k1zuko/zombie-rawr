@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Users, Skull, Zap, Ghost, Bone, HeartPulse, ArrowLeft, Play, CheckCircle2, Circle } from "lucide-react";
+import {
+  Users,
+  Skull,
+  Zap,
+  Ghost,
+  Bone,
+  HeartPulse,
+  ArrowLeft,
+  Play,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase, GameRoom, EmbeddedPlayer } from "@/lib/supabase";
 import SoulStatus from "@/components/game/SoulStatus";
@@ -10,18 +22,16 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import { syncServerTime, calculateCountdown } from "@/lib/server-time";
-
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { useDetectBackAction } from "@/hooks/useDetectBackAction";
+import LoadingScreen from "@/components/LoadingScreen"; // Pastikan versi all-in-one
 
-// Extended EmbeddedPlayer type to include optional fields from useGameLogic
 interface ExtendedEmbeddedPlayer extends EmbeddedPlayer {
   is_ready?: boolean;
   wrong_answers?: number;
 }
 
-// Opsi karakter yang tersedia
 const characterOptions = [
   { value: "robot1", name: "Hijau", gif: "/character/player/character.webp", alt: "Karakter Hijau" },
   { value: "robot2", name: "Biru", gif: "/character/player/character1-crop.webp", alt: "Karakter Biru" },
@@ -35,6 +45,90 @@ const characterOptions = [
   { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.webp", alt: "Karakter Emas" },
 ];
 
+// Mobile Character Selector (tetap sama)
+function MobileCharacterSelector({
+  selectedCharacter,
+  onSelect,
+  isOpen,
+  setIsOpen,
+}: {
+  selectedCharacter: string;
+  onSelect: (value: string) => void;
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}) {
+  const selected = characterOptions.find((c) => c.value === selectedCharacter)!;
+
+  return (
+    <div className="relative w-full">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-gray-800 hover:bg-gray-700 rounded-xl p-4 flex items-center gap-4 shadow-2xl transition-all duration-300 border border-red-900/50"
+      >
+        <Image
+          src={selected.gif}
+          alt={selected.name}
+          width={80}
+          height={80}
+          unoptimized
+          className="rounded-lg border border-red-800/50"
+        />
+        <div className="flex-1 text-left">
+          <p className="text-white font-mono text-lg font-bold">{selected.name}</p>
+          <p className="text-red-400 text-sm">Tap untuk ganti karakter</p>
+        </div>
+        {isOpen ? (
+          <ChevronUp className="w-7 h-7 text-red-500 animate-pulse" />
+        ) : (
+          <ChevronDown className="w-7 h-7 text-red-500" />
+        )}
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/85 z-40" onClick={() => setIsOpen(false)} />
+          <motion.div
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 40, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 350, damping: 30 }}
+            className="absolute bottom-full left-0 right-0 mb-3 bg-black/97 border-2 border-red-800/70 rounded-2xl p-6 z-50 shadow-2xl"
+            style={{ maxHeight: "70vh" }}
+          >
+            <div className="grid grid-cols-5 gap-4">
+              {characterOptions.map((character) => {
+                const isSelected = selectedCharacter === character.value;
+                return (
+                  <motion.button
+                    key={character.value}
+                    whileTap={{ scale: 0.88 }}
+                    onClick={() => {
+                      onSelect(character.value);
+                      setIsOpen(false);
+                    }}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-4 transition-all duration-300
+                      ${isSelected
+                        ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.9)] ring-4 ring-red-500/60"
+                        : "border-white/25 hover:border-red-600/80"
+                      }`}
+                  >
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-red-600/60 z-10 flex items-center justify-center backdrop-blur-sm">
+                        <CheckCircle2 className="w-12 h-12 text-white drop-shadow-2xl" />
+                      </div>
+                    )}
+                    <Image src={character.gif} alt={character.name} fill unoptimized className="object-cover" />
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function LobbyPage() {
   const router = useRouter();
   const params = useParams();
@@ -44,63 +138,71 @@ export default function LobbyPage() {
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [players, setPlayers] = useState<ExtendedEmbeddedPlayer[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<ExtendedEmbeddedPlayer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const [isLoading, setIsLoading] = useState(true);                    // ← Kontrol loading
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [atmosphereText, setAtmosphereText] = useState(() => {
-    const texts = t("atmosphereTexts", { returnObjects: true }) as string[];
-    return texts[0] || "Menunggu pemain lain...";
-  });
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [isCharacterDialogOpen, setIsCharacterDialogOpen] = useState(false);
+  const [isCharacterSelectorOpen, setIsCharacterSelectorOpen] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState("robot1");
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const atmosphereTexts = (t("atmosphereTexts", { returnObjects: true }) as string[]) || [];
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
-  // Initial data fetching
+  // === FETCH DATA DENGAN setIsLoading(false) DI FINALLY ===
   useEffect(() => {
     const fetchInitialData = async () => {
-      if (!roomCode) return;
-      setIsLoading(true);
-
-      const { data: roomData, error: roomError } = await supabase
-        .from("game_rooms")
-        .select("*")
-        .eq("room_code", roomCode)
-        .single();
-
-      if (roomError || !roomData) {
-        console.error("Error fetching room:", roomError);
-        toast.error("Room tidak ditemukan!");
+      if (!roomCode) {
         router.replace("/");
         return;
       }
 
-      setRoom(roomData);
-      const roomPlayers = (roomData.players as ExtendedEmbeddedPlayer[]) || [];
-      setPlayers(roomPlayers);
+      try {
+        setIsLoading(true);
 
-      const playerId = localStorage.getItem("playerId");
-      if (playerId) {
-        const player = roomPlayers.find(p => p.player_id === playerId) || null;
-        setCurrentPlayer(player);
-      } else {
-        console.error("Player ID not found in localStorage. Cannot identify current player.");
-        toast.error("Tidak dapat mengidentifikasi pemain. Silakan bergabung kembali.");
+        const { data: roomData, error: roomError } = await supabase
+          .from("game_rooms")
+          .select("*")
+          .eq("room_code", roomCode)
+          .single();
+
+        if (roomError || !roomData) {
+          toast.error("Room tidak ditemukan!");
+          router.replace("/");
+          return;
+        }
+
+        setRoom(roomData);
+        const roomPlayers = (roomData.players as ExtendedEmbeddedPlayer[]) || [];
+        setPlayers(roomPlayers);
+
+        const playerId = localStorage.getItem("playerId");
+        if (playerId) {
+          const player = roomPlayers.find((p) => p.player_id === playerId) || null;
+          setCurrentPlayer(player);
+          if (player?.character_type) setSelectedCharacter(player.character_type);
+        } else {
+          toast.error("Tidak dapat mengidentifikasi pemain.");
+          router.replace("/");
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Gagal memuat lobby");
         router.replace("/");
+      } finally {
+        setIsLoading(false); // ← INI YANG PENTING!
       }
-
-      setIsLoading(false);
     };
 
     fetchInitialData();
     syncServerTime();
   }, [roomCode, router]);
 
-  // Real-time subscription for room updates
+  // === REAL-TIME SUBSCRIPTION (tetap sama) ===
   useEffect(() => {
     if (!room?.id) return;
 
@@ -114,11 +216,14 @@ export default function LobbyPage() {
           setRoom(newRoom);
           const newPlayers = (newRoom.players as ExtendedEmbeddedPlayer[]) || [];
           setPlayers(newPlayers);
-          
-          const playerId = localStorage.getItem("player_id");
+
+          const playerId = localStorage.getItem("playerId");
           if (playerId) {
-            const updatedPlayer = newPlayers.find(p => p.player_id === playerId) || null;
+            const updatedPlayer = newPlayers.find((p) => p.player_id === playerId) || null;
             setCurrentPlayer(updatedPlayer);
+            if (updatedPlayer?.character_type) {
+              setSelectedCharacter(updatedPlayer.character_type);
+            }
           }
         }
       )
@@ -129,22 +234,7 @@ export default function LobbyPage() {
     };
   }, [room?.id]);
 
-  // Sync selected character with currentPlayer state
-  useEffect(() => {
-    if (currentPlayer?.character_type) {
-      setSelectedCharacter(currentPlayer.character_type);
-    }
-  }, [currentPlayer]);
-
-  // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Countdown logic
+  // === COUNTDOWN (tetap sama) ===
   useEffect(() => {
     if (!room?.countdown_start) {
       setCountdown(null);
@@ -163,29 +253,21 @@ export default function LobbyPage() {
     }
   }, [room?.countdown_start]);
 
-  // Redirect player when game starts
+  // === AUTO REDIRECT KETIKA GAME MULAI ===
   useEffect(() => {
     if (room?.status === "playing" || (countdown !== null && countdown <= 0)) {
       router.replace(`/player/${roomCode}/quiz`);
     }
   }, [room?.status, countdown, roomCode, router]);
 
-  // Atmosphere text interval
-  useEffect(() => {
-    if (atmosphereTexts.length === 0) return;
-    const textInterval = setInterval(() => {
-      setAtmosphereText(atmosphereTexts[Math.floor(Math.random() * atmosphereTexts.length)]);
-    }, 2500);
-    return () => clearInterval(textInterval);
-  }, [atmosphereTexts]);
-
+  // === CHARACTER SELECTION (tetap sama) ===
   const handleCharacterSelect = async (characterValue: string) => {
-    if (!currentPlayer) return;
+    if (!currentPlayer || characterValue === selectedCharacter) return;
+
     const previousCharacter = selectedCharacter;
     try {
       setSelectedCharacter(characterValue);
-      // Optimistic update in the local state first
-      const updatedPlayers = players.map(p => 
+      const updatedPlayers = players.map((p) =>
         p.player_id === currentPlayer.player_id ? { ...p, character_type: characterValue } : p
       );
       setPlayers(updatedPlayers);
@@ -195,26 +277,19 @@ export default function LobbyPage() {
         .update({ players: updatedPlayers })
         .eq("id", room?.id);
 
-      if (error) {
-        // Revert on error
-        setPlayers(players);
-        setSelectedCharacter(previousCharacter);
-        toast.error("Gagal memperbarui karakter: " + error.message);
-        return;
-      }
-      setIsCharacterDialogOpen(false);
+      if (error) throw error;
     } catch (error) {
-      setPlayers(players);
       setSelectedCharacter(previousCharacter);
-      toast.error("Gagal memperbarui karakter: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"));
+      toast.error("Gagal mengganti karakter");
     }
   };
 
+  // === EXIT LOBBY (tetap sama) ===
   const handleExitLobby = async () => {
     if (!currentPlayer || !room) return;
     try {
       localStorage.setItem("exitBySelf", "1");
-      const updatedPlayers = room.players.filter(p => p.player_id !== currentPlayer.player_id);
+      const updatedPlayers = room.players.filter((p) => p.player_id !== currentPlayer.player_id);
       await supabase.from("game_rooms").update({ players: updatedPlayers }).eq("id", room.id);
       router.replace("/");
     } catch (err) {
@@ -224,15 +299,12 @@ export default function LobbyPage() {
     }
   };
 
+  // === START GAME (Host only) ===
   const startGame = async () => {
-    if (!room?.id || !currentPlayer?.is_host || isSubmitting) {
-      return;
-    }
-
+    if (!room?.id || !currentPlayer?.is_host || isSubmitting) return;
     setIsSubmitting(true);
-
     try {
-      const { error: roomError } = await supabase
+      const { error } = await supabase
         .from("game_rooms")
         .update({
           status: "playing",
@@ -241,13 +313,9 @@ export default function LobbyPage() {
         })
         .eq("id", room.id);
 
-      if (roomError) {
-        console.error("Error starting game:", roomError);
-        toast.error("Gagal memulai permainan: " + roomError.message);
-      }
+      if (error) throw error;
     } catch (error) {
-      console.error("Error in startGame:", error);
-      toast.error("Gagal memulai permainan: " + (error instanceof Error ? error.message : "Kesalahan tidak diketahui"));
+      toast.error("Gagal memulai permainan");
     } finally {
       setIsSubmitting(false);
     }
@@ -264,120 +332,152 @@ export default function LobbyPage() {
     });
   }, [players, currentPlayer]);
 
-  const bloodDrips = useMemo(() => {
-    const dripCount = isMobile ? 4 : 8;
-    return Array.from({ length: dripCount }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      speed: 2 + Math.random() * 1.5,
-      delay: Math.random() * 5,
-      opacity: 0.7 + Math.random() * 0.3,
-    }));
-  }, [isMobile]);
-
   useDetectBackAction(setIsExitDialogOpen);
 
-  if (isLoading || !currentPlayer || !room) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-red-500 font-mono text-2xl animate-pulse">
-        MEMUAT RUANGAN...
-      </div>
-    );
-  }
-
+  // === RENDER DENGAN LOADINGSCREEN (INI YANG BARU!) ===
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden select-none">
-      {/* Countdown Overlay */}
-      {countdown !== null && countdown > 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black flex items-center justify-center z-50">
-          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }} className="text-[20rem] md:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]">
-            {countdown}
+    <LoadingScreen minDuration={500} isReady={!isLoading && !!currentPlayer && !!room}>
+      {/* SELURUH KONTEN LOBBY */}
+      <div className="min-h-screen bg-black relative overflow-hidden select-none">
+        {/* Countdown Overlay */}
+        {countdown !== null && countdown > 0 && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black flex items-center justify-center z-50">
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className="text-[20rem] md:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
+            >
+              {countdown}
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
 
-      <div className="relative z-10 mx-auto p-7 mb-10">
-        <motion.header initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.3 }} className="flex flex-col gap-1 mb-10">
-          <div className="flex items-center justify-between mb-5">
-            <h1 className="text-2xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]" onClick={() => setIsExitDialogOpen(true)}>
-              {t("title")}
-            </h1>
-            <Button onClick={() => setIsExitDialogOpen(true)} variant="ghost" size="icon" className="bg-red-600/80 hover:bg-red-700 text-white rounded-lg p-2 shadow-lg">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </div>
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.5 }} className="flex justify-center items-center text-center pb-5">
-            <HeartPulse className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
+        <div className="relative z-10 mx-auto p-4 pt-6 pb-28 max-w-7xl">
+          <motion.header initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
             <h1 className="text-4xl md:text-6xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse">
               {t("waitingRoomTitle")}
             </h1>
-            <HeartPulse className="w-12 h-12 text-red-500 ml-4 animate-pulse" />
-          </motion.div>
-          <p className="text-red-400/80 text-base md:text-xl text-center font-mono animate-pulse tracking-wider">{atmosphereText}</p>
-        </motion.header>
+          </motion.header>
 
-        <div className="max-w-auto mx-auto mb-8 md:h-auto h-[calc(100vh-150px)] overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Daftar Player */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 px-2">
             {sortedPlayers.map((player) => (
-              <div key={player.player_id} className="relative bg-black/40 border border-red-900/50 rounded-lg p-4 lg:mx-2 md:mx-5 mx-10 m-2 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                <SoulStatus
-                  player={{ ...player, id: player.player_id, health: player.health?.current || 3, maxHealth: player.health?.max || 3 }}
-                  isCurrentPlayer={player.player_id === currentPlayer.player_id}
-                  variant="detailed"
-                  showDetailed={true}
-                />
-                {player.is_host && <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded font-mono">HOST</div>}
+              <div
+                key={player.player_id}
+                className="relative bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+              >
+              <SoulStatus
+                player={{
+                  ...player,
+                  id: player.player_id,
+                }}
+                isCurrentPlayer={currentPlayer ? player.player_id === currentPlayer.player_id : false}
+              />
+                {player.is_host && (
+                  <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded font-mono">
+                    HOST
+                  </div>
+                )}
               </div>
             ))}
           </div>
+
+        {/* Tombol Start untuk Host */}
+            {currentPlayer?.is_host && (
+              <div className="text-center mt-10">
+                <Button
+                  onClick={startGame}
+                  disabled={isSubmitting || countdown !== null}
+                  className="bg-red-700 hover:bg-red-600 text-white font-mono text-xl px-8 py-4 rounded-lg shadow-lg"
+                >
+                  {t("startGame")}
+                </Button>
+              </div>
+            )}
+
+            {/* Tombol Bawah Non-Host */}
+            {currentPlayer && !currentPlayer.is_host && (
+              <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-md px-4">
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={() => setIsExitDialogOpen(true)}
+                    variant="outline"
+                    size="icon"
+                    className="bg-red-900/80 border-red-600 hover:bg-red-800 text-white rounded-full p-3 shadow-lg"
+                  >
+                    <ArrowLeft className="w-7 h-7" />
+                  </Button>
+
+                  {isMobile ? (
+                    <MobileCharacterSelector
+                      selectedCharacter={selectedCharacter}
+                      onSelect={handleCharacterSelect}
+                      isOpen={isCharacterSelectorOpen}
+                      setIsOpen={setIsCharacterSelectorOpen}
+                    />
+                  ) : (
+                    <Button
+                      onClick={() => setIsCharacterSelectorOpen(true)}
+                      className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-mono text-xl px-10 py-6 rounded-lg shadow-lg"
+                    >
+                      {t("selectCharacter")}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
         </div>
 
-        <div className="text-center space-y-6">
-          <div className="flex items-center justify-center space-x-4 text-red-400 font-mono text-lg">
-            <Users className="w-6 h-6" />
-            <span className="tracking-wider">{players.length} {t("cursedSouls")}</span>
-          </div>
+        {/* Dialog Keluar */}
+        <Dialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>
+          <DialogContent className="bg-black/95 border border-red-600/70 text-red-400 rounded-xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-red-500">{t("exitConfirm")}</DialogTitle>
+            </DialogHeader>
+            <DialogFooter className="mt-4 flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setIsExitDialogOpen(false)}>{t("cancel")}</Button>
+              <Button onClick={handleExitLobby} className="bg-red-600 hover:bg-red-700 text-white">
+                {t("exit")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-          {/* Ready/Unready button removed */}
-          {currentPlayer.is_host && (
-            <Button onClick={startGame} disabled={isSubmitting || (countdown !== null && countdown > 0)} className="bg-red-700 hover:bg-red-600 text-white font-mono text-xl px-8 py-4 rounded-lg">
-              {t("startGame")}
-            </Button>
-          )}
-        </div>
-
-        {!currentPlayer.is_host && (
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-md px-4">
-            <Button onClick={() => setIsCharacterDialogOpen(true)} className="w-full bg-gray-800 hover:bg-gray-700 text-white font-mono text-xl px-10 py-6 rounded-lg">
-              {t("selectCharacter")}
-            </Button>
-          </div>
+        {/* Dialog Pilih Karakter Desktop */}
+        {!isMobile && isCharacterSelectorOpen && (
+          <Dialog open={isCharacterSelectorOpen} onOpenChange={setIsCharacterSelectorOpen}>
+            <DialogContent className="bg-black/95 border-red-800/60 text-white p-6 max-w-lg rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold font-mono text-red-500">Pilih Karakter</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-5 gap-4 mt-6">
+                {characterOptions.map((character) => (
+                  <motion.button
+                    key={character.value}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => {
+                      handleCharacterSelect(character.value);
+                      setIsCharacterSelectorOpen(false);
+                    }}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-4 ${
+                      selectedCharacter === character.value
+                        ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.9)]"
+                        : "border-white/20 hover:border-red-600"
+                    }`}
+                  >
+                    {selectedCharacter === character.value && (
+                      <div className="absolute inset-0 bg-red-600/50 z-10 flex items-center justify-center">
+                        <CheckCircle2 className="w-12 h-12 text-white" />
+                      </div>
+                    )}
+                    <Image src={character.gif} alt={character.name} fill unoptimized className="object-cover" />
+                  </motion.button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
-
-      <Dialog open={isCharacterDialogOpen} onOpenChange={setIsCharacterDialogOpen}>
-        <DialogContent className="bg-black/95 text-white border-red-500/50 max-w-lg rounded-xl p-6">
-          <DialogHeader><DialogTitle className="text-3xl font-bold text-red-400 font-mono">{t("selectCharacter")}</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-3 gap-4 py-6">
-            {characterOptions.map((character) => (
-              <div key={character.value} role="button" tabIndex={0} onClick={() => handleCharacterSelect(character.value)} className={`relative flex flex-col items-center p-4 rounded-lg cursor-pointer transition-all duration-300 ${selectedCharacter === character.value ? "border-2 border-red-500 shadow-[0_0_10px_rgba(255,0,0,0.7)]" : "border border-white/20 bg-white/10 hover:bg-red-500/20"}`}>
-                <Image src={character.gif} alt={character.alt} width={80} height={80} unoptimized className="object-contain" />
-                <span className="text-white font-mono text-sm text-center mt-2">{character.name}</span>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>
-        <DialogContent className="bg-black/95 border border-red-600/70 text-red-400 rounded-xl">
-          <DialogHeader><DialogTitle className="text-lg font-bold text-red-500">{t("exitConfirm")}</DialogTitle></DialogHeader>
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setIsExitDialogOpen(false)}>{t("cancel")}</Button>
-            <Button onClick={handleExitLobby} className="bg-red-600 hover:bg-red-700 text-white">{t("exit")}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </LoadingScreen>
   );
 }
