@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@radix-ui/react-select"; // Tambahkan import Separator untuk divider
 import { preloadGlobalAssets } from "@/lib/preloadAssets";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // Types for TypeScript
 interface BloodDrip {
@@ -238,113 +239,110 @@ export default function HomePage() {
 
   // Join game - Diubah untuk sinkron dengan schema terbaru: Gunakan query langsung tanpa RPC
   // Fetch room dengan players JSONB, cek nickname manual, append player ke array players, lalu update
-  const handleJoinGame = useCallback(async () => {
-    if (isJoining) return;
-    if (!gameCode || !nickname) {
-      setErrorMessage(t("errorMessages.missingInput"));
-      return;
-    }
-
-    setIsJoining(true);
-    setErrorMessage(null);
-
-    try {
-      // Step 1: Check if room exists dan fetch players
-      const { data: room, error: roomError } = await supabase
-        .from("game_rooms")
-        .select("*")
-        .eq("room_code", gameCode.toUpperCase())
-        .single();
-
-      if (roomError || !room) {
-        toast.error(t("errorMessages.roomNotFound"));
-        setIsJoining(false);
+    const handleJoinGame = useCallback(async () => {
+      if (isJoining) return;
+      if (!gameCode || !nickname) {
+        setErrorMessage(t("errorMessages.missingInput"));
         return;
       }
-
-      // Step 2: Cek status room (hanya bisa join jika 'waiting')
-      if (room.status !== 'waiting') {
-        toast.error(t("errorMessages.roomNotActive"));
+  
+      setIsJoining(true);
+      setErrorMessage(null);
+  
+      try {
+        const joinGameProcess = async () => {
+          // Step 1: Check if room exists dan fetch players
+          const { data: room, error: roomError } = await supabase
+            .from("game_rooms")
+            .select("*")
+            .eq("room_code", gameCode.toUpperCase())
+            .single();
+  
+          if (roomError || !room) {
+            throw new Error(t("errorMessages.roomNotFound"));
+          }
+  
+          // Step 2: Cek status room (hanya bisa join jika 'waiting')
+          if (room.status !== 'waiting') {
+            throw new Error(t("errorMessages.roomNotActive"));
+          }
+  
+          // Step 3: Cek apakah room penuh
+          const currentPlayersCount = (room.players || []).length;
+          if (currentPlayersCount >= (room.max_players || 100)) {
+            throw new Error(t("errorMessages.roomFull"));
+          }
+  
+          // Step 4: Cek nickname duplikat manual dari JSONB players
+          const players = room.players || [] as any[];
+          const existingPlayer = players.find((p: any) => p.nickname?.toLowerCase() === nickname.toLowerCase());
+          if (existingPlayer) {
+            throw new Error(t("errorMessages.nicknameTaken"));
+          }
+  
+          // Step 5: Buat player baru dan append ke array players
+          const playerId = crypto.randomUUID(); // Client-side UUID for player_id
+          const newPlayer = {
+            player_id: playerId,
+            nickname,
+            character_type: `robot${Math.floor(Math.random() * 10) + 1}`,
+            score: 0,
+            correct_answers: 0,
+            is_host: false,
+            position_x: 0,
+            position_y: 0,
+            is_alive: true,
+            power_ups: 0,
+            joined_at: new Date().toISOString(),
+            health: {
+              current: 3,
+              max: 3,
+              is_being_attacked: false,
+              last_attack_time: new Date().toISOString(),
+              speed: 20,
+              last_answer_time: new Date().toISOString(),
+              countdown: 0
+            },
+            answers: [],
+            attacks: []
+          };
+  
+          const newPlayers = [...players, newPlayer];
+  
+          // Step 6: Update room dengan players baru (langsung via UPDATE)
+          const { error: updateError } = await supabase
+            .from("game_rooms")
+            .update({
+              players: newPlayers,
+              updated_at: new Date().toISOString()  // Update timestamp sesuai schema
+            })
+            .eq("id", room.id);
+  
+          if (updateError) {
+            console.error("Error updating room players:", updateError);
+            throw new Error(t("errorMessages.joinFailed"));
+          }
+  
+          localStorage.setItem("nickname", nickname);
+          localStorage.setItem("roomCode", gameCode.toUpperCase());
+          localStorage.setItem("playerId", playerId); // Store for later use
+          if (navigator.vibrate) navigator.vibrate(50);
+          return `/player/${gameCode.toUpperCase()}/lobby`;
+        };
+  
+        const [navigationPath] = await Promise.all([
+          joinGameProcess(),
+          new Promise(resolve => setTimeout(resolve, 500))
+        ]);
+  
+        router.push(navigationPath);
+  
+      } catch (error: any) {
+        console.error("Error bergabung ke permainan:", error);
+        toast.error(error.message || t("errorMessages.joinFailed"));
         setIsJoining(false);
-        return;
       }
-
-      // Step 3: Cek apakah room penuh
-      const currentPlayersCount = (room.players || []).length;
-      if (currentPlayersCount >= (room.max_players || 100)) {
-        toast.error(t("errorMessages.roomFull"));
-        setIsJoining(false);
-        return;
-      }
-
-      // Step 4: Cek nickname duplikat manual dari JSONB players
-      const players = room.players || [] as any[];
-      const existingPlayer = players.find((p: any) => p.nickname?.toLowerCase() === nickname.toLowerCase());
-      if (existingPlayer) {
-        toast.error(t("errorMessages.nicknameTaken"));
-        setIsJoining(false);
-        return;
-      }
-
-      // Step 5: Buat player baru dan append ke array players
-      const playerId = crypto.randomUUID(); // Client-side UUID for player_id
-      const newPlayer = {
-        player_id: playerId,
-        nickname,
-        character_type: `robot${Math.floor(Math.random() * 10) + 1}`,
-        score: 0,
-        correct_answers: 0,
-        is_host: false,
-        position_x: 0,
-        position_y: 0,
-        is_alive: true,
-        power_ups: 0,
-        joined_at: new Date().toISOString(),
-        health: {
-          current: 3,
-          max: 3,
-          is_being_attacked: false,
-          last_attack_time: new Date().toISOString(),
-          speed: 20,
-          last_answer_time: new Date().toISOString(),
-          countdown: 0
-        },
-        answers: [],
-        attacks: []
-      };
-
-      const newPlayers = [...players, newPlayer];
-
-      // Step 6: Update room dengan players baru (langsung via UPDATE)
-      const { error: updateError } = await supabase
-        .from("game_rooms")
-        .update({ 
-          players: newPlayers,
-          updated_at: new Date().toISOString()  // Update timestamp sesuai schema
-        })
-        .eq("id", room.id);
-
-      if (updateError) {
-        console.error("Error updating room players:", updateError);
-        toast.error(t("errorMessages.joinFailed"));
-        setIsJoining(false);
-        return;
-      }
-
-      // Verifikasi opsional: Fetch ulang room untuk konfirmasi (tidak wajib, tapi bagus untuk debug)
-      console.log("Player joined successfully. New players count:", newPlayers.length);
-
-      localStorage.setItem("nickname", nickname);
-      localStorage.setItem("roomCode", gameCode.toUpperCase());
-      localStorage.setItem("playerId", playerId); // Store for later use
-      if (navigator.vibrate) navigator.vibrate(50);
-              await router.push(`/player/${gameCode.toUpperCase()}/lobby`);    } catch (error) {
-      console.error("Error bergabung ke permainan:", error);
-      toast.error(t("errorMessages.joinFailed"));
-      setIsJoining(false);
-    }
-  }, [gameCode, nickname, router, t, isJoining]);
-
+    }, [gameCode, nickname, router, t, isJoining]);
   // Start Play mode
   const handleStartTryout = useCallback(() => {
     if (!nickname) {
@@ -407,6 +405,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none">
+      {(isCreating || isJoining) && <LoadingScreen children={undefined} />}
       {isClient &&
         bloodDrips.map((drip) => (
           <motion.div

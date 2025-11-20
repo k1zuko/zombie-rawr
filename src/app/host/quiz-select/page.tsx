@@ -134,18 +134,31 @@ export default function QuizSelectPage() {
 
   const handleQuizSelect = useCallback(async (quizId: string) => {
     setIsCreating(true);
+
     try {
       const roomCode = generateRoomCode();
       const tabHostId = crypto.randomUUID();
       sessionStorage.setItem("currentHostId", tabHostId);
 
-      const { data, error } = await supabase
+      const createRoomPromise = supabase
         .from("game_rooms")
-        .insert({ room_code: roomCode, title: t("title"), quiz_id: quizId, host_id: tabHostId })
+        .insert({
+          room_code: roomCode,
+          title: t("title"),
+          quiz_id: quizId,
+          host_id: tabHostId,
+        })
         .select()
         .single();
 
-      if (error) throw error;
+      const minDelayPromise = new Promise((resolve) => setTimeout(resolve, 500));
+
+      const [{ error }] = await Promise.all([createRoomPromise, minDelayPromise]);
+
+      if (error) {
+        throw error;
+      }
+
       router.push(`/host/${roomCode}/character-select`);
     } catch (error) {
       console.error("Error creating game:", error);
@@ -158,6 +171,10 @@ export default function QuizSelectPage() {
 
   const totalPages = Math.ceil(totalQuizzes / quizzesPerPage);
   const isSearching = searchQuery.trim().length > 0;
+
+  if (isCreating) {
+    return <LoadingScreen isReady={false} children={undefined} />;
+  }
 
   // ==== RENDER ====
   return (

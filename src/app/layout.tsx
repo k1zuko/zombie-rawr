@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "react-hot-toast";
+import LoadingScreenPreload from "@/components/LoadingScreenPreload";
 import Script from "next/script"; // ✅ Tambahkan ini
 
 const geistSans = Geist({
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <ClientProviders>
+            <LoadingScreenPreload />
             {children}
             <Toaster
               position="top-center"

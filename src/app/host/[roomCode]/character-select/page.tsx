@@ -285,7 +285,7 @@ export default function CharacterSelectPage() {
       const validatedDifficultyLevel = validateDifficultyLevel(difficultyLevel);
       const durationInSeconds = gameDuration * 60;
 
-      const { error } = await supabase
+      const updatePromise = supabase
         .from("game_rooms")
         .update({
           duration: durationInSeconds,
@@ -296,15 +296,24 @@ export default function CharacterSelectPage() {
         })
         .eq("id", room.id);
 
-      if (error) throw error;
+      const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500));
+
+      const [{ error }] = await Promise.all([updatePromise, minDelayPromise]);
+
+      if (error) {
+        throw error;
+      }
       router.push(`/host/${roomCode}/lobby`);
     } catch (error) {
       console.error(t("errorMessages.saveSettingsFailedLog"), error);
       toast.error(t("errorMessages.saveSettingsFailed"));
-    } finally {
       setIsSaving(false);
     }
   };
+
+  if (isSaving) {
+    return <LoadingScreen isReady={false} children={undefined} />;
+  }
 
   // ==== RENDER DENGAN LOADINGSCREEN ====
   return (
