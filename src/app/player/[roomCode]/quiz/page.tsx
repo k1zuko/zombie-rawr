@@ -279,16 +279,6 @@ export default function QuizPage() {
     if (!room || !currentPlayer) return;
     setIsProcessingAnswer(true);
 
-    let newHealth = playerHealth;
-    let newSpeed = playerSpeed;
-
-    if (isCorrectAnswer) {
-      newSpeed = Math.min(playerSpeed + 5, 100);
-    } else {
-      newHealth = Math.max(0, playerHealth - 1);
-      newSpeed = Math.max(20, playerSpeed - 5);
-    }
-
     const { data: roomData, error: roomError } = await supabase
       .from("game_rooms")
       .select("players")
@@ -316,6 +306,9 @@ export default function QuizPage() {
       is_correct: isCorrectAnswer,
       answered_at: new Date().toISOString(),
     };
+
+    const newHealth = isCorrectAnswer ? playerHealth : Math.max(0, playerHealth - 1);
+    const newSpeed = isCorrectAnswer ? Math.min(playerSpeed + 5, 100) : Math.max(20, playerSpeed - 5);
 
     const updatedPlayer = {
       ...currentPlayers[playerIndex],
@@ -432,7 +425,7 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <Skull className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
+     
           <p className="text-white font-mono text-xl">{t("loadingGame")}</p>
         </div>
       </div>
@@ -475,7 +468,7 @@ export default function QuizPage() {
       <div className="relative z-10 container mx-auto px-4 pt-8">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
-            <Skull className="w-8 h-8 text-red-500 mr-3 animate-pulse" />
+     
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -489,7 +482,7 @@ export default function QuizPage() {
                 {t("title")}
               </h1>
             </motion.div>
-            <Skull className="w-8 h-8 text-red-500 ml-3 animate-pulse" />
+        
           </div>
 
           {/* 1-BAR INFO ROW */}
@@ -509,8 +502,7 @@ export default function QuizPage() {
               </span>
             </div>
             <div className="flex items-center gap-x-1">
-              {[...Array(3)].map((_, i) => (
-                <Heart
+                            {[...Array(currentPlayer.health.max)].map((_, i) => (                 <Heart
                   key={i}
                   className={`w-4 h-4 transition-all ${
                     i < playerHealth

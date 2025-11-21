@@ -280,7 +280,21 @@ export default function HomePage() {
             throw new Error(t("errorMessages.nicknameTaken"));
           }
   
-          // Step 5: Buat player baru dan append ke array players
+          // Step 5: Tentukan health berdasarkan difficulty dan buat player baru
+          let initialHealth = 3; // Default untuk 'medium'
+          switch (room.difficulty_level) {
+            case 'easy':
+              initialHealth = 5;
+              break;
+            case 'hard':
+              initialHealth = 1;
+              break;
+            case 'medium':
+            default:
+              initialHealth = 3;
+              break;
+          }
+
           const playerId = crypto.randomUUID(); // Client-side UUID for player_id
           const newPlayer = {
             player_id: playerId,
@@ -295,8 +309,8 @@ export default function HomePage() {
             power_ups: 0,
             joined_at: new Date().toISOString(),
             health: {
-              current: 3,
-              max: 3,
+              current: initialHealth,
+              max: initialHealth,
               is_being_attacked: false,
               last_attack_time: new Date().toISOString(),
               speed: 20,

@@ -651,7 +651,7 @@ export default function ResultsPage() {
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
         <div className="text-center z-10">
-          <Skull className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
+
           <p className="text-white font-mono text-xl mb-4 tracking-widest">{t("result.loadingTitle")}</p>
           <p className="text-gray-400 font-mono text-sm">{t("result.loadingSubtitle")}</p>
         </div>
@@ -737,14 +737,16 @@ export default function ResultsPage() {
           className="flex flex-col gap-1 mb-7 md:mb-10"
         >
           <div className="flex items-center justify-between mb-5">
-            <div>
+            <div className="hidden sm:block">
               <Link href={"/"}>
-                <h1
-                  className="text-xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
-                  style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-                >
-                  {t("title")}
-                </h1>
+            <Image 
+                src="/logo/quizrushlogo.png" 
+                alt="QuizRush Logo" 
+                width={140}   // turunin sedikit biar proporsional
+                height={35}   // sesuaikan tinggi
+                className="w-32 md:w-40 lg:w-48 h-auto"   // ini yang paling berpengaruh
+                unoptimized 
+              />
               </Link>
             </div>
 
@@ -752,16 +754,15 @@ export default function ResultsPage() {
               <img
                 src={`/logo/gameforsmartlogo-horror.png`}
                 alt="Game for Smart Logo"
-                className="w-36 md:w-52 lg:w-64 h-auto mr-3"
+                className="w-36 md:w-52 lg:w-64 h-auto mr-3 hidden sm:block"
               />
-              {/* Tombol Home */}
+              {/* Tombol Home (hanya terlihat di desktop) */}
               <motion.button
                 onClick={() => router.push("/")}
                 whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
                 whileTap={{ scale: 0.95 }}
-                // Ganti padding & tambahkan aria-label
-                className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
-                aria-label={t("homeButton")} // Penting untuk aksesibilitas
+                className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md hidden sm:block"
+                aria-label={t("homeButton")}
               >
                 <Home className="w-3 h-3" />
               </motion.button>
@@ -774,14 +775,14 @@ export default function ResultsPage() {
             transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
             className="flex justify-center items-center text-center"
           >
-            <Skull className="w-12 h-12 text-red-500 animate-pulse" />
+   
             <h1
               className={`mx-3 text-5xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.title")}
             </h1>
-            <Skull className="w-12 h-12 text-red-500 animate-pulse" />
+    
           </motion.div>
         </motion.header>
 
@@ -811,7 +812,7 @@ export default function ResultsPage() {
                   {getPerformanceTitle()}
                 </h2>
 
-                <p className="text-gray-300 mb-6 italic font-mono text-sm">{getPerformanceMessage()}</p>
+
 
                 <div className="mb-6 flex justify-center">
                   <Image
@@ -942,15 +943,16 @@ export default function ResultsPage() {
           </motion.div>
         )}
 
-        <motion.div
-          className="mt-5 text-center text-gray-500 text-xs font-mono tracking-widest"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.2 }}
+         {/* Tombol Home (hanya terlihat di mobile, di bagian bawah) */}
+        <motion.button
+          onClick={() => router.push("/")}
+          whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
+          whileTap={{ scale: 0.95 }}
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-800 text-white p-3 border-2 border-red-600 rounded-full sm:hidden z-50"
+          aria-label={t("homeButton")}
         >
-          <p>{t("result.adventureAwait")}</p>
-          <p className="mt-1">{t("result.braveryRemembered")}</p>
-        </motion.div>
+          <Home className="w-6 h-6" />
+        </motion.button>
       </div>
     </div>
   )

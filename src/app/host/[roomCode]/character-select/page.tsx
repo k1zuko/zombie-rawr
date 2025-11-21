@@ -191,7 +191,7 @@ export default function CharacterSelectPage() {
       try {
         const { data, error } = await supabase
           .from("game_rooms")
-          .select(`*, embedded_questions`)
+          .select(`*`)
           .eq("room_code", roomCode)
           .single();
 
@@ -285,6 +285,32 @@ export default function CharacterSelectPage() {
       const validatedDifficultyLevel = validateDifficultyLevel(difficultyLevel);
       const durationInSeconds = gameDuration * 60;
 
+      // Tentukan health berdasarkan difficulty
+      let initialHealth = 3; // Default untuk 'medium'
+      switch (validatedDifficultyLevel) {
+        case 'easy':
+          initialHealth = 5;
+          break;
+        case 'hard':
+          initialHealth = 1;
+          break;
+        default:
+          initialHealth = 3;
+          break;
+      }
+
+      // Ambil data pemain saat ini dan perbarui health mereka
+      // @ts-ignore
+      const currentPlayers = room.players || [];
+      const updatedPlayers = currentPlayers.map((player: any) => ({
+        ...player,
+        health: {
+          ...(player.health || {}),
+          current: initialHealth,
+          max: initialHealth,
+        },
+      }));
+
       const updatePromise = supabase
         .from("game_rooms")
         .update({
@@ -292,6 +318,7 @@ export default function CharacterSelectPage() {
           question_count: questionCount,
           chaser_type: validatedChaserType,
           difficulty_level: validatedDifficultyLevel,
+          players: updatedPlayers, // Perbarui data pemain dengan health baru
           updated_at: new Date().toISOString(),
         })
         .eq("id", room.id);

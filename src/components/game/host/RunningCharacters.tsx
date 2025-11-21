@@ -2,7 +2,6 @@
 
 import { Heart } from "lucide-react";
 import { useEffect, useMemo, memo, useRef } from "react"; // ✅ Tambahkan useRef
-import { useParams, useRouter } from "next/navigation";
 import type { EmbeddedPlayer } from "@/lib/supabase";
 import Image from "next/image";
 
@@ -113,7 +112,7 @@ const CharacterItem = memo(function CharacterItem({
           style={{ zIndex: 50 }}
         >
           <div className="flex gap-0.5">
-            {[...Array(3)].map((_, heartIndex) => (
+            {[...Array(player.health.max || 3)].map((_, heartIndex) => (
               <Heart
                 key={heartIndex}
                 className={`w-3.5 h-3.5 ${
@@ -161,10 +160,6 @@ function RunningCharacters({
   centerX,
   completedPlayers,
 }: RunningCharactersProps) {
-  const router = useRouter();
-  const params = useParams();
-  const roomCode = params.roomCode as string;
-
   // ✅ Memoisasi activePlayers
   const activePlayers = useMemo(() => {
     return players.filter((player) => {
@@ -175,15 +170,6 @@ function RunningCharacters({
       return !isCompleted && !isEliminated;
     });
   }, [players, playerStates, completedPlayers]);
-
-  useEffect(() => {
-    if (activePlayers.length === 0 && players.length > 0) {
-      const redirectTimeout = setTimeout(() => {
-        router.push(`/game/${roomCode}/resultshost`);
-      }, 1000);
-      return () => clearTimeout(redirectTimeout);
-    }
-  }, [activePlayers, players, router, roomCode]);
 
   return (
     <div className="absolute bottom-50 z-30 w-full">

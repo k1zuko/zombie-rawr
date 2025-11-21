@@ -235,7 +235,7 @@ export default function ResultsHostPage() {
       }
 
       // Redirect to the new host page
-      router.push(`/host/${newRoomCode}`);
+      router.push(`/host/${newRoom.room_code}`);
     } catch (error) {
       console.error("Failed to create new session:", error);
       setLoadingError(t("errorMessages.createNewSessionFailed"));
@@ -485,65 +485,22 @@ export default function ResultsHostPage() {
           className="flex flex-col gap-5 mb-10 px-4"
         >
           <div className="flex justify-between items-center">
-            <h1
-              className="text-xl md:text-3xl lg:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
-              style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-            >
-              {t("title")}
-            </h1>
+            <Image 
+                src="/logo/quizrushlogo.png" 
+                alt="QuizRush Logo" 
+                width={140}   // turunin sedikit biar proporsional
+                height={35}   // sesuaikan tinggi
+                className="w-32 md:w-40 lg:w-48 h-auto hidden sm:block"   // ini yang paling berpengaruh
+                unoptimized 
+              />
 
             <div className="flex w-fit gap-2 items-center">
               <img
                 src={`/logo/gameforsmartlogo-horror.png`}
                 alt="Game for Smart Logo"
-                className="w-36 md:w-52 lg:w-64 h-auto mr-3"
+                className="w-36 md:w-52 lg:w-64 h-auto mr-3 hidden sm:block"
               />
-              {/* Tombol Home */}
-              <motion.button
-                onClick={() => router.push("/")}
-                whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-                whileTap={{ scale: 0.95 }}
-                // Ganti padding & tambahkan aria-label
-                className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md"
-                aria-label={t("homeButton")} // Penting untuk aksesibilitas
-              >
-                <Home className="w-4 h-4" />
-              </motion.button>
-
-              {/* Tombol Play Again */}
-              <motion.button
-                onClick={handlePlayAgain}
-                disabled={isCreatingNewSession}
-                whileHover={{ scale: 1.05, boxShadow: "0 0 12px rgba(239, 68, 0.8)" }}
-                whileTap={{ scale: 0.95 }}
-                // Ganti padding & tambahkan aria-label
-                className="bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white p-2 border-2 border-red-600 rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label={t("playAgain")} // Penting untuk aksesibilitas
-              >
-                {isCreatingNewSession ? (
-                  // State loading: tampilkan ikon Zap yang berputar
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <RotateCw className="w-4 h-4" />
-                  </motion.div>
-                ) : (
-                  // State default: tampilkan ikon Play Again
-                  <RotateCw className="w-4 h-4" />
-                )}
-              </motion.button>
-
-              {/* Tombol New Game */}
-              <motion.button
-                onClick={() => router.push('/host/quiz-select')}
-                whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(59, 130, 246, 0.7)" }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-blue-600 text-white p-2 border-2 border-blue-500 rounded-md"
-                aria-label={t("newGameButton")}
-              >
-                <Zap className="w-4 h-4" />
-              </motion.button>
+              {/* Tombol Home dihapus dari header */}
             </div>
           </div>
 
@@ -553,14 +510,14 @@ export default function ResultsHostPage() {
             transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
             className="flex justify-center items-center text-center"
           >
-            <HeartPulse className="md:w-12 h-12 text-red-500 mr-4 animate-pulse" />
+           
             <h1
               className={`text-3xl sm:text-5xl lg:text-7xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.titleLeaderboard")}
             </h1>
-            <HeartPulse className="md:w-12 h-12 text-red-500 ml-4 animate-pulse" />
+            
           </motion.div>
         </motion.header>
 
@@ -584,7 +541,7 @@ export default function ResultsHostPage() {
                     animate="show"
                     exit={{ opacity: 0, scale: 0.85, x: idx % 2 ? 80 : -80, transition: { duration: 0.36 } }}
                     whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(220,38,38,0.18)" }}
-                    className="relative bg-gradient-to-br from-gray-950/80 to-black/90 border border-red-800/50 rounded-lg p-3 text-left overflow-hidden"
+                    className="relative bg-gradient-to-br from-gray-950/70 to-black/70 border border-red-800/50 rounded-lg p-3 text-left overflow-hidden"
                     style={{ minHeight: 120 }}
                   >
                     {/* Rank bubble top-left */}
@@ -634,6 +591,36 @@ export default function ResultsHostPage() {
           </div>
         </motion.section>
       </motion.div>
+
+      {/* Tombol Aksi Terapung */}
+      {/* Tombol Home */}
+      <motion.button
+        onClick={() => router.push("/")}
+        whileHover={{ scale: 1.1, boxShadow: "0 0 15px rgba(239, 68, 68, 0.8)" }}
+        whileTap={{ scale: 0.95 }}
+        className="fixed top-1/2 -translate-y-1/2 left-4 z-50 bg-red-800 text-white p-3 border-2 border-red-600 rounded-full shadow-lg"
+        aria-label={t("homeButton")}
+      >
+        <Home className="w-6 h-6" />
+      </motion.button>
+
+      {/* Tombol Play Again */}
+      <motion.button
+        onClick={handlePlayAgain}
+        disabled={isCreatingNewSession}
+        whileHover={{ scale: 1.1, boxShadow: "0 0 15px rgba(239, 68, 68, 0.8)" }}
+        whileTap={{ scale: 0.95 }}
+        className="fixed top-1/2 -translate-y-1/2 right-4 z-50 bg-red-800 text-white p-3 border-2 border-red-600 rounded-full shadow-lg disabled:opacity-50"
+        aria-label={t("playAgain")}
+      >
+        {isCreatingNewSession ? (
+          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+            <RotateCw className="w-6 h-6" />
+          </motion.div>
+        ) : (
+          <RotateCw className="w-6 h-6" />
+        )}
+      </motion.button>
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');

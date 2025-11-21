@@ -76,55 +76,18 @@ const ZombieCharacter = React.memo(
       const attackProgress = isAttacking ? zombieState.attackProgress : 0;
 
       const movementX = attackProgress * ATTACK_DISTANCE;
-      const rotationDeg = isAttacking ? Math.sin(animationTime * 0.3) * 10 : 0;
       const currentScale = isAttacking
         ? gameMode === "panic" ? 2.0 : 1.8
         : gameMode === "panic" ? 1.8 : 1.6;
 
-      const brightness = isAttacking
-        ? "brightness(1.4) contrast(1.4) drop-shadow(0 0 10px rgba(255,50,50,0.6))"
-        : gameMode === "panic"
-          ? "brightness(1.2) contrast(1.2)"
-          : "brightness(1.0) contrast(1.0)";
-
       return {
         x: movementX,
         y: 0,
-        rotation: rotationDeg,
+        rotation: 0,
         scale: currentScale,
-        filter: brightness,
+        filter: "none",
       };
     }, [zombieState.isAttacking, zombieState.attackProgress, animationTime, gameMode]);
-
-    // ✅ Hanya render efek darah jika benar-benar menyerang
-    const renderBloodEffect = zombieState.isAttacking && (
-      <>
-        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-4 h-12 bg-red-700 animate-drip">
-          <div className="absolute bottom-0 w-6 h-6 bg-red-700 rounded-full animate-pulse" />
-        </div>
-        <style jsx>{`
-          @keyframes drip { 
-            0% { height: 0; opacity: 1; }
-            50% { height: 12px; opacity: 1; }
-            100% { height: 24px; opacity: 0; }
-          }
-          .animate-drip {
-            animation: drip 0.5s infinite;
-          }
-          @keyframes pulse {
-            0%, 100% { opacity: 0.9; }
-            50% { opacity: 1; }
-          }
-          .animate-pulse {
-            animation: pulse 0.5s infinite;
-          }
-        `}</style>
-      </>
-    );
-
-    // ✅ Hanya render bayangan jika menyerang
-    const shadowScaleX = zombieState.isAttacking ? 1.2 + zombieState.attackProgress * 0.2 : 1;
-    const shadowOpacity = zombieState.isAttacking ? 0.6 : 0.4;
 
     return (
       <div
@@ -138,9 +101,6 @@ const ZombieCharacter = React.memo(
         }}
       >
         <div className="relative">
-          {/* ✅ Efek darah (hanya saat attack) */}
-          {renderBloodEffect}
-
           {/* ✅ Gambar pengejar — tanpa Framer Motion */}
           <Image
             src={selectedChaser.src}
@@ -154,17 +114,6 @@ const ZombieCharacter = React.memo(
               transform: `scale(${scale}) rotate(${rotation}deg)`,
               transformOrigin: "bottom center",
               willChange: "transform",
-            }}
-          />
-
-          {/* ✅ Bayangan dinamis — tanpa keyframes jika tidak perlu */}
-          <div
-            className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-32 h-8 bg-black/50 rounded-full blur-md"
-            style={{
-              transform: `translateX(-50%) scaleX(${shadowScaleX})`,
-              opacity: shadowOpacity,
-              willChange: "transform, opacity",
-              transition: "transform 0.3s ease, opacity 0.3s ease",
             }}
           />
         </div>
