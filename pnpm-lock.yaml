@@ -116,6 +116,9 @@ importers:
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
+      xid-js:
+        specifier: ^1.0.1
+        version: 1.0.1
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -3018,6 +3021,9 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+
+  xid-js@1.0.1:
+    resolution: {integrity: sha512-l+rmscve/to4bbA35eOXvcSmmbLJuKOHIplc2Yz7r1drsGm7+VoCs8ahb/9weMyNkPd8xPF5HAH6surmElBTuA==}
 
   yallist@5.0.0:
     resolution: {integrity: sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==}
@@ -6103,6 +6109,8 @@ snapshots:
   word-wrap@1.2.5: {}
 
   ws@8.18.3: {}
+
+  xid-js@1.0.1: {}
 
   yallist@5.0.0: {}
 
