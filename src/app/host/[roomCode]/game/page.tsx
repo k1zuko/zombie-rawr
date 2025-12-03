@@ -320,7 +320,7 @@ export default function HostGamePage() {
 
   return (
     <div className={mainContentClass} style={wrapperStyle}>
-      {/* <MemoizedBackground3 isFlashing={false} /> */}
+      <MemoizedBackground3 isFlashing={false} />
       <motion.header
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
