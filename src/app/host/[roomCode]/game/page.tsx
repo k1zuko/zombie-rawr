@@ -15,6 +15,10 @@ import { throttle } from "lodash";
 import React from "react";
 import type { GameRoom, EmbeddedPlayer as Player } from "@/lib/supabase";
 
+// User-configurable Zombie Position for Mobile Landscape
+const ZOMBIE_MOBILE_VERTICAL_OFFSET = 11; // Percentage from the top (e.g., 85 means 85% down)
+const ZOMBIE_MOBILE_HORIZONTAL_OFFSET = 50; // Pixels from the center, positive to move right
+
 // Custom hook to get the previous value of a prop or state
 function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T | undefined>(undefined);
@@ -86,6 +90,8 @@ export default function HostGamePage() {
   const [gameMode, setGameMode] = useState<"normal" | "panic">("normal");
   const [isClient, setIsClient] = useState(false);
   const [screenWidth, setScreenWidth] = useState(1200);
+  const [screenHeight, setScreenHeight] = useState(800);
+  const [isPortraitMobile, setIsPortraitMobile] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
   const prevGameRoom = usePrevious(gameRoom); // <-- Track previous gameRoom state
@@ -236,13 +242,26 @@ export default function HostGamePage() {
     }
   }, [gameRoom, prevGameRoom, initializePlayerStates, router, roomCode, handleZombieAttack, zombieState.isAttacking]);
 
-  // Other useEffects (animationTime, screen size, etc.)
+  // Effect for handling screen size and orientation
   useEffect(() => {
     setIsClient(true);
-    setScreenWidth(window.innerWidth);
-    const handleResize = () => setScreenWidth(window.innerWidth);
+    
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+      setScreenHeight(window.innerHeight);
+      const isMobile = window.innerWidth <= 768;
+      const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+      setIsPortraitMobile(isMobile && isPortrait);
+    };
+
+    handleResize(); // Initial check
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
   }, []);
 
   // New useEffect to handle game end when no players are active
@@ -294,8 +313,14 @@ export default function HostGamePage() {
     );
   }
 
+  const mainContentClass = `relative w-full h-screen bg-black overflow-hidden ${isPortraitMobile ? 'rotate-to-landscape-wrapper' : ''}`;
+  const wrapperStyle = isPortraitMobile ? {
+    width: `${screenHeight}px`,
+    height: `${screenWidth}px`,
+  } : {};
+
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    <div className={mainContentClass} style={wrapperStyle}>
       <MemoizedBackground3 isFlashing={false} />
       <motion.header
         initial={{ opacity: 0, y: -50 }}
@@ -331,6 +356,9 @@ export default function HostGamePage() {
         chaserType={chaserType}
         players={activePlayers}
         animationTime={animationTime}
+        screenHeight={screenHeight} // Add screenHeight prop
+        isPortraitMobile={isPortraitMobile} // Add isPortraitMobile prop
+        mobileHorizontalShift={ZOMBIE_MOBILE_HORIZONTAL_OFFSET} // Pass the horizontal offset
       />
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
         <MemoizedGameUI roomCode={roomCode} />

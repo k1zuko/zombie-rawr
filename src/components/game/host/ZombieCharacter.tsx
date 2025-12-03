@@ -22,6 +22,7 @@ interface ZombieCharacterProps {
   players: EmbeddedPlayer[];
   screenHeight: number;
   isPortraitMobile: boolean;
+  mobileHorizontalShift: number; // New prop for mobile horizontal adjustment
 }
 
 const chaserImages = {
@@ -69,7 +70,6 @@ const chaserImages = {
 
 // You can adjust this value to change the zombie's vertical position on mobile
 const MOBILE_BOTTOM_OFFSET = 30; // Pixels from the bottom of the screen
-const MOBILE_RIGHTWARD_SHIFT_PX = 20; // Pixels to shift the zombie character to the right on mobile
 
 const ZombieCharacter = React.memo(
   ({
@@ -80,6 +80,7 @@ const ZombieCharacter = React.memo(
     chaserType,
     screenHeight,
     isPortraitMobile,
+    mobileHorizontalShift, // Destructure new prop
   }: ZombieCharacterProps) => {
     const selectedChaser = chaserImages[chaserType as keyof typeof chaserImages] || chaserImages.zombie;
 
@@ -110,7 +111,7 @@ const ZombieCharacter = React.memo(
     // Use a different positioning style for mobile
     const positionStyle = isPortraitMobile
       ? {
-          left: `${centerX - zombieState.currentPosition + x + finalHorizontalOffset + MOBILE_RIGHTWARD_SHIFT_PX}px`,
+          left: `${centerX - zombieState.currentPosition + x + finalHorizontalOffset + mobileHorizontalShift}px`,
           bottom: `${MOBILE_BOTTOM_OFFSET * scaleFactor}px`,
         }
       : {
