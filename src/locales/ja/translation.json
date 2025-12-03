@@ -225,5 +225,37 @@
   "difficultyLevelLabel": "難易度設定",
   "difficulty.hard": "難しい",
   "difficulty.medium": "普通",
-  "difficulty.easy": "簡単"
+  "difficulty.easy": "簡単",
+  "user": "ユーザー",
+  "fullscreen": "フルスクリーン",
+  "exitFullscreen": "フルスクリーンを終了",
+  "selectLanguage": "言語を選択",
+
+  "loginTitle": "ログイン",
+  "loginDescription": "冒険を始めるためにログインしてください",
+  "loginSubDescription": "認証情報を入力するか、Googleを使用して続行してください",
+  "loginButton": "ログイン",
+  "loggingIn": "ログイン中...",
+  "googleLoginButton": "Googleでログイン",
+  "emailPlaceholder": "メールアドレスまたはユーザー名",
+  "passwordPlaceholder": "パスワード",
+  "or": "または",
+  "errorMessagesLogin": {
+    "missingInput": "メールアドレス/ユーザー名とパスワードを入力してください",
+    "invalidCredentials": "無効なメールアドレスまたはパスワードです",
+    "loginFailed": "ログインに失敗しました。もう一度お試しください",
+    "googleLoginFailed": "Googleでのログインに失敗しました。もう一度お試しください",
+    "usernameNotFound": "ユーザー名が見つかりません！"
+  },
+  "loginSuccess": "正常にログインしました！",
+  "login": {
+    "noAccount": "アカウントをお持ちではありませんか？",
+    "registerHere": "こちらで登録"
+  },
+  "logoutConfirm": {
+    "title": "ログアウトの確認",
+    "message": "本当にログアウトしますか？"
+  },
+  "logout": "ログアウト",
+  "logoutSuccess": "正常にログアウトしました！"
 }

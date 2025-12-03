@@ -15,7 +15,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase, GameRoom, EmbeddedPlayer } from "@/lib/supabase";
+import { mysupa } from "@/lib/supabase"; // GANTI INI SAJA
 import SoulStatus from "@/components/game/SoulStatus";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
@@ -25,11 +25,30 @@ import { syncServerTime, calculateCountdown } from "@/lib/server-time";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { useDetectBackAction } from "@/hooks/useDetectBackAction";
-import LoadingScreen from "@/components/LoadingScreen"; // Pastikan versi all-in-one
+import LoadingScreen from "@/components/LoadingScreen";
 
-interface ExtendedEmbeddedPlayer extends EmbeddedPlayer {
-  is_ready?: boolean;
-  wrong_answers?: number;
+interface Session {
+  id: string;
+  game_pin: string;
+  status: "waiting" | "playing" | "finished";
+  countdown_started_at?: string | null;
+  total_time_minutes: number;
+  question_limit: number;
+}
+
+interface Participant {
+  id: string;
+  session_id: string;
+  nickname: string;
+  character_type: string;
+  is_host: boolean;
+  is_alive: boolean;
+  score: number;
+  correct_answers: number;
+  health: any;
+  position_x: number;
+  position_y: number;
+  joined_at: string;
 }
 
 const characterOptions = [
@@ -45,13 +64,8 @@ const characterOptions = [
   { value: "robot10", name: "Emas", gif: "/character/player/character9-crop.webp", alt: "Karakter Emas" },
 ];
 
-// Mobile Character Selector (tetap sama)
-function MobileCharacterSelector({
-  selectedCharacter,
-  onSelect,
-  isOpen,
-  setIsOpen,
-}: {
+// Mobile Character Selector (100% SAMA)
+function MobileCharacterSelector({ selectedCharacter, onSelect, isOpen, setIsOpen }: {
   selectedCharacter: string;
   onSelect: (value: string) => void;
   isOpen: boolean;
@@ -65,23 +79,12 @@ function MobileCharacterSelector({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full bg-gray-800 hover:bg-gray-700 rounded-xl p-4 flex items-center gap-4 shadow-2xl transition-all duration-300 border border-red-900/50"
       >
-        <Image
-          src={selected.gif}
-          alt={selected.name}
-          width={80}
-          height={80}
-          unoptimized
-          className="rounded-lg border border-red-800/50"
-        />
+        <Image src={selected.gif} alt={selected.name} width={80} height={80} unoptimized className="rounded-lg border border-red-800/50" />
         <div className="flex-1 text-left">
           <p className="text-white font-mono text-lg font-bold">{selected.name}</p>
           <p className="text-red-400 text-sm">Tap untuk ganti karakter</p>
         </div>
-        {isOpen ? (
-          <ChevronUp className="w-7 h-7 text-red-500 animate-pulse" />
-        ) : (
-          <ChevronDown className="w-7 h-7 text-red-500" />
-        )}
+        {isOpen ? <ChevronUp className="w-7 h-7 text-red-500 animate-pulse" /> : <ChevronDown className="w-7 h-7 text-red-500" />}
       </button>
 
       {isOpen && (
@@ -107,10 +110,7 @@ function MobileCharacterSelector({
                       setIsOpen(false);
                     }}
                     className={`relative aspect-square rounded-xl overflow-hidden border-4 transition-all duration-300
-                      ${isSelected
-                        ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.9)] ring-4 ring-red-500/60"
-                        : "border-white/25 hover:border-red-600/80"
-                      }`}
+                      ${isSelected ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.9)] ring-4 ring-red-500/60" : "border-white/25 hover:border-red-600/80"}`}
                   >
                     {isSelected && (
                       <div className="absolute inset-0 bg-red-600/60 z-10 flex items-center justify-center backdrop-blur-sm">
@@ -135,10 +135,10 @@ export default function LobbyPage() {
   const roomCode = params.roomCode as string;
   const { t } = useTranslation();
 
-  const [room, setRoom] = useState<GameRoom | null>(null);
-  const [players, setPlayers] = useState<ExtendedEmbeddedPlayer[]>([]);
-  const [currentPlayer, setCurrentPlayer] = useState<ExtendedEmbeddedPlayer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);                    // ← Kontrol loading
+  const [session, setSession] = useState<Session | null>(null);
+  const [players, setPlayers] = useState<Participant[]>([]);
+  const [currentPlayer, setCurrentPlayer] = useState<Participant | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isCharacterSelectorOpen, setIsCharacterSelectorOpen] = useState(false);
@@ -153,7 +153,7 @@ export default function LobbyPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // === FETCH DATA DENGAN setIsLoading(false) DI FINALLY ===
+  // FETCH DATA — HANYA UBAH INI
   useEffect(() => {
     const fetchInitialData = async () => {
       if (!roomCode) {
@@ -164,25 +164,30 @@ export default function LobbyPage() {
       try {
         setIsLoading(true);
 
-        const { data: roomData, error: roomError } = await supabase
-          .from("game_rooms")
+        const { data: sess, error } = await mysupa
+          .from("sessions")
           .select("*")
-          .eq("room_code", roomCode)
+          .eq("game_pin", roomCode)
           .single();
 
-        if (roomError || !roomData) {
+        if (error || !sess) {
           toast.error("Room tidak ditemukan!");
           router.replace("/");
           return;
         }
 
-        setRoom(roomData);
-        const roomPlayers = (roomData.players as ExtendedEmbeddedPlayer[]) || [];
-        setPlayers(roomPlayers);
+        setSession(sess);
+
+        const { data: parts } = await mysupa
+          .from("participants")
+          .select("*")
+          .eq("session_id", sess.id);
+
+        setPlayers(parts || []);
 
         const playerId = localStorage.getItem("playerId");
         if (playerId) {
-          const player = roomPlayers.find((p) => p.player_id === playerId) || null;
+          const player = parts?.find(p => p.id === playerId) || null;
           setCurrentPlayer(player);
           if (player?.character_type) setSelectedCharacter(player.character_type);
         } else {
@@ -194,7 +199,7 @@ export default function LobbyPage() {
         toast.error("Gagal memuat lobby");
         router.replace("/");
       } finally {
-        setIsLoading(false); // ← INI YANG PENTING!
+        setIsLoading(false);
       }
     };
 
@@ -202,27 +207,48 @@ export default function LobbyPage() {
     syncServerTime();
   }, [roomCode, router]);
 
-  // === REAL-TIME SUBSCRIPTION (tetap sama) ===
+   // === REALTIME YANG BENAR & PASTI LANGSUNG UPDATE KARAKTER ===
   useEffect(() => {
-    if (!room?.id) return;
+    if (!session?.id) return;
 
-    const channel = supabase
-      .channel(`lobby_${room.id}`)
+    const participantsChannel = mysupa
+      .channel(`participants:${session.id}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "game_rooms", filter: `id=eq.${room.id}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "participants",
+          filter: `session_id=eq.${session.id}`,
+        },
         (payload) => {
-          const newRoom = payload.new as GameRoom;
-          setRoom(newRoom);
-          const newPlayers = (newRoom.players as ExtendedEmbeddedPlayer[]) || [];
-          setPlayers(newPlayers);
+          const newData = payload.new as Participant;
+          const oldData = payload.old as any;
 
-          const playerId = localStorage.getItem("playerId");
-          if (playerId) {
-            const updatedPlayer = newPlayers.find((p) => p.player_id === playerId) || null;
-            setCurrentPlayer(updatedPlayer);
-            if (updatedPlayer?.character_type) {
-              setSelectedCharacter(updatedPlayer.character_type);
+          if (payload.eventType === "INSERT") {
+            setPlayers((prev) => [...prev, newData]);
+          }
+
+          if (payload.eventType === "UPDATE") {
+            setPlayers((prev) =>
+              prev.map((p) => (p.id === newData.id ? newData : p))
+            );
+
+            // INI YANG PENTING: UPDATE currentPlayer & selectedCharacter JIKA DIA YANG BERUBAH
+            if (newData.id === currentPlayer?.id) {
+              setCurrentPlayer(newData);
+              if (newData.character_type) {
+                setSelectedCharacter(newData.character_type);
+                localStorage.setItem("selectedCharacter", newData.character_type);
+              }
+            }
+          }
+
+          if (payload.eventType === "DELETE") {
+            setPlayers((prev) => prev.filter((p) => p.id !== oldData.id));
+            if (oldData.id === currentPlayer?.id) {
+              toast.error("Kamu dikeluarkan dari room!");
+              router.replace("/");
             }
           }
         }
@@ -230,18 +256,18 @@ export default function LobbyPage() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      mysupa.removeChannel(participantsChannel);
     };
-  }, [room?.id]);
+  }, [session?.id, currentPlayer?.id, router]);
 
-  // === COUNTDOWN (tetap sama) ===
+  // COUNTDOWN — HANYA UBAH KOLOMNYA
   useEffect(() => {
-    if (!room?.countdown_start) {
+    if (!session?.countdown_started_at) {
       setCountdown(null);
       return;
     }
     const updateCountdown = () => {
-      const remaining = calculateCountdown(room.countdown_start, 10000);
+      const remaining = calculateCountdown(session.countdown_started_at!, 10000);
       setCountdown(remaining);
       return remaining > 0;
     };
@@ -251,31 +277,27 @@ export default function LobbyPage() {
       }, 100);
       return () => clearInterval(timer);
     }
-  }, [room?.countdown_start]);
+  }, [session?.countdown_started_at]);
 
-  // === AUTO REDIRECT KETIKA GAME MULAI ===
+  // AUTO REDIRECT — HANYA UBAH KOLOMNYA
   useEffect(() => {
-    if (room?.status === "playing" || (countdown !== null && countdown <= 0)) {
+    if (session?.status === "playing" || (countdown !== null && countdown <= 0)) {
       router.replace(`/player/${roomCode}/quiz`);
     }
-  }, [room?.status, countdown, roomCode, router]);
+  }, [session?.status, countdown, roomCode, router]);
 
-  // === CHARACTER SELECTION (tetap sama) ===
+  // GANTI KARAKTER — HANYA UBAH INI
   const handleCharacterSelect = async (characterValue: string) => {
     if (!currentPlayer || characterValue === selectedCharacter) return;
 
     const previousCharacter = selectedCharacter;
     try {
       setSelectedCharacter(characterValue);
-      const updatedPlayers = players.map((p) =>
-        p.player_id === currentPlayer.player_id ? { ...p, character_type: characterValue } : p
-      );
-      setPlayers(updatedPlayers);
 
-      const { error } = await supabase
-        .from("game_rooms")
-        .update({ players: updatedPlayers })
-        .eq("id", room?.id);
+      const { error } = await mysupa
+        .from("participants")
+        .update({ character_type: characterValue })
+        .eq("id", currentPlayer.id);
 
       if (error) throw error;
     } catch (error) {
@@ -284,13 +306,16 @@ export default function LobbyPage() {
     }
   };
 
-  // === EXIT LOBBY (tetap sama) ===
+  // EXIT LOBBY — HANYA UBAH INI
   const handleExitLobby = async () => {
-    if (!currentPlayer || !room) return;
+    if (!currentPlayer) return;
     try {
       localStorage.setItem("exitBySelf", "1");
-      const updatedPlayers = room.players.filter((p) => p.player_id !== currentPlayer.player_id);
-      await supabase.from("game_rooms").update({ players: updatedPlayers }).eq("id", room.id);
+      await mysupa.from("participants").delete().eq("id", currentPlayer.id);
+      localStorage.removeItem("playerId");
+      localStorage.removeItem("sessionId");
+      localStorage.removeItem("nickname");
+      localStorage.removeItem("selectedCharacter");
       router.replace("/");
     } catch (err) {
       console.error("Gagal keluar lobby:", err);
@@ -299,33 +324,11 @@ export default function LobbyPage() {
     }
   };
 
-  // === START GAME (Host only) ===
-  const startGame = async () => {
-    if (!room?.id || !currentPlayer?.is_host || isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from("game_rooms")
-        .update({
-          status: "playing",
-          game_start_time: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", room.id);
-
-      if (error) throw error;
-    } catch (error) {
-      toast.error("Gagal memulai permainan");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const sortedPlayers = useMemo(() => {
     if (!currentPlayer) return players;
     return [...players].sort((a, b) => {
-      if (a.player_id === currentPlayer.player_id) return -1;
-      if (b.player_id === currentPlayer.player_id) return 1;
+      if (a.id === currentPlayer.id) return -1;
+      if (b.id === currentPlayer.id) return 1;
       if (a.is_host) return -1;
       if (b.is_host) return 1;
       return 0;
@@ -336,7 +339,7 @@ export default function LobbyPage() {
 
   // === RENDER DENGAN LOADINGSCREEN (INI YANG BARU!) ===
   return (
-    <LoadingScreen minDuration={500} isReady={!isLoading && !!currentPlayer && !!room}>
+    <LoadingScreen minDuration={500} isReady={!isLoading && !!currentPlayer && !!session}>
       {/* SELURUH KONTEN LOBBY */}
       <div className="min-h-screen bg-black relative overflow-hidden select-none">
           {/* Logos */}
@@ -392,15 +395,15 @@ export default function LobbyPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 px-2">
             {sortedPlayers.map((player) => (
               <div
-                key={player.player_id}
+                key={player.id}
                 className="relative bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
               >
               <SoulStatus
                 player={{
                   ...player,
-                  id: player.player_id,
+                  id: player.id,
                 }}
-                isCurrentPlayer={currentPlayer ? player.player_id === currentPlayer.player_id : false}
+                isCurrentPlayer={currentPlayer ? player.id === currentPlayer.id : false}
               />
                 {player.is_host && (
                   <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded font-mono">
@@ -410,19 +413,6 @@ export default function LobbyPage() {
               </div>
             ))}
           </div>
-
-        {/* Tombol Start untuk Host */}
-            {currentPlayer?.is_host && (
-              <div className="text-center mt-10">
-                <Button
-                  onClick={startGame}
-                  disabled={isSubmitting || countdown !== null}
-                  className="bg-red-700 hover:bg-red-600 text-white font-mono text-xl px-8 py-4 rounded-lg shadow-lg"
-                >
-                  {t("startGame")}
-                </Button>
-              </div>
-            )}
 
             {/* Tombol Bawah Non-Host */}
             {currentPlayer && !currentPlayer.is_host && (

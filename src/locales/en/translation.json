@@ -193,11 +193,11 @@
   "inviteMessage": "Join the thrilling QuizRush game! Use code: {{roomCode}} or click here: {{joinLink}}",
   "inviteToPlay": "Invite to Play",
   "joinLink": "Join Link",
-  "kickPlayerConfirm": "kick {{nickname}}?",
+  "kickPlayerConfirm": "Kick {{nickname}}?",
   "kickPlayerSuccess": "{{nickname}} has been kicked",
   "kickPlayerError": "Failed to kick player",
   "notHost": "Not a host. Redirected home.",
-  "exitConfirm": "want to leave?",
+  "exitConfirm": "Want to leave?",
   "cancel": "Cancel",
   "exit": "Exit",
   "confirm": "Confirm",
@@ -237,8 +237,8 @@
   "errorMessages.roomNotActive": "Room is not active or has already started!",
   "user": "User",
   "fullscreen": "Fullscreen",
+  "exitFullscreen": "Exit Fullscreen",
   "selectLanguage": "Language",
-  "exit": "Exit",
 
   "loginTitle": "Login",
   "loginDescription": "Sign in to start your adventure",
@@ -246,16 +246,21 @@
   "loginButton": "Sign In",
   "loggingIn": "Logging In...",
   "googleLoginButton": "Sign In with Google",
-  "emailPlaceholder": "Enter your email",
-  "passwordPlaceholder": "Enter your password",
+  "emailPlaceholder": "Email or username",
+  "passwordPlaceholder": "Password",
   "or": "or",
   "errorMessagesLogin": {
-    "missingInput": "Please fill in both email and password",
+    "missingInput": "Please fill in both email/username and password",
     "invalidCredentials": "Invalid email or password",
     "loginFailed": "Failed to sign in. Please try again",
-    "googleLoginFailed": "Failed to sign in with Google. Please try again"
+    "googleLoginFailed": "Failed to sign in with Google. Please try again",
+    "usernameNotFound": "Username not found!"
   },
   "loginSuccess": "Successfully signed in!",
+  "login": {
+    "noAccount": "Don't have an account?",
+    "registerHere": "Register here"
+  },
   "logoutConfirm": {
     "title": "Confirm Logout",
     "message": "Are you sure you want to log out?"

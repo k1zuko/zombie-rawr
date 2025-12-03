@@ -9,10 +9,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  } from "@/components/ui/card";
+} from "@/components/ui/card";
 import { Gamepad2, Users, Play, Hash, Zap, Skull, Bone, RefreshCw, HelpCircle, RotateCw, LogOut, Menu, Globe, User, X, BookOpen, ArrowLeft, ArrowRight, Camera } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { mysupa, supabase } from "@/lib/supabase";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,13 +23,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Separator } from "@radix-ui/react-select"; // Tambahkan import Separator untuk divider
 import { preloadGlobalAssets } from "@/lib/preloadAssets";
 import LoadingScreen from "@/components/LoadingScreen";
+import { useAuth } from "@/contexts/AuthContext";
+import Image from "next/image";
+import dynamic from "next/dynamic";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Types for TypeScript
+// Dynamically import the QR Scanner
+const Scanner = dynamic(
+  () => import("@yudiel/react-qr-scanner").then((mod) => mod.Scanner),
+  { ssr: false }
+);
+
 interface BloodDrip {
   id: number;
   left: number;
@@ -38,45 +44,27 @@ interface BloodDrip {
   opacity: number;
 }
 
-interface FloatingIcon {
-  id: number;
-  left: number;
-  top: number;
-  fontSize: number;
-  animationDelay: number;
-  animationDuration: number;
-  isSkull: boolean;
-}
-
-// Custom debounce function
-// const debounce = (func: Function, delay: number) => {
-//   let timeout: NodeJS.Timeout;
-//   return (...args: any[]) => {
-//     clearTimeout(timeout);
-//     timeout = setTimeout(() => func(...args), delay);
-//   };
-// };
-
 export default function HomePage() {
   const { t, i18n } = useTranslation();
+  const { user, profile, loading: authLoading } = useAuth();
   const [gameCode, setGameCode] = useState<string>("");
   const [nickname, setNickname] = useState<string>("");
   const [isJoining, setIsJoining] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
-  const [isStartingTryout, setIsStartingTryout] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isClient, setIsClient] = useState<boolean>(false);
-  const [dripCount, setDripCount] = useState(8); // server fallback
-  const [iconCount, setIconCount] = useState(5); // server fallback
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [dripCount, setDripCount] = useState(8); // server fallback
+  const [iconCount, setIconCount] = useState(5); // server fallback
   const [openHowToPlay, setOpenHowToPlay] = useState(false);
   const [showTooltipOnce, setShowTooltipOnce] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState<boolean>(false);
-  const [tab, setTab] = useState<"join" | "play">("join");
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // State baru untuk hamburger menu
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-  const [showTryoutInput, setShowTryoutInput] = useState(false); // New state for tryout input in menu
+  const [tab, setTab] = useState<"join">("join");
 
   // State untuk debug mode
   const [debugMode, setDebugMode] = useState(false);
@@ -84,297 +72,218 @@ export default function HomePage() {
   const [massJoinStatus, setMassJoinStatus] = useState("");
   const [joinCount, setJoinCount] = useState(0);
 
-  // Atmosphere text
+
   const atmosphereText = t("atmosphereText");
 
   useEffect(() => {
-    preloadGlobalAssets()
+    preloadGlobalAssets();
   }, []);
 
-  // Blood drip effects
   const bloodDrips = useMemo(() => {
     if (!isClient) return [];
-    return Array.from({ length: dripCount }, (_, i) => ({
+    return Array.from({ length: 8 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       speed: 2 + Math.random() * 1.5,
       delay: Math.random() * 5,
       opacity: 0.7 + Math.random() * 0.3,
     }));
-  }, [isClient, dripCount]);
+  }, [isClient]);
 
-  // Responsive drip and icon counts
-  useEffect(() => {
-    const update = () => {
-      const mobile = window.innerWidth < 640;
-      setDripCount(mobile ? 4 : 8);
-      setIconCount(mobile ? 3 : 5);
-    };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
-  // Random nickname generator
-  const generateRandomNickname = useCallback(() => {
-    const prefixes = [
-      "Salsa", "Zombi", "Vampir", "Downey", "Robert", "Windah",
-      "Neko", "Shadow", "Ghost", "Pixel", "Nova", "Luna",
-      "Blaze", "Frost", "Echo", "Cyber", "Storm", "Phantom",
-      "Night", "Inferno", "Zephyr", "Hunter", "Draco", "Falcon",
-      "Toxic", "Venom", "Aqua", "Raven", "Sky", "Zero",
-      "Jinx", "Hex", "Bolt", "Ash", "Flame", "Magma",
-      "Comet", "Glitch", "Vortex", "Wraith", "Slayer", "Bane",
-      "Arcade", "Pixelz", "Mysterio", "Oblivion", "Hydra", "Titan"
-    ];
+  const generateRandomNickname = useCallback((): string => {
+    const prefixes = ["Salsa", "Zombi", "Vampir", "Downey", "Robert", "Windah", "Neko", "Shadow", "Ghost", "Pixel", "Nova"];
     const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const randomNumber = Math.floor(Math.random() * 10000);
-    const newNickname = `${randomPrefix}${randomNumber}`;
-    setNickname(newNickname);
+    return `${randomPrefix}${randomNumber}`;
   }, []);
 
-  // Game code handler with debouncing
-  const handleGameCodeChange = useCallback(
-    ((value: string) => {
-      let processedCode = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-      if (value.includes("http") && value.includes("?code=")) {
-        try {
-          const url = new URL(value);
-          const codeFromUrl = url.searchParams.get("code");
-          if (codeFromUrl) {
-            processedCode = codeFromUrl.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-          }
-        } catch (error) {
-          console.warn("URL tidak valid, diabaikan.");
-          return;
+  const handleGameCodeChange = useCallback(((value: string) => {
+    let processedCode = value;
+    if (value.includes("http") && value.includes("?code=")) {
+      try {
+        const url = new URL(value);
+        const codeFromUrl = url.searchParams.get("code");
+        if (codeFromUrl) {
+          processedCode = codeFromUrl;
         }
+      } catch (error) {
+        console.warn("Invalid URL, ignoring.");
+        return;
       }
-      setGameCode(processedCode);
-    }),
-    []
-  );
+    }
+    setGameCode(processedCode.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6));
+  }), []);
 
-  // Nickname handler with debouncing
-  const handleNicknameChange = useCallback(
-    ((value: string) => {
-      setNickname(value.slice(0, 20));
-    }),
-    []
-  );
+  const handleNicknameChange = useCallback(((value: string) => {
+    setNickname(value.slice(0, 20));
+  }), []);
 
-  // Language change handler
   const handleLanguageChange = (value: string) => {
     i18n.changeLanguage(value);
     if (typeof window !== "undefined") localStorage.setItem("language", value);
-    setIsMenuOpen(false); // Tutup menu setelah pilih bahasa
-  };
-
-  // Placeholder for fullscreen toggle
-  const handleToggleFullscreen = () => {
-    // Placeholder - implement later
-    console.log("Fullscreen toggle - to be implemented");
-  };
-
-  // Placeholder for solo tryout in menu
-  const handleTryoutFromMenu = () => {
-    if (!nickname) {
-      setErrorMessage(t("errorMessages.missingNickname"));
-      return;
-    }
-    setIsStartingTryout(true);
-    localStorage.setItem("nickname", nickname);
-    if (navigator.vibrate) navigator.vibrate(50);
-    router.push("/quiz-select-tryout");
     setIsMenuOpen(false);
   };
 
-  // Handle URL parameters
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(console.warn);
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(console.warn);
+      setIsFullscreen(false);
+    }
+  };
+
   useEffect(() => {
-    const updates: Record<string, string | null> = {};
-    const codeFromUrl = searchParams.get("code");
+    const codeFromUrl = localStorage.getItem("roomCode");
     if (codeFromUrl) {
-      setGameCode(codeFromUrl.toUpperCase());
-      updates.code = null;
+      handleGameCodeChange(codeFromUrl);
     }
+  }, [searchParams, handleGameCodeChange]);
 
-    if (searchParams.get("kicked") === "1") {
-      toast.error(t("youWereKicked"));
-      updates.kicked = null;
-    }
-
-    if (searchParams.get("isHost") === "0") {
-      toast.error(t("notHost"));
-      updates.isHost = null;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      window.history.replaceState(null, "", "/");
-    }
-  }, [searchParams, t]);
-
-  // Set client-side flag
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Show How to Play dialog on first visit
   useEffect(() => {
-    if (!isClient) return;
-    const timer = setTimeout(() => {
-      const seen = typeof window !== "undefined" ? localStorage.getItem("seenHowToPlay") : null;
-      if (!seen) {
-        setOpenHowToPlay(true);
-        localStorage.setItem("seenHowToPlay", "1");
-      }
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, [isClient]);
+    if (authLoading) return;
+    localStorage.removeItem("nickname");
+    let defaultNick = generateRandomNickname();
+    if (profile?.fullname) defaultNick = profile.fullname;
+    else if (profile?.username) defaultNick = profile.username;
+    else if (user?.email) defaultNick = user.email.split('@')[0];
+    setNickname(defaultNick);
+    localStorage.setItem("nickname", defaultNick);
+  }, [user, profile, authLoading, generateRandomNickname]);
 
-  // Host game
   const handleHostGame = useCallback(() => {
     setIsCreating(true);
-    if (navigator.vibrate) navigator.vibrate(50);
-    router.push("/host/quiz-select");
+    router.push("/host");
   }, [router]);
 
-  // Join game - Diubah untuk sinkron dengan schema terbaru: Gunakan query langsung tanpa RPC
-  // Fetch room dengan players JSONB, cek nickname manual, append player ke array players, lalu update
-    const handleJoinGame = useCallback(async () => {
-      if (isJoining) return;
-      if (!gameCode || !nickname) {
-        setErrorMessage(t("errorMessages.missingInput"));
-        return;
-      }
-  
-      setIsJoining(true);
-      setErrorMessage(null);
-  
-      try {
-        const joinGameProcess = async () => {
-          // Step 1: Check if room exists dan fetch players
-          const { data: room, error: roomError } = await supabase
-            .from("game_rooms")
-            .select("*")
-            .eq("room_code", gameCode.toUpperCase())
-            .single();
-  
-          if (roomError || !room) {
-            throw new Error(t("errorMessages.roomNotFound"));
-          }
-  
-          // Step 2: Cek status room (hanya bisa join jika 'waiting')
-          if (room.status !== 'waiting') {
-            throw new Error(t("errorMessages.roomNotActive"));
-          }
-  
-          // Step 3: Cek apakah room penuh
-          const currentPlayersCount = (room.players || []).length;
-          if (currentPlayersCount >= (room.max_players || 100)) {
-            throw new Error(t("errorMessages.roomFull"));
-          }
-  
-          // Step 4: Cek nickname duplikat manual dari JSONB players
-          const players = room.players || [] as any[];
-          const existingPlayer = players.find((p: any) => p.nickname?.toLowerCase() === nickname.toLowerCase());
-          if (existingPlayer) {
-            throw new Error(t("errorMessages.nicknameTaken"));
-          }
-  
-          // Step 5: Tentukan health berdasarkan difficulty dan buat player baru
-          let initialHealth = 3; // Default untuk 'medium'
-          switch (room.difficulty_level) {
-            case 'easy':
-              initialHealth = 5;
-              break;
-            case 'hard':
-              initialHealth = 1;
-              break;
-            case 'medium':
-            default:
-              initialHealth = 3;
-              break;
-          }
+  const handleJoinGame = useCallback(async () => {
+  if (isJoining || !gameCode || !nickname.trim()) {
+    toast.error("Kode game dan nickname harus diisi!");
+    return;
+  }
 
-          const playerId = crypto.randomUUID(); // Client-side UUID for player_id
-          const newPlayer = {
-            player_id: playerId,
-            nickname,
-            character_type: `robot${Math.floor(Math.random() * 10) + 1}`,
-            score: 0,
-            correct_answers: 0,
-            is_host: false,
-            position_x: 0,
-            position_y: 0,
-            is_alive: true,
-            power_ups: 0,
-            joined_at: new Date().toISOString(),
-            health: {
-              current: initialHealth,
-              max: initialHealth,
-              is_being_attacked: false,
-              last_attack_time: new Date().toISOString(),
-              speed: 20,
-              last_answer_time: new Date().toISOString(),
-              countdown: 0
-            },
-            answers: [],
-            attacks: []
-          };
-  
-          const newPlayers = [...players, newPlayer];
-  
-          // Step 6: Update room dengan players baru (langsung via UPDATE)
-          const { error: updateError } = await supabase
-            .from("game_rooms")
-            .update({
-              players: newPlayers,
-              updated_at: new Date().toISOString()  // Update timestamp sesuai schema
-            })
-            .eq("id", room.id);
-  
-          if (updateError) {
-            console.error("Error updating room players:", updateError);
-            throw new Error(t("errorMessages.joinFailed"));
-          }
-  
-          localStorage.setItem("nickname", nickname);
-          localStorage.setItem("roomCode", gameCode.toUpperCase());
-          localStorage.setItem("playerId", playerId); // Store for later use
-          if (navigator.vibrate) navigator.vibrate(50);
-          return `/player/${gameCode.toUpperCase()}/lobby`;
-        };
-  
-        const [navigationPath] = await Promise.all([
-          joinGameProcess(),
-          new Promise(resolve => setTimeout(resolve, 500))
-        ]);
-  
-        router.push(navigationPath);
-  
-      } catch (error: any) {
-        console.error("Error bergabung ke permainan:", error);
-        toast.error(error.message || t("errorMessages.joinFailed"));
-        setIsJoining(false);
-      }
-    }, [gameCode, nickname, router, t, isJoining]);
-  // Start Play mode
-  const handleStartTryout = useCallback(() => {
-    if (!nickname) {
-      setErrorMessage(t("errorMessages.missingNickname"));
+  setIsJoining(true);
+  setErrorMessage(null);
+
+  try {
+    // 1. Cari session berdasarkan game_pin
+    const { data: session, error: sessionError } = await mysupa
+      .from("sessions")
+      .select("id, status, game_pin, host_id, question_limit, total_time_minutes")
+      .eq("game_pin", gameCode.toUpperCase())
+      .single();
+
+    if (sessionError || !session) {
+      toast.error(t("roomNotFound") || "Kode game tidak ditemukan atau sudah expired!");
+      setIsJoining(false);
       return;
     }
 
-    setIsStartingTryout(true);
-    localStorage.setItem("nickname", nickname);
-    if (navigator.vibrate) navigator.vibrate(50);
-    router.push("/quiz-select-tryout");
-  }, [nickname, router, t]);
+    if (session.status !== "waiting") {
+      toast.error(t("gameAlreadyStarted") || "Game sudah dimulai atau selesai!");
+      setIsJoining(false);
+      return;
+    }
 
-  // Settings navigation
-  const handleSettingsClick = useCallback(() => {
-    if (navigator.vibrate) navigator.vibrate(50);
-    router.push("/questions");
-  }, [router]);
+    // 2. Cek apakah user sudah join sebelumnya (opsional, cegah duplikat)
+    const { data: existingParticipant } = await mysupa
+      .from("participants")
+      .select("id")
+      .eq("session_id", session.id)
+      .eq("nickname", nickname.trim())
+      .maybeSingle();
+
+    if (existingParticipant) {
+      toast.error(t("nicknameTaken") || "Nickname sudah digunakan di room ini!");
+      setIsJoining(false);
+      return;
+    }
+
+    // 3. Pilih karakter random kalau belum ada di localStorage
+    const savedChar = localStorage.getItem("selectedCharacter");
+    const characterOptions = [
+      "robot1", "robot2", "robot3", "robot4", "robot5",
+      "robot6", "robot7", "robot8", "robot9", "robot10"
+    ];
+    const character_type = savedChar && characterOptions.includes(savedChar)
+      ? savedChar
+      : characterOptions[Math.floor(Math.random() * characterOptions.length)];
+
+    // 4. Insert participant baru
+    const { data: newParticipant, error: insertError } = await mysupa
+      .from("participants")
+      .insert({
+        session_id: session.id,
+        nickname: nickname.trim(),
+        character_type,
+        is_host: false,
+        user_id: profile?.id || null,
+        score: 0,
+        correct_answers: 0,
+        is_alive: true,
+        position_x: 0,
+        position_y: 0,
+        power_ups: 0,
+        health: {
+          max: 100,
+          current: 100,
+          speed: 1,
+          countdown: 0,
+          last_answer_time: null,
+          last_attack_time: null,
+          is_being_attacked: false
+        },
+        answers: []
+      })
+      .select()
+      .single();
+
+    if (insertError || !newParticipant) {
+      console.error("Insert participant error:", insertError);
+      toast.error(t("joinFailed") || "Gagal masuk ke room. Coba lagi!");
+      setIsJoining(false);
+      return;
+    }
+
+    // 5. Simpan data penting ke localStorage supaya player page bisa baca
+    localStorage.setItem("playerId", newParticipant.id);
+    localStorage.setItem("sessionId", session.id);
+    localStorage.setItem("gamePin", session.game_pin);
+    localStorage.setItem("nickname", nickname.trim());
+    localStorage.setItem("selectedCharacter", character_type);
+
+    toast.success(t("joinSuccess") || `Berhasil masuk sebagai ${nickname}!`);
+    localStorage.removeItem("roomCode")
+
+    // 6. Pindah ke waiting room player
+    router.push(`/player/${gameCode}/lobby`);
+
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    toast.error("Terjadi kesalahan. Coba lagi nanti.");
+  } finally {
+    setIsJoining(false);
+  }
+}, [gameCode, nickname, user, router, t, isJoining]);
+
+  // --- QR SCANNER HANDLERS ---
+  const handleScan = (result: any) => {
+    if (result) {
+      handleGameCodeChange(result.data);
+      setIsScannerOpen(false);
+      toast.success(t("qrCodeScanned") || "QR Code Scanned!");
+    }
+  };
+
+  const handleError = (error: any) => {
+    console.error("QR Scanner Error:", error);
+    toast.error(t("qrScannerError") || "QR Scanner Error.");
+  };
 
   // Logout handler
   const handleLogout = () => {
@@ -384,6 +293,7 @@ export default function HomePage() {
   const confirmLogout = async () => {
     setIsLogoutConfirmOpen(false);
     const { error } = await supabase.auth.signOut();
+    localStorage.clear()
     if (error) {
       toast.error(t("logoutFailed"));
       console.error("Error logging out:", error);
@@ -404,35 +314,15 @@ export default function HomePage() {
     setIsMenuOpen(false);
   };
 
-  // Tutup menu dengan ESC key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsMenuOpen(false);
-      }
-    };
-    if (isMenuOpen) {
-      document.addEventListener('keydown', handleEscape);
-    }
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isMenuOpen]);
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none">
-      {(isCreating || isJoining) && <LoadingScreen children={undefined} />}
-      {isClient &&
-        bloodDrips.map((drip) => (
-          <motion.div
-            key={drip.id}
-            initial={{ y: -100 }}
-            animate={{ y: "100vh" }}
-            transition={{ duration: drip.speed, delay: drip.delay, ease: "linear", repeat: Infinity }}
-            className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
-            style={{ left: `${drip.left}%`, opacity: 0.6 + Math.random() * 0.2 }}
-          />
-        ))}
+      {(isCreating || isJoining || !profile) && <LoadingScreen children={undefined} />}
+      {isClient && bloodDrips.map((drip) => (
+        <motion.div key={drip.id} initial={{ y: -100 }} animate={{ y: "100vh" }} transition={{ duration: drip.speed, delay: drip.delay, ease: "linear", repeat: Infinity }} className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50" style={{ left: `${drip.left}%`, opacity: drip.opacity }} />
+      ))}
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-2 sm:p-4">
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         {/* Hamburger Menu Button - Adapted from reference */}
         <motion.button
           initial={{ opacity: 0, x: 20 }}
@@ -465,56 +355,25 @@ export default function HomePage() {
                   transition={{ duration: 0.25, ease: "easeOut" }}
                 >
                   <DialogHeader>
-                    <DialogTitle className="text-red-500 text-2xl font-mono">{t("howToPlay")}</DialogTitle>
+                    <DialogTitle className="text-red-500 text-2xl text-center font-mono">{t("howToPlay")}</DialogTitle>
                   </DialogHeader>
                   <Tabs defaultValue="join" className="mt-4">
-                    <TabsList className="grid w-full grid-cols-2 bg-black/50 border-red-500/50">
-                      <TabsTrigger value="join" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">{t("join")}</TabsTrigger>
-                      <TabsTrigger value="play" className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono">{t("play")}</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="join" asChild>
-                      <motion.div
-                        className="mt-4"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <h3 className="text-xl font-mono mb-2">{t("joinTitle")}</h3>
-                        <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
-                          {Array.isArray(t("joinSteps", { returnObjects: true }))
-                            ? (t("joinSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
-                              <li key={idx}>{step}</li>
-                            ))
-                            : <li>{t("errorMessages.noStepsAvailable", "No steps available.")}</li>}
-                        </ol>
-                      </motion.div>
-                    </TabsContent>
-                    <TabsContent value="play" asChild>
-                      <motion.div
-                        className="mt-4"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <h3 className="text-xl font-bold mb-2">{t("playTitle")}</h3>
-                        <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
-                          {Array.isArray(t("playSteps", { returnObjects: true }))
-                            ? (t("playSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
-                              <li key={idx}>{step}
-                                {idx === 1 && (
-                                  <ul className="list-disc list-outside pl-6 mt-1 space-y-1">
-                                    <li>{t("speedRuleCorrect")}</li>
-                                    <li>{t("speedRuleWrong")}</li>
-                                  </ul>
-                                )}
-                              </li>
-                            ))
-                            : <li>{t("errorMessages.noStepsAvailable", "No steps available.")}</li>}
-                        </ol>
-                      </motion.div>
-                    </TabsContent>
+                    <motion.div
+                      className="mt-4"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <h3 className="text-xl font-mono mb-2">{t("joinTitle")}</h3>
+                      <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
+                        {Array.isArray(t("joinSteps", { returnObjects: true }))
+                          ? (t("joinSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
+                            <li key={idx}>{step}</li>
+                          ))
+                          : <li>{t("errorMessages.noStepsAvailable", "No steps available.")}</li>}
+                      </ol>
+                    </motion.div>
                   </Tabs>
                 </motion.div>
               </DialogContent>
@@ -532,14 +391,31 @@ export default function HomePage() {
               className="absolute top-20 right-4 z-30 w-64 bg-black/60 border-4 border-red-500/50 rounded-lg p-4 shadow-xl shadow-red-500/30 backdrop-blur-sm max-h-[70vh] overflow-y-auto custom-scrollbar"
             >
               <div className="space-y-4">
-                {/* Profile Section - Placeholder */}
+                {/* Profile Section - Enhanced with useAuth */}
                 <div className="flex items-center gap-3 p-3 bg-black/80 border border-red-500/30 rounded-lg">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-900 to-black flex items-center justify-center overflow-hidden">
-                    <User className="h-6 w-6 text-red-400" />
+                    {authLoading ? (
+                      <div className="w-full h-full text-red-400 flex items-center justify-center">...</div>
+                    ) : profile?.avatar_url ? (
+                      <Image
+                        src={profile.avatar_url}
+                        alt="Profile"
+                        width={48}
+                        height={48}
+                        className="w-full h-full object-cover rounded-full"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="text-xl font-bold text-red-400">
+                        {profile?.fullname?.charAt(0)?.toUpperCase() ||
+                          profile?.username?.charAt(0)?.toUpperCase() ||
+                          user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-red-300 truncate">
-                      {t("user")}
+                    <p className="text-xs font-bold font-mono text-red-300 truncate">
+                      {profile?.fullname || profile?.username || user?.email?.split('@')[0] || t("user")}
                     </p>
                   </div>
                 </div>
@@ -551,7 +427,9 @@ export default function HomePage() {
                   aria-label="Toggle Fullscreen"
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <span className="text-sm text-red-300">{t("fullscreen") || "Fullscreen"}</span>
+                    <span className="text-sm font-mono text-red-300">
+                      {isFullscreen ? t("exitFullscreen") || "Exit Fullscreen" : t("fullscreen") || "Fullscreen"}
+                    </span>
                   </div>
                 </button>
 
@@ -562,19 +440,19 @@ export default function HomePage() {
                   aria-label="How to Play"
                 >
                   <div className="flex items-center justify-center gap-2">
-                   
-                    <span className="text-sm text-red-300">{t("howToPlay")}</span>
+
+                    <span className="text-sm font-mono text-red-300">{t("howToPlay")}</span>
                   </div>
                 </button>
 
                 {/* Language Button */}
                 <button
                   onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                  className="w-full p-2 bg-black/60 border-2 border-red-500/50 hover:border-red-500 text-red-300 hover:bg-red-500/20 rounded text-center"
+                  className="w-full p-2 bg-black/60 border-2 border-red-500/50 hover:border-red-500 text-red-300 hover:bg-red-500/20 rounded text-center font-mono"
                   aria-label="Language"
                 >
                   <div className="flex items-center justify-center gap-2">
-             
+
                     <span className="text-sm text-red-300">{t("selectLanguage")}</span>
                   </div>
                 </button>
@@ -622,7 +500,7 @@ export default function HomePage() {
                 >
                   <div className="flex items-center justify-center gap-2">
                     <LogOut className="h-4 w-4" />
-                    <span className="text-sm text-red-300">{t("logout")}</span>
+                    <span className="text-sm font-mono text-red-300">{t("logout")}</span>
                   </div>
                 </button>
               </div>
@@ -635,14 +513,17 @@ export default function HomePage() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-8 mt-12 pt-12 sm:mt-0 sm:pt-0"
+            className="text-center py-8"
           >
-            <h1
-              className="text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]"
-              style={{ textShadow: "0 0 15px rgba(239, 68, 68, 0.9), 0 0 20px rgba(0, 0, 0, 0.5)" }}
-            >
-              {t("title")}
-            </h1>
+            <Image
+              src="/logo/quizrushlogo.png"
+              alt="QuizRush Logo"
+              width={140}   // turunin sedikit biar proporsional
+              height={35}   // sesuaikan tinggi
+              className="mx-auto w-48 md:w-64 lg:w-80 h-auto"   // ini yang paling berpengaruh
+              unoptimized
+              onClick={() => router.push("/")}
+            />
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -661,295 +542,121 @@ export default function HomePage() {
               </motion.p>
             )}
           </motion.div>
-
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
-            {/* Combined Join & Play Card */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              whileHover={{ scale: 1.02 }}
-              className="group"
-            >
-              <Card className="bg-black/40 border-red-900/50 hover:border-red-500 transition-all duration-300 h-full shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                <CardHeader className="text-center pb-3">
-                  <motion.div
-                    className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:shadow-[0_0_15px_rgba(239,68,68,0.7)] transition-all duration-300"
-                    whileHover={{ rotate: -3 }}
-                  >
-                    {tab === "join" ? (
-                      <Play className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
-                    ) : (
-                      <Gamepad2 className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
-                    )}
-                  </motion.div>
-                  <CardTitle className="text-2xl sm:text-3xl font-bold text-red-400 font-mono mb-2">
-                    {tab === "join" ? t("joinGame") : t("tryOut")}
-                  </CardTitle>
-                  <CardDescription className="text-red-400/80 text-sm sm:text-lg font-mono">
-                    {tab === "join" ? t("joinDescription") : t("tryOutDescription")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 sm:space-y-6 pt-0">
-                  {/* Tabs for Join vs Play */}
-                  <Tabs defaultValue="join" onValueChange={(val) => setTab(val as "join" | "play")} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-black/50 border border-red-400 mb-4 sm:mb-6 h-auto">
-                      <TabsTrigger
-                        value="join"
-                        className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono text-sm sm:text-base transition-all duration-200 w-full"
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        {t("joinGame")}
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="play"
-                        className="text-red-400 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-300 font-mono text-sm sm:text-base transition-all duration-200"
-                      >
-                        <Gamepad2 className="w-4 h-4 mr-2" />
-                        {t("tryOut")}
-                      </TabsTrigger>
-                    </TabsList>
-
-                    {/* Join Game Tab */}
-                    <TabsContent value="join" className="space-y-4 sm:space-y-6 mt-0">
-                      <div className="space-y-3 sm:space-y-4">
-                        <div>
-                          <Input
-                            placeholder={t("gameCodePlaceholder")}
-                            value={gameCode}
-                            onChange={(e) => handleGameCodeChange(e.target.value)}
-                            className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-xl font-mono h-10 sm:h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30"
-                            aria-label="Kode permainan"
-                          />
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            placeholder={t("nicknamePlaceholder")}
-                            value={nickname}
-                            onChange={(e) => handleNicknameChange(e.target.value)}
-                            className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-xl font-mono h-10 sm:h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 flex-1"
-                            maxLength={20}
-                            aria-label="Nama panggilan"
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={generateRandomNickname}
-                            className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-10 sm:h-12 w-10 sm:w-12"
-                            aria-label="Buat nama acak"
-                          >
-                            <RefreshCw className="h-5 w-5" />
-                          </Button>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => { if (!isJoining) handleJoinGame() }}
-                        disabled={!gameCode || !nickname || isJoining}
-                        className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-base sm:text-lg py-3 sm:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
-                        aria-label={isJoining ? t("joining") : t("joinButton")}
-                        aria-disabled={!gameCode || !nickname || isJoining}
-                      >
-                        <span className="relative z-10 flex items-center gap-2">
-                          {isJoining ? (
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                              className="w-5 h-5 flex items-center justify-center"
-                            >
-                              <RotateCw className="w-5 h-5" aria-hidden="true" />
-                            </motion.div>
-                          ) : (
-                            <Play className="w-5 h-5" aria-hidden="true" />
-                          )}
-                          {isJoining ? t("joining") : t("joinButton")}
-                        </span>
-                      </Button>
-                    </TabsContent>
-
-                    {/* Play Tab */}
-                    <TabsContent value="play" className="space-y-4 sm:space-y-6 mt-0">
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            placeholder={t("nicknamePlaceholder")}
-                            value={nickname}
-                            onChange={(e) => handleNicknameChange(e.target.value)}
-                            className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-xl font-mono h-10 sm:h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 flex-1"
-                            maxLength={20}
-                            aria-label="Nama panggilan"
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={generateRandomNickname}
-                            className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-10 sm:h-12 w-10 sm:w-12"
-                            aria-label="Buat nama acak"
-                          >
-                            <RefreshCw className="h-5 w-5" />
-                          </Button>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={handleStartTryout}
-                        disabled={!nickname || isStartingTryout}
-                        className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-base sm:text-lg py-3 sm:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
-                        aria-label={isStartingTryout ? t("starting") : t("start")}
-                        aria-disabled={!nickname || isStartingTryout}
-                      >
-                        <span className="relative z-10 flex items-center gap-2">
-                          {isStartingTryout ? (
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                              className="w-5 h-5 flex items-center justify-center"
-                            >
-                              <RotateCw className="w-5 h-5" aria-hidden="true" />
-                            </motion.div>
-                          ) : (
-                            <Gamepad2 className="w-5 h-5" aria-hidden="true" />
-                          )}
-                          {isStartingTryout ? t("starting") : t("start")}
-                        </span>
-                      </Button>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Host Game Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              whileHover={{ scale: 1.02 }}
-              className="group"
-            >
-              <Card className="bg-black/40 border-red-900/50 hover:border-red-500 transition-all duration-300 h-full shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                <CardHeader className="text-center pb-4 sm:pb-6">
-                  <motion.div
-                    className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:shadow-[0_0_15px_rgba(239,68,68,0.7)] transition-all duration-300"
-                    whileHover={{ rotate: 5 }}
-                  >
-                    <Users className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" aria-hidden="true" />
-                  </motion.div>
-                  <CardTitle className="text-2xl sm:text-3xl font-bold text-red-400 font-mono mb-2">
-                    {t("hostGame")}
-                  </CardTitle>
-                  <CardDescription className="text-red-400/80 text-sm sm:text-lg font-mono">
-                    {t("hostDescription")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Button
-                    onClick={handleHostGame}
-                    disabled={isCreating}
-                    className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-base sm:text-lg py-3 sm:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 group"
-                    aria-label={isCreating ? t("creatingRoom") : t("createRoomButton")}
-                    aria-disabled={isCreating}
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      {isCreating ? (
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                          className="w-5 h-5 flex items-center justify-center"
-                        >
-                          <RotateCw className="w-5 h-5" aria-hidden="true" />
-                        </motion.div>
-                      ) : (
-                        <Play className="w-5 h-5" aria-hidden="true" />
-                      )}
+          <div className="w-full max-w-4xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl w-full px-4">
+              <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.8 }} whileHover={{ scale: 1.02 }}>
+                <Card className="bg-black/40 border-red-900/50 hover:border-red-500 transition-all duration-300 h-full shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                  <CardHeader className="text-center pb-6">
+                    <motion.div className="w-20 h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6" whileHover={{ rotate: 5 }}>
+                      <Users className="w-10 h-10 text-red-400" />
+                    </motion.div>
+                    <CardTitle className="text-3xl font-bold text-red-400 font-mono">{t("hostGame")}</CardTitle>
+                    <CardDescription className="text-red-400/80 text-lg font-mono">{t("hostDescription")}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button onClick={handleHostGame} disabled={isCreating || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white font-mono text-lg py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                      <Play className="w-5 h-5 mr-2" />
                       {isCreating ? t("creatingRoom") : t("createRoomButton")}
-                    </span>
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.8 }} whileHover={{ scale: 1.02 }}>
+                <Card className="bg-black/40 border-red-900/50 hover:border-red-500 transition-all duration-300 h-full shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                  <CardHeader className="text-center pb-3">
+                    <motion.div className="w-20 h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6" whileHover={{ rotate: -3 }}>
+                      <Play className="w-10 h-10 text-red-400" />
+                    </motion.div>
+                    <CardTitle className="text-3xl font-bold text-red-400 font-mono">{t("joinGame")}</CardTitle>
+                    <CardDescription className="text-red-400/80 text-lg font-mono">{t("joinDescription")}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Input placeholder={t("gameCodePlaceholder")} value={gameCode} onChange={(e) => handleGameCodeChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-xl font-mono h-12 rounded-xl flex-1" />
+                        <Button variant="outline" size="icon" onClick={() => setIsScannerOpen(true)} className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-12 w-12">
+                          <Camera className="h-5 w-5" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Input placeholder={t("nicknamePlaceholder")} value={nickname} onChange={(e) => handleNicknameChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-xl font-mono h-12 rounded-xl flex-1" maxLength={20} />
+                        <Button variant="outline" size="icon" onClick={() => setNickname(generateRandomNickname())} className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-12 w-12">
+                          <RefreshCw className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </div>
+                    <Button onClick={handleJoinGame} disabled={!gameCode || !nickname || isJoining || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white font-mono text-lg py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                      {isJoining ? t("joining") : t("joinButton")}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
           </div>
         </div>
+
+        <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+          <DialogContent className="bg-black/90 border-red-500/50 max-w-md mx-auto p-0">
+            <DialogHeader className="p-4 border-b border-red-500/20">
+              <DialogTitle className="text-red-500 text-center text-lg font-mono">
+                Scan QR Code Room
+              </DialogTitle>
+            </DialogHeader>
+            <div className="p-4 flex flex-col items-center space-y-4">
+              <div className="relative w-full max-w-xs rounded-lg overflow-hidden border border-red-500/30">
+                <Scanner
+                  onScan={handleScan}
+                  onError={handleError}
+                  constraints={{ facingMode: "environment" }}
+                />
+              </div>
+              <button type="button" onClick={() => setIsScannerOpen(false)} className="text-red-400/70 hover:text-red-400 text-sm transition-colors">
+                Batal
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Logout Confirmation Dialog */}
+        <Dialog open={isLogoutConfirmOpen} onOpenChange={setIsLogoutConfirmOpen}>
+          <AnimatePresence>
+            {isLogoutConfirmOpen && (
+              <DialogContent forceMount className="bg-black/80 border-red-500 text-red-400 max-w-sm">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                >
+                  <DialogHeader>
+                    <DialogTitle className="text-red-500 text-2xl font-mono text-center">
+                      {t("logoutConfirm.title")}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="mt-4 text-center text-red-400/80 font-mono">
+                    {t("logoutConfirm.message")}
+                  </div>
+                  <div className="mt-6 grid grid-cols-2 gap-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsLogoutConfirmOpen(false)}
+                      className="border-red-500/50 text-red-400 hover:bg-red-500/20 font-mono"
+                    >
+                      {t("cancel")}
+                    </Button>
+                    <Button
+                      onClick={confirmLogout}
+                      className="bg-red-800 hover:bg-red-700 text-white font-mono"
+                    >
+                      {t("logout")}
+                    </Button>
+                  </div>
+                </motion.div>
+              </DialogContent>
+            )}
+          </AnimatePresence>
+        </Dialog>
       </div>
-
-      <Dialog open={isLogoutConfirmOpen} onOpenChange={setIsLogoutConfirmOpen}>
-        <AnimatePresence>
-          {isLogoutConfirmOpen && (
-            <DialogContent forceMount className="bg-black/80 border-red-500 text-red-400 max-w-sm">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-              >
-                <DialogHeader>
-                  <DialogTitle className="text-red-500 text-2xl font-mono text-center">
-                    {t("logoutConfirm.title")}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="mt-4 text-center text-red-400/80 font-mono">
-                  {t("logoutConfirm.message")}
-                </div>
-                <div className="mt-6 grid grid-cols-2 gap-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsLogoutConfirmOpen(false)}
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/20 font-mono"
-                  >
-                    {t("cancel")}
-                  </Button>
-                  <Button
-                    onClick={confirmLogout}
-                    className="bg-red-800 hover:bg-red-700 text-white font-mono"
-                  >
-                    {t("logout")}
-                  </Button>
-                </div>
-              </motion.div>
-            </DialogContent>
-          )}
-        </AnimatePresence>
-      </Dialog>
-
-      <style jsx global>{`
-        @keyframes fall {
-          to {
-            transform: translateY(100vh);
-          }
-        }
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-20px) rotate(180deg);
-          }
-        }
-        @keyframes glow {
-          from {
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.7), 0 0 15px rgba(0, 0, 0, 0.5);
-          }
-          to {
-            text-shadow: 0 0 20px rgba(239, 68, 68, 1), 0 0 25px rgba(0, 0, 0, 0.7);
-          }
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(26, 0, 0, 0.8);
-          border-left: 2px solid rgba(255, 0, 0, 0.3);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #8b0000, #ff0000);
-          border-radius: 4px;
-        }
-        .toast {
-          background: #1a0000 !important;
-          color: #ff4444 !important;
-          border: 1px solid #ff0000 !important;
-          font-size: 0.875rem;
-          padding: 0.5rem 1rem;
-        }
-      `}</style>
     </div>
-  );
+  )
 }

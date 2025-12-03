@@ -234,6 +234,7 @@
   "errorMessages.roomNotActive": "Ruangan tidak aktif atau sudah dimulai!",
   "user": "Pengguna",
   "fullscreen": "Layar Penuh",
+  "exitFullscreen": "Keluar dari Layar Penuh",
   "selectLanguage": "Pilih Bahasa",
   "exit": "Keluar",
 
@@ -243,16 +244,21 @@
   "loginButton": "Masuk",
   "loggingIn": "Sedang Masuk...",
   "googleLoginButton": "Masuk dengan Google",
-  "emailPlaceholder": "Masukkan email Anda",
+  "emailPlaceholder": "Email atau username",
   "passwordPlaceholder": "Masukkan kata sandi Anda",
   "or": "atau",
   "errorMessagesLogin": {
-    "missingInput": "Harap isi email dan kata sandi",
-    "invalidCredentials": "Email atau kata sandi tidak valid",
+    "missingInput": "Harap isi email/username dan kata sandi",
+    "invalidCredentials": "Email atau kata sandi salah",
     "loginFailed": "Gagal masuk. Silakan coba lagi",
-    "googleLoginFailed": "Gagal masuk dengan Google. Silakan coba lagi"
+    "googleLoginFailed": "Gagal masuk dengan Google. Silakan coba lagi",
+    "usernameNotFound": "Username tidak ditemukan!"
   },
   "loginSuccess": "Berhasil masuk!",
+  "login": {
+    "noAccount": "Tidak punya akun?",
+    "registerHere": "Daftar di sini"
+  },
   "logoutConfirm": {
     "title": "Konfirmasi Keluar",
     "message": "Apakah Anda yakin ingin keluar?"

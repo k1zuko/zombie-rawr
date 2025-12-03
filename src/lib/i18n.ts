@@ -11,40 +11,34 @@ import jaTranslation from "../locales/ja/translation.json";
 import esTranslation from '../locales/es/translation.json';
 
 const resources = {
-    en: {
-    translation: enTranslation,
-  },
-    id: {
-    translation: idTranslation,
-  },
-    de: {
-    translation: deTranslation,
-  },
-    fr: {
-    translation: frTranslation,
-  },
-    ja: {
-    translation: jaTranslation,
-  },
-    es: {
-    translation: esTranslation,
-  },
+  en: { translation: enTranslation },
+  id: { translation: idTranslation },
+  de: { translation: deTranslation },
+  fr: { translation: frTranslation },
+  ja: { translation: jaTranslation },
+  es: { translation: esTranslation },
 };
 
-i18n
-  .use(LanguageDetector) // Detect browser language
-  .use(initReactI18next) // Integrate with React
-  .init({
-    resources,
-    fallbackLng: "en",
-    supportedLngs: ["en", "id","de","fr","ja","es"],
-    interpolation: {
-      escapeValue: false, // React handles XSS
-    },
-    detection: {
-      order: ["localStorage", "navigator", "cookie"], // localStorage first
-      caches: ["localStorage", "cookie"], // Cache language preference
-    },
-  });
+let initialized = false;
+
+export const getI18nInstance = () => {
+  if (!initialized && !i18n.isInitialized) {
+    i18n
+      .use(LanguageDetector)
+      .use(initReactI18next)
+      .init({
+        resources,
+        fallbackLng: "en",
+        supportedLngs: ["en", "id","de","fr","ja","es"],
+        interpolation: { escapeValue: false },
+        detection: {
+          order: ["localStorage", "navigator", "cookie"],
+          caches: ["localStorage", "cookie"],
+        },
+      });
+    initialized = true;
+  }
+  return i18n;
+};
 
 export default i18n;

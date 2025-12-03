@@ -3,11 +3,11 @@ import { createClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// const supabaseUrlUtama = process.env.NEXT_PUBLIC_SUPABASE_URL_UTAMA!
-// const supabaseAnonKeyUtama = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_UTAMA!
+const supabaseUrlGame = process.env.NEXT_PUBLIC_SUPABASE_URL_MINE!
+const supabaseAnonKeyGame = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY_MINE!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-// export const supabaseUtama = createClient(supabaseUrlUtama, supabaseAnonKeyUtama)
+export const mysupa = createClient(supabaseUrlGame, supabaseAnonKeyGame)
 
 // Type untuk EmbeddedPlayer (dari JSONB game_rooms.players)
 export type EmbeddedPlayer = {

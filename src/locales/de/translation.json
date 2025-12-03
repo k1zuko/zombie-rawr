@@ -225,5 +225,37 @@
   "difficultyLevelLabel": "Schwierigkeitsgrad",
   "difficulty.hard": "Schwer",
   "difficulty.medium": "Mittel",
-  "difficulty.easy": "Einfach"
+  "difficulty.easy": "Einfach",
+  "user": "Benutzer",
+  "fullscreen": "Vollbild",
+  "exitFullscreen": "Vollbild beenden",
+  "selectLanguage": "Sprache auswählen",
+
+  "loginTitle": "Anmelden",
+  "loginDescription": "Melden Sie sich an, um Ihr Abenteuer zu beginnen",
+  "loginSubDescription": "Geben Sie Ihre Anmeldeinformationen ein oder verwenden Sie Google, um fortzufahren",
+  "loginButton": "Anmelden",
+  "loggingIn": "Wird angemeldet...",
+  "googleLoginButton": "Mit Google anmelden",
+  "emailPlaceholder": "E-Mail oder Benutzername",
+  "passwordPlaceholder": "Passwort",
+  "or": "oder",
+  "errorMessagesLogin": {
+    "missingInput": "Bitte geben Sie E-Mail/Benutzername und Passwort ein",
+    "invalidCredentials": "Ungültige E-Mail oder ungültiges Passwort",
+    "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut",
+    "googleLoginFailed": "Anmeldung mit Google fehlgeschlagen. Bitte versuchen Sie es erneut",
+    "usernameNotFound": "Benutzername nicht gefunden!"
+  },
+  "loginSuccess": "Erfolgreich angemeldet!",
+  "login": {
+    "noAccount": "Noch kein Konto?",
+    "registerHere": "Hier registrieren"
+  },
+  "logoutConfirm": {
+    "title": "Abmeldung bestätigen",
+    "message": "Möchten Sie sich wirklich abmelden?"
+  },
+  "logout": "Abmelden",
+  "logoutSuccess": "Erfolgreich abgemeldet!"
 }

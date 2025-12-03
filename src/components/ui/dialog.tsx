@@ -59,10 +59,10 @@ const DialogContent = React.forwardRef<
       {children}
 
       {/* Close Button — Keren dengan glow merah */}
-      {showCloseButton && (
+      {/* {showCloseButton && (
         <DialogPrimitive.Close 
           className={cn(
-            "absolute left-4 top-4 rounded-full p-2",
+            "absolute right-2 top-2 rounded-full p-1",
             "bg-red-900/80 hover:bg-red-800 text-white",
             "transition-all hover:scale-110",
             "focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
@@ -73,7 +73,7 @@ const DialogContent = React.forwardRef<
           <X className="h-5 w-5" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
-      )}
+      )} */}
     </DialogPrimitive.Content>
   </DialogPortal>
 ))

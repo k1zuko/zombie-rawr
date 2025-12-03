@@ -225,5 +225,37 @@
   "difficultyLevelLabel": "Niveau de difficulté",
   "difficulty.hard": "Difficile",
   "difficulty.medium": "Moyen",
-  "difficulty.easy": "Facile"
+  "difficulty.easy": "Facile",
+  "user": "Utilisateur",
+  "fullscreen": "Plein écran",
+  "exitFullscreen": "Quitter le plein écran",
+  "selectLanguage": "Sélectionner la langue",
+
+  "loginTitle": "Se connecter",
+  "loginDescription": "Connectez-vous pour commencer votre aventure",
+  "loginSubDescription": "Entrez vos identifiants ou utilisez Google pour continuer",
+  "loginButton": "Se connecter",
+  "loggingIn": "Connexion en cours...",
+  "googleLoginButton": "Se connecter avec Google",
+  "emailPlaceholder": "E-mail ou nom d'utilisateur",
+  "passwordPlaceholder": "Mot de passe",
+  "or": "ou",
+  "errorMessagesLogin": {
+    "missingInput": "Veuillez saisir l'e-mail/nom d'utilisateur et le mot de passe",
+    "invalidCredentials": "E-mail ou mot de passe invalide",
+    "loginFailed": "Échec de la connexion. Veuillez réessayer",
+    "googleLoginFailed": "Échec de la connexion avec Google. Veuillez réessayer",
+    "usernameNotFound": "Nom d'utilisateur non trouvé!"
+  },
+  "loginSuccess": "Connecté avec succès!",
+  "login": {
+    "noAccount": "Pas de compte ?",
+    "registerHere": "S'inscrire ici"
+  },
+  "logoutConfirm": {
+    "title": "Confirmer la déconnexion",
+    "message": "Êtes-vous sûr de vouloir vous déconnecter?"
+  },
+  "logout": "Se déconnecter",
+  "logoutSuccess": "Déconnecté avec succès!"
 }

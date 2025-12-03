@@ -20,13 +20,13 @@ export function useHostGuard(roomCode: string) {
     }
 
     (async () => {
-      const { data: room, error } = await supabase
-        .from("game_rooms")
+      const { data: session, error } = await supabase
+        .from("game_sessions")
         .select("host_id")
-        .eq("room_code", roomCode)
+        .eq("game_pin", roomCode)
         .single();
 
-      if (error || !room || room.host_id !== hostId) {
+      if (error || !session || session.host_id !== hostId) {
         if (redirectTo == "/") {
           router.replace(`/?isHost=0`);
         } else if (!hostId) {

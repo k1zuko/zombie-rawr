@@ -225,5 +225,37 @@
   "difficultyLevelLabel": "Nivel de dificultad",
   "difficulty.hard": "Difícil",
   "difficulty.medium": "Medio",
-  "difficulty.easy": "Fácil"
+  "difficulty.easy": "Fácil",
+  "user": "Usuario",
+  "fullscreen": "Pantalla completa",
+  "exitFullscreen": "Salir de pantalla completa",
+  "selectLanguage": "Seleccionar idioma",
+
+  "loginTitle": "Iniciar sesión",
+  "loginDescription": "Inicia sesión para comenzar tu aventura",
+  "loginSubDescription": "Ingresa tus credenciales o usa Google para continuar",
+  "loginButton": "Iniciar sesión",
+  "loggingIn": "Iniciando sesión...",
+  "googleLoginButton": "Iniciar sesión con Google",
+  "emailPlaceholder": "Correo electrónico o nombre de usuario",
+  "passwordPlaceholder": "Contraseña",
+  "or": "o",
+  "errorMessagesLogin": {
+    "missingInput": "Por favor, ingrese el correo electrónico/nombre de usuario y la contraseña",
+    "invalidCredentials": "Correo electrónico o contraseña no válidos",
+    "loginFailed": "Error al iniciar sesión. Por favor, inténtelo de nuevo",
+    "googleLoginFailed": "Error al iniciar sesión con Google. Por favor, inténtelo de nuevo",
+    "usernameNotFound": "¡Nombre de usuario no encontrado!"
+  },
+  "loginSuccess": "¡Sesión iniciada con éxito!",
+  "login": {
+    "noAccount": "¿No tienes una cuenta?",
+    "registerHere": "Regístrate aquí"
+  },
+  "logoutConfirm": {
+    "title": "Confirmar cierre de sesión",
+    "message": "¿Estás seguro de que quieres cerrar la sesión?"
+  },
+  "logout": "Cerrar sesión",
+  "logoutSuccess": "¡Sesión cerrada con éxito!"
 }
