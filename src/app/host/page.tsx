@@ -143,7 +143,7 @@ export default function QuizSelectPage() {
     };
 
     fetchQuizzes();
-  }, [profile?.id, t]);
+  }, [profile?.id]);
 
   const categories = useMemo(() => {
     return ["All", ...new Set(allQuizzes.map(q => q.category).filter(Boolean))];

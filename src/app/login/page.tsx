@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 import Image from "next/image";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // Tipe untuk efek visual (sama seperti homepage)
 interface BloodDrip {
@@ -130,6 +131,7 @@ export default function LoginPage() {
       });
 
       if (error) {
+        setIsLoading(false)
         throw error; // Throw to be caught by the outer catch
       }
 
@@ -137,6 +139,7 @@ export default function LoginPage() {
       router.push("/");
     } catch (err: any) {
       console.error("Error login:", err);
+      setIsLoading(false)
       // Check if it's a specific error from resolveEmail or Supabase
       if (err.message === t("errorMessagesLogin.usernameNotFound")) {
         setErrorMessage(err.message);
@@ -145,8 +148,6 @@ export default function LoginPage() {
       } else {
         setErrorMessage(t("errorMessagesLogin.loginFailed"));
       }
-    } finally {
-      setIsLoading(false);
     }
   }, [identifier, password, router, t]);
 
@@ -162,15 +163,17 @@ export default function LoginPage() {
       });
 
       if (error) {
+        setIsLoading(false)
         setErrorMessage(t("errorMessagesLogin.googleLoginFailed"));
       }
     } catch (error) {
       console.error("Error Google login:", error);
+      setIsLoading(false)
       setErrorMessage(t("errorMessagesLogin.loginFailed"));
-    } finally {
-      setIsLoading(false);
     }
   }, [t]);
+
+  if (isLoading) <LoadingScreen children={undefined} />
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none">

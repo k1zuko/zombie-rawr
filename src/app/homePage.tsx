@@ -162,114 +162,114 @@ export default function HomePage() {
   }, [router]);
 
   const handleJoinGame = useCallback(async () => {
-  if (isJoining || !gameCode || !nickname.trim()) {
-    toast.error("Kode game dan nickname harus diisi!");
-    return;
-  }
-
-  setIsJoining(true);
-  setErrorMessage(null);
-
-  try {
-    // 1. Cari session berdasarkan game_pin
-    const { data: session, error: sessionError } = await mysupa
-      .from("sessions")
-      .select("id, status, game_pin, host_id, question_limit, total_time_minutes")
-      .eq("game_pin", gameCode.toUpperCase())
-      .single();
-
-    if (sessionError || !session) {
-      toast.error(t("roomNotFound") || "Kode game tidak ditemukan atau sudah expired!");
-      setIsJoining(false);
+    if (isJoining || !gameCode || !nickname.trim()) {
+      toast.error("Kode game dan nickname harus diisi!");
       return;
     }
 
-    if (session.status !== "waiting") {
-      toast.error(t("gameAlreadyStarted") || "Game sudah dimulai atau selesai!");
+    setIsJoining(true);
+    setErrorMessage(null);
+
+    try {
+      // 1. Cari session berdasarkan game_pin
+      const { data: session, error: sessionError } = await mysupa
+        .from("sessions")
+        .select("id, status, game_pin, host_id, question_limit, total_time_minutes")
+        .eq("game_pin", gameCode.toUpperCase())
+        .single();
+
+      if (sessionError || !session) {
+        toast.error(t("roomNotFound") || "Kode game tidak ditemukan atau sudah expired!");
+        setIsJoining(false);
+        return;
+      }
+
+      if (session.status !== "waiting") {
+        toast.error(t("gameAlreadyStarted") || "Game sudah dimulai atau selesai!");
+        setIsJoining(false);
+        return;
+      }
+
+      // 2. Cek apakah user sudah join sebelumnya (opsional, cegah duplikat)
+      const { data: existingParticipant } = await mysupa
+        .from("participants")
+        .select("id")
+        .eq("session_id", session.id)
+        .eq("nickname", nickname.trim())
+        .maybeSingle();
+
+      if (existingParticipant) {
+        toast.error(t("nicknameTaken") || "Nickname sudah digunakan di room ini!");
+        setIsJoining(false);
+        return;
+      }
+
+      // 3. Pilih karakter random kalau belum ada di localStorage
+      const savedChar = localStorage.getItem("selectedCharacter");
+      const characterOptions = [
+        "robot1", "robot2", "robot3", "robot4", "robot5",
+        "robot6", "robot7", "robot8", "robot9", "robot10"
+      ];
+      const character_type = savedChar && characterOptions.includes(savedChar)
+        ? savedChar
+        : characterOptions[Math.floor(Math.random() * characterOptions.length)];
+
+      // 4. Insert participant baru
+      const { data: newParticipant, error: insertError } = await mysupa
+        .from("participants")
+        .insert({
+          session_id: session.id,
+          nickname: nickname.trim(),
+          character_type,
+          is_host: false,
+          user_id: profile?.id || null,
+          score: 0,
+          correct_answers: 0,
+          is_alive: true,
+          position_x: 0,
+          position_y: 0,
+          power_ups: 0,
+          health: {
+            max: 100,
+            current: 100,
+            speed: 1,
+            countdown: 0,
+            last_answer_time: null,
+            last_attack_time: null,
+            is_being_attacked: false
+          },
+          answers: []
+        })
+        .select()
+        .single();
+
+      if (insertError || !newParticipant) {
+        console.error("Insert participant error:", insertError);
+        toast.error(t("joinFailed") || "Gagal masuk ke room. Coba lagi!");
+        setIsJoining(false);
+        return;
+      }
+
+      // 5. Simpan data penting ke localStorage supaya player page bisa baca
+      localStorage.setItem("playerId", newParticipant.id);
+      localStorage.setItem("sessionId", session.id);
+      localStorage.setItem("gamePin", session.game_pin);
+      localStorage.setItem("nickname", nickname.trim());
+      localStorage.setItem("selectedCharacter", character_type);
+
+      toast.success(t("joinSuccess") || `Berhasil masuk sebagai ${nickname}!`);
+      localStorage.removeItem("roomCode")
+
+      // 6. Pindah ke waiting room player
+      router.push(`/player/${gameCode}/lobby`);
+
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast.error("Terjadi kesalahan. Coba lagi nanti.");
+    } finally {
       setIsJoining(false);
-      return;
     }
-
-    // 2. Cek apakah user sudah join sebelumnya (opsional, cegah duplikat)
-    const { data: existingParticipant } = await mysupa
-      .from("participants")
-      .select("id")
-      .eq("session_id", session.id)
-      .eq("nickname", nickname.trim())
-      .maybeSingle();
-
-    if (existingParticipant) {
-      toast.error(t("nicknameTaken") || "Nickname sudah digunakan di room ini!");
-      setIsJoining(false);
-      return;
-    }
-
-    // 3. Pilih karakter random kalau belum ada di localStorage
-    const savedChar = localStorage.getItem("selectedCharacter");
-    const characterOptions = [
-      "robot1", "robot2", "robot3", "robot4", "robot5",
-      "robot6", "robot7", "robot8", "robot9", "robot10"
-    ];
-    const character_type = savedChar && characterOptions.includes(savedChar)
-      ? savedChar
-      : characterOptions[Math.floor(Math.random() * characterOptions.length)];
-
-    // 4. Insert participant baru
-    const { data: newParticipant, error: insertError } = await mysupa
-      .from("participants")
-      .insert({
-        session_id: session.id,
-        nickname: nickname.trim(),
-        character_type,
-        is_host: false,
-        user_id: profile?.id || null,
-        score: 0,
-        correct_answers: 0,
-        is_alive: true,
-        position_x: 0,
-        position_y: 0,
-        power_ups: 0,
-        health: {
-          max: 100,
-          current: 100,
-          speed: 1,
-          countdown: 0,
-          last_answer_time: null,
-          last_attack_time: null,
-          is_being_attacked: false
-        },
-        answers: []
-      })
-      .select()
-      .single();
-
-    if (insertError || !newParticipant) {
-      console.error("Insert participant error:", insertError);
-      toast.error(t("joinFailed") || "Gagal masuk ke room. Coba lagi!");
-      setIsJoining(false);
-      return;
-    }
-
-    // 5. Simpan data penting ke localStorage supaya player page bisa baca
-    localStorage.setItem("playerId", newParticipant.id);
-    localStorage.setItem("sessionId", session.id);
-    localStorage.setItem("gamePin", session.game_pin);
-    localStorage.setItem("nickname", nickname.trim());
-    localStorage.setItem("selectedCharacter", character_type);
-
-    toast.success(t("joinSuccess") || `Berhasil masuk sebagai ${nickname}!`);
-    localStorage.removeItem("roomCode")
-
-    // 6. Pindah ke waiting room player
-    router.push(`/player/${gameCode}/lobby`);
-
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    toast.error("Terjadi kesalahan. Coba lagi nanti.");
-  } finally {
-    setIsJoining(false);
-  }
-}, [gameCode, nickname, user, router, t, isJoining]);
+  }, [gameCode, nickname, user, router, t, isJoining]);
 
   // --- QR SCANNER HANDLERS ---
   const handleScan = (result: any) => {
@@ -292,15 +292,10 @@ export default function HomePage() {
 
   const confirmLogout = async () => {
     setIsLogoutConfirmOpen(false);
-    const { error } = await supabase.auth.signOut();
+    await supabase.auth.signOut();
     localStorage.clear()
-    if (error) {
-      toast.error(t("logoutFailed"));
-      console.error("Error logging out:", error);
-    } else {
-      toast.success(t("logoutSuccess"));
-      router.push("/login");
-    }
+    toast.success(t("logoutSuccess"));
+    window.location.replace("/login");
   };
 
   // Handler untuk hamburger menu
