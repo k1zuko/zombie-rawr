@@ -207,7 +207,7 @@ export default function LobbyPage() {
     syncServerTime();
   }, [roomCode, router]);
 
-   // === REALTIME YANG BENAR & PASTI LANGSUNG UPDATE KARAKTER ===
+  // === REALTIME YANG BENAR & PASTI LANGSUNG UPDATE KARAKTER ===
   useEffect(() => {
     if (!session?.id) return;
 
@@ -255,8 +255,22 @@ export default function LobbyPage() {
       )
       .subscribe();
 
+    const sessionChannel = mysupa
+      .channel(`session:${session.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'sessions', filter: `id=eq.${session.id}` },
+        (payload) => {
+          const updated = payload.new as Session;
+          setSession(updated);               // <-- penting, supaya
+          // countdown_started_at & status langsung ter-update
+        }
+      )
+      .subscribe();
+
     return () => {
       mysupa.removeChannel(participantsChannel);
+      mysupa.removeChannel(sessionChannel);
     };
   }, [session?.id, currentPlayer?.id, router]);
 
@@ -342,47 +356,47 @@ export default function LobbyPage() {
     <LoadingScreen minDuration={500} isReady={!isLoading && !!currentPlayer && !!session}>
       {/* SELURUH KONTEN LOBBY */}
       <div className="min-h-screen bg-black relative overflow-hidden select-none">
-          {/* Logos */}
-          <div className="absolute top-4 left-4 z-20 hidden md:block">
-            <Image
-              src="/logo/quizrushlogo.png"
-              alt="QuizRush Logo"
-              width={140}
-              height={35}
-              className="w-32 md:w-40 lg:w-48 h-auto"
-              unoptimized
-            />
-          </div>
-          <div className="absolute top-4 right-4 z-20 hidden md:block">
-            <img
-              src={`/logo/gameforsmartlogo-horror.png`}
-              alt="Game for Smart Logo"
-              className="w-40 md:w-48 lg:w-56 h-auto"
-            />
-          </div>
-
-          {/* Background Image */}
+        {/* Logos */}
+        <div className="absolute top-4 left-4 z-20 hidden md:block">
           <Image
-            src="/background/30.gif"
-            alt="Background"
-            layout="fill"
-            objectFit="cover"
-            className="absolute inset-0 z-0 opacity-30" // Adjust opacity as needed
+            src="/logo/quizrushlogo.png"
+            alt="QuizRush Logo"
+            width={140}
+            height={35}
+            className="w-32 md:w-40 lg:w-48 h-auto"
             unoptimized
           />
+        </div>
+        <div className="absolute top-4 right-4 z-20 hidden md:block">
+          <img
+            src={`/logo/gameforsmartlogo-horror.png`}
+            alt="Game for Smart Logo"
+            className="w-40 md:w-48 lg:w-56 h-auto"
+          />
+        </div>
 
-          {/* Countdown Overlay */}
-          {countdown !== null && countdown > 0 && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black flex items-center justify-center z-50">
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-                className="text-[20rem] md:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
-              >
-                {countdown}
-              </motion.div>
+        {/* Background Image */}
+        <Image
+          src="/background/30.gif"
+          alt="Background"
+          layout="fill"
+          objectFit="cover"
+          className="absolute inset-0 z-0 opacity-30" // Adjust opacity as needed
+          unoptimized
+        />
+
+        {/* Countdown Overlay */}
+        {countdown !== null && countdown > 0 && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black flex items-center justify-center z-50">
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className="text-[20rem] md:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
+            >
+              {countdown}
             </motion.div>
-          )}
+          </motion.div>
+        )}
 
         <div className="relative z-10 mx-auto p-4 pt-6 pb-28 max-w-7xl mt-10">
           <motion.header initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
@@ -398,13 +412,13 @@ export default function LobbyPage() {
                 key={player.id}
                 className="relative bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
               >
-              <SoulStatus
-                player={{
-                  ...player,
-                  id: player.id,
-                }}
-                isCurrentPlayer={currentPlayer ? player.id === currentPlayer.id : false}
-              />
+                <SoulStatus
+                  player={{
+                    ...player,
+                    id: player.id,
+                  }}
+                  isCurrentPlayer={currentPlayer ? player.id === currentPlayer.id : false}
+                />
                 {player.is_host && (
                   <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded font-mono">
                     HOST
@@ -414,67 +428,67 @@ export default function LobbyPage() {
             ))}
           </div>
 
-            {/* Tombol Bawah Non-Host */}
-            {currentPlayer && !currentPlayer.is_host && (
-              <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-md px-4">
-                <div className="flex items-center gap-3">
-                  <Button
-                    onClick={() => setIsExitDialogOpen(true)}
-                    variant="outline"
-                    size="icon"
-                    className="bg-red-900/80 border-red-600 hover:bg-red-800 text-white rounded-full p-3 shadow-lg"
-                  >
-                    <ArrowLeft className="w-7 h-7" />
-                  </Button>
+          {/* Tombol Bawah Non-Host */}
+          {currentPlayer && !currentPlayer.is_host && (
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-md px-4">
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => setIsExitDialogOpen(true)}
+                  variant="outline"
+                  size="icon"
+                  className="bg-red-900/80 border-red-600 hover:bg-red-800 text-white rounded-full p-3 shadow-lg"
+                >
+                  <ArrowLeft className="w-7 h-7" />
+                </Button>
 
-                  {isMobile ? (
-                    <MobileCharacterSelector
-                      selectedCharacter={selectedCharacter}
-                      onSelect={handleCharacterSelect}
-                      isOpen={isCharacterSelectorOpen}
-                      setIsOpen={setIsCharacterSelectorOpen}
-                    />
-                  ) : (
-                    <Button
-                      onClick={() => setIsCharacterSelectorOpen(true)}
-                      className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-mono text-xl px-10 py-6 rounded-lg shadow-lg"
-                    >
-                      {t("selectCharacter")}
-                    </Button>
-                  )}
-                </div>
+                {isMobile ? (
+                  <MobileCharacterSelector
+                    selectedCharacter={selectedCharacter}
+                    onSelect={handleCharacterSelect}
+                    isOpen={isCharacterSelectorOpen}
+                    setIsOpen={setIsCharacterSelectorOpen}
+                  />
+                ) : (
+                  <Button
+                    onClick={() => setIsCharacterSelectorOpen(true)}
+                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-mono text-xl px-10 py-6 rounded-lg shadow-lg"
+                  >
+                    {t("selectCharacter")}
+                  </Button>
+                )}
               </div>
-            )}
+            </div>
+          )}
         </div>
 
 
-          {/* Dialog Keluar – Dengan Karakter Pemain */}
-          <Dialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>
-            <DialogContent className="bg-black/95 border-2 border-red-600/80 text-white max-w-sm rounded-2xl overflow-hidden">
-              {/* Header dengan karakter di tengah */}
-              <div className="relative pt-8 pb-4">
-                <motion.div
-                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="mx-auto w-32 h-32 relative"
-                >
-                  {currentPlayer?.character_type ? (
-                    <Image
-                      src={characterOptions.find(c => c.value === selectedCharacter)?.gif || "/character/player/character.webp"}
-                      alt="Karakter kamu"
-                      fill
-                      unoptimized
-                      className="object-cover rounded-fullshadow-[0_0_30px_rgba(239,68,68,0.8)]"
-                    />
-                  ) : (
-                    <div className="" />
-                  )}
-                  {/* Efek glow merah di sekitar karakter */}
+        {/* Dialog Keluar – Dengan Karakter Pemain */}
+        <Dialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>
+          <DialogContent className="bg-black/95 border-2 border-red-600/80 text-white max-w-sm rounded-2xl overflow-hidden">
+            {/* Header dengan karakter di tengah */}
+            <div className="relative pt-8 pb-4">
+              <motion.div
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                className="mx-auto w-32 h-32 relative"
+              >
+                {currentPlayer?.character_type ? (
+                  <Image
+                    src={characterOptions.find(c => c.value === selectedCharacter)?.gif || "/character/player/character.webp"}
+                    alt="Karakter kamu"
+                    fill
+                    unoptimized
+                    className="object-cover rounded-fullshadow-[0_0_30px_rgba(239,68,68,0.8)]"
+                  />
+                ) : (
                   <div className="" />
-                </motion.div>
-                <DialogTitle className="text-2xl font-bold text-red-500 text-center mt-6 font-mono tracking-wider">
-                  {t("exitConfirm")}
-                </DialogTitle>
-              </div>
+                )}
+                {/* Efek glow merah di sekitar karakter */}
+                <div className="" />
+              </motion.div>
+              <DialogTitle className="text-2xl font-bold text-red-500 text-center mt-6 font-mono tracking-wider">
+                {t("exitConfirm")}
+              </DialogTitle>
+            </div>
             <DialogFooter className="justify-center gap-6 mt-6 pb-8">
               <Button
                 variant="ghost"
@@ -490,8 +504,8 @@ export default function LobbyPage() {
                 {t("exit")}
               </Button>
             </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog Pilih Karakter Desktop */}
         {!isMobile && isCharacterSelectorOpen && (
@@ -509,15 +523,14 @@ export default function LobbyPage() {
                       handleCharacterSelect(character.value);
                       setIsCharacterSelectorOpen(false);
                     }}
-                    className={`relative aspect-square rounded-xl overflow-hidden border-4 ${
-                      selectedCharacter === character.value
-                        ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.9)]"
-                        : "border-white/20 hover:border-red-600"
-                    }`}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-4 ${selectedCharacter === character.value
+                      ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.9)]"
+                      : "border-white/20 hover:border-red-600"
+                      }`}
                   >
                     {selectedCharacter === character.value && (
                       <div className="absolute inset-0 bg-red-600/50 z-10 flex items-center justify-center">
-                        
+
                       </div>
                     )}
                     <Image src={character.gif} alt={character.name} fill unoptimized className="object-cover" />
