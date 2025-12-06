@@ -695,6 +695,14 @@ export default function ResultsPage() {
   // Render utama jika playerData berhasil dimuat
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
+      <Image
+        src="/background/10.gif"
+        alt="Background"
+        layout="fill"
+        objectFit="cover"
+        quality={100}
+        className="absolute inset-0 z-0 opacity-20"
+      />
 
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="absolute top-10 left-10 w-32 h-32 bg-red-900 rounded-full opacity-10 blur-xl" />

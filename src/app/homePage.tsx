@@ -465,7 +465,7 @@ export default function HomePage() {
                   transition={{ duration: 0.25, ease: "easeOut" }}
                 >
                   <DialogHeader>
-                    <DialogTitle className="text-red-500 text-2xl font-mono">{t("howToPlay")}</DialogTitle>
+                    <DialogTitle className="text-red-500 text-2xl">{t("howToPlay")}</DialogTitle>
                   </DialogHeader>
                   <Tabs defaultValue="join" className="mt-4">
                     <TabsList className="grid w-full grid-cols-2 bg-black/50 border-red-500/50">
@@ -638,7 +638,7 @@ export default function HomePage() {
             className="text-center mb-8 mt-12 pt-12 sm:mt-0 sm:pt-0"
           >
             <h1
-              className="text-6xl md:text-8xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]"
+              className="text-6xl md:text-8xl font-bold tracking-wider text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]"
               style={{ textShadow: "0 0 15px rgba(239, 68, 68, 0.9), 0 0 20px rgba(0, 0, 0, 0.5)" }}
             >
               {t("title")}
@@ -647,7 +647,7 @@ export default function HomePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-red-400/80 text-base sm:text-lg md:text-2xl font-mono tracking-wider mt-2"
+              className="text-red-400/80 text-base sm:text-lg md:text-2xl tracking-wider mt-2"
             >
               {atmosphereText}
             </motion.p>
@@ -683,10 +683,10 @@ export default function HomePage() {
                       <Gamepad2 className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
                     )}
                   </motion.div>
-                  <CardTitle className="text-2xl sm:text-3xl font-bold text-red-400 font-mono mb-2">
+                  <CardTitle className="text-2xl sm:text-3xl font-bold text-red-400 mb-2">
                     {tab === "join" ? t("joinGame") : t("tryOut")}
                   </CardTitle>
-                  <CardDescription className="text-red-400/80 text-sm sm:text-lg font-mono">
+                  <CardDescription className="text-red-400/80 text-sm sm:text-lg">
                     {tab === "join" ? t("joinDescription") : t("tryOutDescription")}
                   </CardDescription>
                 </CardHeader>
@@ -833,10 +833,10 @@ export default function HomePage() {
                   >
                     <Users className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" aria-hidden="true" />
                   </motion.div>
-                  <CardTitle className="text-2xl sm:text-3xl font-bold text-red-400 font-mono mb-2">
+                  <CardTitle className="text-2xl sm:text-3xl font-bold text-red-400 mb-2">
                     {t("hostGame")}
                   </CardTitle>
-                  <CardDescription className="text-red-400/80 text-sm sm:text-lg font-mono">
+                  <CardDescription className="text-red-400/80 text-sm sm:text-lg">
                     {t("hostDescription")}
                   </CardDescription>
                 </CardHeader>
