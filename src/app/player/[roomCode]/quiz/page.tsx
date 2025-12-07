@@ -339,7 +339,7 @@ useEffect(() => {
       .from("participants")
       .update({
         answers: updatedAnswers,
-        correct_answers: isCorrectAnswer ? currentPlayer.correct_answers: correctCount,
+        correct_answers: correctCount,
         score: newScore,
         health: {
           ...currentPlayer.health,
@@ -372,8 +372,8 @@ useEffect(() => {
           speed: newSpeed,
           last_answer_time: new Date().toISOString(),
         },
-        correct_answers: isCorrectAnswer ? (prev.correct_answers || 0) + 1 : (prev.correct_answers || 0),
-        score: (prev.score || 0) + (isCorrectAnswer ? perQuestionScore : 0),
+        correct_answers: correctCount,
+        score: newScore,
         answers: updatedAnswers,
       };
     });

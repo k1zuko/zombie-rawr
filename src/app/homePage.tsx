@@ -238,7 +238,6 @@ export default function HomePage() {
             max: healthMax,
             current: healthMax,
             speed: 20,
-            countdown: 0,
             last_answer_time: null,
             last_attack_time: null,
             is_being_attacked: false
@@ -271,7 +270,6 @@ export default function HomePage() {
     } catch (err) {
       console.error("Unexpected error:", err);
       toast.error("Terjadi kesalahan. Coba lagi nanti.");
-    } finally {
       setIsJoining(false);
     }
   }, [gameCode, nickname, user, router, t, isJoining]);
