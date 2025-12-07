@@ -528,7 +528,7 @@ export default function HomePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-red-400/80 text-base sm:text-lg md:text-2xl font-mono tracking-wider mt-2"
+              className="text-red-400/80 text-base sm:text-lg md:text-2xl tracking-wider mt-2"
             >
               {atmosphereText}
             </motion.p>

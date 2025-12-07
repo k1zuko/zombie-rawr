@@ -1,4 +1,3 @@
-
 {
   "title": "QuizRush",
   "description": "Berpikir cepat atau dikejar!",
@@ -162,7 +161,7 @@
     "accuracy60": "Pemburu Ilmu",
     "accuracy50": "Pencari Jawaban",
     "accuracy40": "Pejalan Ragu",
-    "accuracy30": "Pengamat Sunyi",
+  "accuracy30": "Pengamat Sunyi",
     "accuracy20": "Pemula Berani",
     "default": "Siswa Haus Ilmu"
   },

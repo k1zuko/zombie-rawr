@@ -4,6 +4,7 @@ import { Heart } from "lucide-react";
 import { useEffect, useMemo, memo, useRef } from "react"; // ✅ Tambahkan useRef
 import type { EmbeddedPlayer } from "@/lib/supabase";
 import Image from "next/image";
+import { Participant } from "@/app/host/[roomCode]/game/page";
 
 
 
@@ -18,7 +19,7 @@ interface ZombieState {
 }
 
 interface RunningCharactersProps {
-  players: EmbeddedPlayer[];
+  players: Participant[];
   playerStates: { [playerId: string]: PlayerState };
   zombieState: ZombieState;
   animationTime: number;
@@ -28,16 +29,16 @@ interface RunningCharactersProps {
 }
 
 const characterConfigs = [
-  { src: "/character/player/character.webp", alt: "Hijau", type: "robot1", width: 20, height: 48, verticalOffset: 85, horizontalOffset: 10 },
-  { src: "/character/player/character1-crop.webp", alt: "Biru", type: "robot2", width: 20, height: 50, verticalOffset: 58, horizontalOffset: 10 },
-  { src: "/character/player/character2-crop.webp", alt: "Merah", type: "robot3", width: 20, height: 46, verticalOffset: 32, horizontalOffset: -10 },
-  { src: "/character/player/character4-crop.webp", alt: "Ungu", type: "robot4", width: 20, height: 48, verticalOffset: 10, horizontalOffset: 5 },
-  { src: "/character/player/character5.webp", alt: "Oranye", type: "robot5", width: 20, height: 50, verticalOffset: -4, horizontalOffset: -5 },
-  { src: "/character/player/character6.webp", alt: "Kuning", type: "robot6", width: 20, height: 48, verticalOffset: 24, horizontalOffset: 15 },
-  { src: "/character/player/character7-crop.webp", alt: "Abu-abu", type: "robot7", width: 20, height: 46, verticalOffset: 62, horizontalOffset: -15 },
-  { src: "/character/player/character8-crop.webp", alt: "Pink", type: "robot8", width: 20, height: 50, verticalOffset: 82, horizontalOffset: 20 },
-  { src: "/character/player/character9-crop.webp", alt: "Cokelat", type: "robot9", width: 20, height: 48, verticalOffset: 10, horizontalOffset: -20 },
-  { src: "/character/player/character9-crop.webp", alt: "Emas", type: "robot10", width: 20, height: 52, verticalOffset: 70, horizontalOffset: 25 },
+  { src: "/character/player/character.webp", alt: "Hijau", type: "robot1", width: 20, height: 48, verticalOffset: 72, horizontalOffset:1 },
+  { src: "/character/player/character1-crop.webp", alt: "Biru", type: "robot2", width: 20, height: 50, verticalOffset: 72, horizontalOffset: 1 },
+  { src: "/character/player/character2-crop.webp", alt: "Merah", type: "robot3", width: 20, height: 46, verticalOffset: 72, horizontalOffset: 1 },
+  { src: "/character/player/character4-crop.webp", alt: "Ungu", type: "robot4", width: 20, height: 48, verticalOffset: 72, horizontalOffset: 1 },
+  { src: "/character/player/character5.webp", alt: "Oranye", type: "robot5", width: 15, height: 50, verticalOffset: 72, horizontalOffset: 1 },
+  { src: "/character/player/character6.webp", alt: "Kuning", type: "robot6", width: 20, height: 48, verticalOffset: 72, horizontalOffset: 1 },
+  { src: "/character/player/character7-crop.webp", alt: "Abu-abu", type: "robot7", width: 20, height: 46, verticalOffset: 72, horizontalOffset: 1 },
+  { src: "/character/player/character8-crop.webp", alt: "Pink", type: "robot8", width: 20, height: 50, verticalOffset: 72, horizontalOffset: 1 },
+  { src: "/character/player/character9-crop.webp", alt: "Cokelat", type: "robot9", width: 20, height: 48, verticalOffset: 72, horizontalOffset: 1 },
+  { src: "/character/player/character9-crop.webp", alt: "Emas", type: "robot10", width: 20, height: 52, verticalOffset: 72, horizontalOffset: 1},
 ];
 
 // ✅ Memoisasi per karakter — hanya update jika props berubah
@@ -49,7 +50,7 @@ const CharacterItem = memo(function CharacterItem({
   animationTime,
   centerX,
 }: {
-  player: EmbeddedPlayer;
+  player: Participant;
   state: PlayerState;
   isZombieTarget: boolean;
   gameMode: "normal" | "panic";
@@ -97,7 +98,7 @@ const CharacterItem = memo(function CharacterItem({
 
   return (
     <div
-      key={`character-${player.player_id}`}
+      key={`character-${player.id}`}
       className="absolute"
       style={{
         transform: `translate(${finalX}px, ${finalY}px) scale(${scale})`,
@@ -163,9 +164,9 @@ function RunningCharacters({
   // ✅ Memoisasi activePlayers
   const activePlayers = useMemo(() => {
     return players.filter((player) => {
-      const state = playerStates[player.player_id];
+      const state = playerStates[player.id];
       if (!state) return false;
-      const isCompleted = completedPlayers.some((cp) => cp.player_id === player.player_id);
+      const isCompleted = completedPlayers.some((cp) => cp.player_id === player.id);
       const isEliminated = !player.is_alive || state.health <= 0;
       return !isCompleted && !isEliminated;
     });
@@ -174,15 +175,15 @@ function RunningCharacters({
   return (
     <div className="absolute bottom-50 z-30 w-full">
       {activePlayers.map((player) => {
-        const state = playerStates[player.player_id];
+        const state = playerStates[player.id];
         if (!state) return null;
 
         return (
           <CharacterItem
-            key={player.player_id}
+            key={player.id}
             player={player}
             state={state}
-            isZombieTarget={zombieState.targetPlayerId === player.player_id}
+            isZombieTarget={zombieState.targetPlayerId === player.id}
             gameMode={gameMode}
             animationTime={animationTime}
             centerX={centerX}

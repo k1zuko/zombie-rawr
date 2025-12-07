@@ -101,7 +101,6 @@ export default function CharacterSelectPage() {
 
       if (sessionError || !session) {
         console.error("Error fetching game session:", sessionError);
-        toast.error(t("errorMessages.roomNotFound"));
         router.push("/host");
         return;
       }
@@ -234,17 +233,8 @@ export default function CharacterSelectPage() {
     return () => clearInterval(flickerInterval);
   }, []);
 
-  if (isLoading) {
+  if (isLoading || !sessionData) {
     <LoadingScreen children={undefined} />
-  }
-
-  if (!sessionData) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-red-400 text-xl font-mono text-center p-6 border border-red-900/50 bg-black/60">
-        <Skull className="w-12 h-12 mx-auto mb-4 animate-pulse" />
-        <p>{t("roomNotFound")}</p>
-      </div>
-    );
   }
 
   return (

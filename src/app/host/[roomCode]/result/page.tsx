@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { mysupa, supabase } from "@/lib/supabase";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import Image from "next/image";
 import Confetti from "react-confetti";
 import { Trophy, Clock, Ghost, Zap, HeartPulse, RotateCw, Home, X } from 'lucide-react';
 import { t } from "i18next";
 import { useHostGuard } from "@/lib/host-guard";
+import LoadingScreen from "@/components/LoadingScreen";
+import { generateGamePin } from "@/utils/gameHelpers";
 
 const validChaserTypes = ["zombie", "monster1", "monster2", "monster3", "darknight"] as const;
 type ChaserType = typeof validChaserTypes[number];
@@ -189,156 +191,140 @@ export default function ResultsHostPage() {
       .join("");
   }, []);
 
-  const handlePlayAgain = useCallback(async () => {
-    if (!gameRoom) return;
+  const handlePlayAgain = async () => {
+    if (!roomCode) return;
     setIsCreatingNewSession(true);
+
     try {
-      // Clean up previous game data
-      await Promise.all([
-        supabase.from("game_completions").delete().eq("room_id", gameRoom.id),
-        supabase.from("player_health_states").delete().eq("room_id", gameRoom.id),
-        supabase.from("players").delete().eq("room_id", gameRoom.id),
-        supabase.from("game_rooms").delete().eq("id", gameRoom.id),
-      ]);
-
-      const newRoomCode = generateRoomCode();
-      const tabHostId = crypto.randomUUID(); // Generate new host ID for the session
-      sessionStorage.setItem("currentHostId", tabHostId); // Store new host ID
-
-      // Validate chaser_type
-      const validatedChaserType = validChaserTypes.includes(gameRoom.chaser_type)
-        ? gameRoom.chaser_type
-        : "zombie";
-
-      // Create new room with previous settings
-      const { data: newRoom, error: newRoomError } = await supabase
-        .from("game_rooms")
-        .insert({
-          room_code: newRoomCode,
-          title: gameRoom.title || "New Game",
-          quiz_id: gameRoom.quiz_id,
-          status: "waiting",
-          // max_players: gameRoom.max_players || 10,
-          duration: gameRoom.duration || 600,
-          question_count: gameRoom.question_count || 20,
-          chaser_type: validatedChaserType,
-          current_phase: "lobby",
-          host_id: tabHostId, // Set new host ID
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select()
+      // 1. Ambil session lama dari mysupa (QuizRush)
+      const { data: oldSess, error: oldErr } = await mysupa
+        .from("sessions")
+        .select("quiz_id, host_id, question_limit, total_time_minutes, difficulty, current_questions, quiz_detail")
+        .eq("game_pin", roomCode.toUpperCase())
         .single();
 
-      if (newRoomError || !newRoom) {
-        throw new Error(`Failed to create new room: ${newRoomError?.message || "No room data"}`);
-      }
+      if (oldErr || !oldSess) throw new Error("Session lama tidak ditemukan");
 
-      // Redirect to the new host page
-      router.push(`/host/${newRoom.room_code}`);
-    } catch (error) {
-      console.error("Failed to create new session:", error);
-      setLoadingError(t("errorMessages.createNewSessionFailed"));
-    } finally {
+      // 2. Shuffle & ambil soal sesuai question_limit
+      const questions = oldSess.current_questions || [];
+      const shuffled = questions.sort(() => Math.random() - 0.5);
+      const selectedQuestions = shuffled.slice(0, oldSess.question_limit || 5);
+
+      // 3. Generate PIN baru
+      const newPin = generateGamePin(6); // pastikan kamu punya fungsi ini
+
+      // 4. BUAT SESSION BARU DI mysupa (untuk real-time gameplay)
+      const { error: mysupaErr } = await mysupa
+        .from("sessions")
+        .insert({
+          game_pin: newPin,
+          quiz_id: oldSess.quiz_id,
+          host_id: oldSess.host_id,
+          status: "waiting",
+          question_limit: oldSess.question_limit,
+          total_time_minutes: oldSess.total_time_minutes,
+          difficulty: oldSess.difficulty,
+          current_questions: selectedQuestions,
+          quiz_detail: oldSess.quiz_detail,
+          application: "quizrush"
+        });
+
+      if (mysupaErr) throw mysupaErr;
+
+      // 5. BUAT BARU DI supabase UTAMA (gameforsmart) – agar bisa di-join & masuk leaderboard
+      const { error: mainErr } = await supabase
+        .from("game_sessions")
+        .insert({
+          game_pin: newPin,
+          quiz_id: oldSess.quiz_id,
+          host_id: oldSess.host_id,
+          status: "waiting",
+          application: "quizrush",
+          total_time_minutes: oldSess.total_time_minutes || 5,
+          question_limit: (oldSess.question_limit || 5).toString(),
+          difficulty: oldSess.difficulty,
+          current_questions: selectedQuestions,
+          participants: [],
+          responses: [],
+          quiz_detail: oldSess.quiz_detail
+        });
+
+      if (mainErr) throw mainErr;
+
+      console.log("Restart berhasil! PIN baru:", newPin);
+
+      // 6. Redirect ke lobby (bukan langsung settings)
+      router.push(`/host/${newPin}/lobby`);
+
+    } catch (err: any) {
+      console.error("Gagal restart game:", err);
+      alert("Gagal membuat game baru: " + err.message);
       setIsCreatingNewSession(false);
     }
-  }, [gameRoom, router, generateRoomCode, t]);
+  };
 
   const fetchGameData = useCallback(async () => {
-    if (!roomCode) {
-      setLoadingError(t("errorMessages.invalidRoomCode"));
-      setIsLoading(false);
-      return;
-    }
+    if (!roomCode) return;
 
     try {
       setIsLoading(true);
-      const { data: room, error: roomError } = await supabase
-        .from("game_rooms")
-        .select("*") // Corrected select statement
-        .eq("room_code", roomCode.toUpperCase())
+
+      // 1. Ambil session berdasarkan game_pin
+      const { data: session, error: sessErr } = await mysupa
+        .from("sessions")
+        .select("id, quiz_id, question_limit, total_time_minutes, started_at, difficulty")
+        .eq("game_pin", roomCode.toUpperCase())
         .single();
 
-      if (roomError || !room) throw new Error(t("errorMessages.roomNotFound"));
+      if (sessErr || !session) throw new Error("Session tidak ditemukan");
 
-      setGameRoom(room);
+      // 2. Ambil semua participant yang sudah selesai
+      const { data: participants } = await mysupa
+        .from("participants")
+        .select("*")
+        .eq("session_id", session.id)
+        .order("score", { ascending: false });
 
-      // The `players` array is now part of the `room` object.
-      const playersInRoom = (room.players || []) as Player[];
+      const totalQuestions = session.question_limit || 5;
 
-      // Fetch all game completions for the room
-      const { data: completions, error: completionsError } = await supabase
-        .from("game_completions")
-        .select(`*`) // Removed the incorrect players!inner join
-        .eq("room_id", room.id)
-        .order("completed_at", { ascending: false });
+      const results: PlayerResult[] = (participants || []).map((p, index) => {
+        const survival = p.finished_at && session.started_at
+          ? Math.floor((new Date(p.finished_at).getTime() - new Date(session.started_at).getTime()) / 1000)
+          : 0;
 
-      if (completionsError) {
-        console.error("Error fetching game completions:", completionsError);
-        throw new Error(t("errorMessages.fetchCompletionsFailed"));
-      }
-
-      const totalQuestions = room.question_count || 0; // Corrected to use question_count
-
-      const processedResults: PlayerResult[] = (completions || []).map((completion: GameCompletion) => {
-        // Find the corresponding player from the room's players array
-        const playerInfo = playersInRoom.find(p => p.player_id === completion.player_id);
-
-        const survivalSeconds = completion.survival_duration || calculateAccurateDuration(
-          room.game_start_time,
-          completion.completed_at,
-          playerInfo?.joined_at || new Date(0).toISOString(),
-        );
-
-        const isLolos = !completion.is_eliminated && completion.final_health > 0;
-        const duration = formatDuration(survivalSeconds);
-        const finalScore = completion.correct_answers * 100 + completion.final_health * 50;
+        const isLolos = p.health.current > 0 && p.finished_at !== null;
 
         return {
-          id: completion.player_id,
-          nickname: playerInfo?.nickname || "Unknown Player",
-          character_type: playerInfo?.character_type || "robot1",
-          rank: 0, // Will be set after sorting
-          duration,
+          id: p.id,
+          nickname: p.nickname,
+          character_type: p.character_type || "robot1",
+          rank: index + 1,
+          duration: formatDuration(survival),
           isLolos,
-          correctAnswers: completion.correct_answers,
+          correctAnswers: p.correct_answers,
           totalQuestions,
-          finalScore,
-          finalHealth: completion.final_health,
-          completionTime: completion.completed_at,
-          survivalSeconds,
+          finalScore: p.score,
+          finalHealth: p.health.current,
+          completionTime: p.finished_at || p.joined_at,
+          survivalSeconds: survival,
         };
       });
 
-      const rankedResults = processedResults
-        .sort((a, b) => {
-          // Prioritize 'lolos' (survived) players
-          if (a.isLolos !== b.isLolos) return a.isLolos ? -1 : 1;
-          // Then by final score (higher is better)
-          if (a.finalScore !== b.finalScore) return b.finalScore - a.finalScore;
-          // If scores are tied, shorter survival duration is better for 'lolos' players, longer for 'fail'
-          return a.isLolos ? a.survivalSeconds - b.survivalSeconds : b.survivalSeconds - a.survivalSeconds;
-        })
-        .map((result, index) => ({
-          ...result,
-          rank: index + 1,
-        }));
+      setPlayerResults(results);
 
-      setPlayerResults(rankedResults);
-
-      if (rankedResults.some((r) => r.isLolos)) {
+      if (results.some(r => r.isLolos)) {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
       }
 
       setTimeout(() => setShowContent(true), 1000);
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
-      setLoadingError(t("errorMessages.fetchGameDataFailed"));
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false)
+    } catch (err) {
+      console.error(err);
+      setLoadingError("Gagal load hasil");
+      setIsLoading(false)
     }
-  }, [roomCode, calculateAccurateDuration, formatDuration, t]);
+  }, [roomCode, formatDuration]);
 
   useEffect(() => {
     fetchGameData();
@@ -365,26 +351,7 @@ export default function ResultsHostPage() {
     generateBlood();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 flex items-center justify-center relative overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: [0.6, -0.05, 0.01, 0.99] }}
-          className="text-red-400 text-4xl font-bold font-mono flex items-center space-x-4"
-        >
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Ghost className="w-10 h-10" />
-          </motion.div>
-          <span>{t("loading")}</span>
-        </motion.div>
-      </div>
-    );
-  }
+  if (isLoading) <LoadingScreen children={undefined} />
 
   if (loadingError) {
     return (
@@ -482,17 +449,17 @@ export default function ResultsHostPage() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
-          className="flex flex-col gap-5 mb-10 px-4"
+          className="flex flex-col gap-5 mb-10 px-2"
         >
           <div className="flex justify-between items-center">
-            <Image 
-                src="/logo/quizrushlogo.png" 
-                alt="QuizRush Logo" 
-                width={140}   // turunin sedikit biar proporsional
-                height={35}   // sesuaikan tinggi
-                className="w-32 md:w-40 lg:w-48 h-auto hidden sm:block"   // ini yang paling berpengaruh
-                unoptimized 
-              />
+            <Image
+              src="/logo/quizrushlogo.png"
+              alt="QuizRush Logo"
+              width={140}   // turunin sedikit biar proporsional
+              height={35}   // sesuaikan tinggi
+              className="w-32 md:w-40 lg:w-48 h-auto hidden sm:block"   // ini yang paling berpengaruh
+              unoptimized
+            />
 
             <div className="flex w-fit gap-2 items-center">
               <img
@@ -510,14 +477,14 @@ export default function ResultsHostPage() {
             transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 100 }}
             className="flex justify-center items-center text-center"
           >
-           
+
             <h1
               className={`text-3xl sm:text-5xl lg:text-7xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.titleLeaderboard")}
             </h1>
-            
+
           </motion.div>
         </motion.header>
 

@@ -75,7 +75,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           />
         </div>
 
-         <div className="background-container-ground">
+        <div className="background-container-ground">
           <div
             className="background-image"
             style={{
@@ -100,7 +100,7 @@ export default function Background1({ isFlashing }: Background1Props) {
 
 
 
-                 <div className="background-container-ground">
+        <div className="background-container-ground">
           <div
             className="background-image"
             style={{
@@ -122,7 +122,7 @@ export default function Background1({ isFlashing }: Background1Props) {
         </div>
 
 
-         <div className="background-container-ground">
+        <div className="background-container-ground">
           <div
             className="background-image"
             style={{
@@ -142,8 +142,8 @@ export default function Background1({ isFlashing }: Background1Props) {
             }}
           />
         </div>
-        
-             
+
+
         <div className="mist-effect" />
       </div>
       <style jsx>{`

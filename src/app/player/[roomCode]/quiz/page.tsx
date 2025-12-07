@@ -13,9 +13,10 @@ import ZombieFeedback from "@/components/game/ZombieFeedback"
 import { useTranslation } from "react-i18next"
 import toast from "react-hot-toast"
 import LoadingScreen from "@/components/LoadingScreen"
+import { generateXID } from "@/lib/id-generator"
 
 // === TIPE BARU YANG SESUAI DENGAN SKEMA BARU ===
-interface Session {
+export interface Session {
   id: string
   game_pin: string
   quiz_id: string
@@ -42,8 +43,6 @@ interface Participant {
     current: number
     max: number
     speed: number
-    countdown: number
-    last_answer_time: string | null
     last_attack_time: string | null
     is_being_attacked: boolean
   }
@@ -181,8 +180,8 @@ useEffect(() => {
           setCorrectAnswers(updated.correct_answers || 0);
 
           // INI YANG KAMU CARI → index soal ikut jumlah jawaban
-          const nextQuestionIndex = updated.answers?.length || 0;
-          setCurrentQuestionIndex(nextQuestionIndex);
+          // const nextQuestionIndex = updated.answers?.length || 0;
+          // setCurrentQuestionIndex(nextQuestionIndex);
         }
       )
       .subscribe();
@@ -234,10 +233,10 @@ useEffect(() => {
       }
 
       // Semua soal selesai
-      if (currentQuestionIndex >= totalQuestions) {
-        redirectToResults(playerHealth, correctAnswers, totalQuestions, false);
-        return;
-      }
+      // if (currentQuestionIndex >= totalQuestions) {
+      //   redirectToResults(playerHealth, correctAnswers, totalQuestions, false);
+      //   return;
+      // }
 
       // Lanjut soal berikutnya
       nextQuestion();
@@ -277,14 +276,19 @@ useEffect(() => {
     const survivalDuration = calculateSurvivalDuration();
 
     try {
+      // hitung skor per soal berdasarkan totalQuestions/session.question_limit
+      const questionsCount = session?.question_limit ?? (session?.current_questions?.length ?? 0);
+      const perQuestionScore = questionsCount > 0 ? Math.floor(100 / questionsCount) : 100;
+
       // CUKUP UPDATE participants DOANG → semua data udah lengkap di sini!
       const { error } = await mysupa
         .from("participants")
         .update({
           finished_at: new Date().toISOString(),           // waktu selesai
-          score: finalCorrect * 100,                        // atau sesuai logikamu
-          correct_answers: finalCorrect,
-          answers: currentPlayer.answers,                   // tetap simpan (sudah ada)
+          completion: true,
+          // score: finalCorrect * perQuestionScore,          // skor akhir menyesuaikan jumlah soal
+          // correct_answers: finalCorrect,
+          // answers: currentPlayer.answers,                   // tetap simpan (sudah ada)
           health: {
             ...currentPlayer.health,
             current: Math.max(0, finalHealth)
@@ -307,10 +311,10 @@ useEffect(() => {
     setIsProcessingAnswer(true);
 
     const newAnswerEntry = {
-      question_index: currentQuestionIndex,
-      answer,
-      is_correct: isCorrectAnswer,
-      answered_at: new Date().toISOString(),
+      id: generateXID(),
+      correct: isCorrectAnswer,
+      answer_id: currentQuestion.answers.findIndex((a: any) => a.answer === answer).toString(),
+      question_id: currentQuestion.id
     };
 
     const updatedAnswers = [...(currentPlayer.answers || []), newAnswerEntry];
@@ -319,16 +323,28 @@ useEffect(() => {
       ? currentPlayer.health.current
       : Math.max(0, currentPlayer.health.current - 1);
 
+    // adjust speed: +5 if correct, -5 if wrong, minimum 20
+    const currentSpeed = currentPlayer.health.speed ?? 20;
+    const newSpeed = Math.max(20, currentSpeed + (isCorrectAnswer ? 5 : -5));
+
+    // hitung skor per soal berdasarkan totalQuestions/session.question_limit
+    const questionsCount = session?.question_limit ?? (session?.current_questions?.length ?? 0);
+    const perQuestionScore = questionsCount > 0 ? Math.floor(100 / questionsCount) : 100;
+
+    const correctCount = updatedAnswers.filter((a: any) => a.correct === true).length;
+    const newScore = correctCount * perQuestionScore;
+
+
     const { error } = await mysupa
       .from("participants")
       .update({
         answers: updatedAnswers,
-        correct_answers: isCorrectAnswer ? currentPlayer.correct_answers + 1 : currentPlayer.correct_answers,
-        score: (currentPlayer.score || 0) + (isCorrectAnswer ? 100 : 0),
+        correct_answers: isCorrectAnswer ? currentPlayer.correct_answers: correctCount,
+        score: newScore,
         health: {
           ...currentPlayer.health,
           current: newHealthValue,
-          last_answer_time: new Date().toISOString(),
+          speed: newSpeed,
         },
       })
       .eq("id", currentPlayer.id);
@@ -340,7 +356,27 @@ useEffect(() => {
       toast.error("Jawaban gagal dikirim!");
       // Kembalikan tombol ke aktif kalau gagal
       setIsAnswered(false);
+      return;
     }
+
+    // Update local UI state agar speed, health & skor berubah langsung
+    setPlayerHealth(newHealthValue);
+    setPlayerSpeed(newSpeed);
+    setCurrentPlayer(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        health: {
+          ...prev.health,
+          current: newHealthValue,
+          speed: newSpeed,
+          last_answer_time: new Date().toISOString(),
+        },
+        correct_answers: isCorrectAnswer ? (prev.correct_answers || 0) + 1 : (prev.correct_answers || 0),
+        score: (prev.score || 0) + (isCorrectAnswer ? perQuestionScore : 0),
+        answers: updatedAnswers,
+      };
+    });
   };
 
   const redirectToResults = async (
@@ -574,7 +610,7 @@ useEffect(() => {
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
-                        <div className="flex items-start space-x-3 md:space-x-4 relative z-10 w-full">
+                        <div className="flex items-center space-x-3 md:space-x-4 relative z-10 w-full">
                           <span className="w-10 h-10 rounded-full border-2 border-current flex items-center justify-center text-lg font-bold flex-shrink-0 mt-0.5">
                             {String.fromCharCode(65 + index)}
                           </span>

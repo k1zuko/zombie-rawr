@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { mysupa, supabase } from "@/lib/supabase"; // GANTI DARI supabase KE mysupa
 import Background3 from "@/components/game/host/Background3";
 import GameUI from "@/components/game/host/GameUI";
 import { motion } from "framer-motion";
@@ -11,56 +11,45 @@ import RunningCharacters from "@/components/game/host/RunningCharacters";
 import { useHostGuard } from "@/lib/host-guard";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
-import { throttle } from "lodash";
 import React from "react";
-import type { GameRoom, EmbeddedPlayer as Player } from "@/lib/supabase";
+import { generateXID } from "@/lib/id-generator";
 
-// User-configurable Zombie Position for Mobile Landscape
-const ZOMBIE_MOBILE_VERTICAL_OFFSET = 90; // Percentage from the top (e.g., 85 means 85% down)
-const ZOMBIE_MOBILE_HORIZONTAL_OFFSET = 20; // Pixels from the center, positive to move right
+const ZOMBIE_MOBILE_VERTICAL_OFFSET = 90;
+const ZOMBIE_MOBILE_HORIZONTAL_OFFSET = 20;
 
-// Custom hook to get the previous value of a prop or state
 function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T | undefined>(undefined);
-  useEffect(() => {
-    ref.current = value;
-  });
+  useEffect(() => { ref.current = value; });
   return ref.current;
 }
 
 const MemoizedBackground3 = React.memo(Background3);
 const MemoizedGameUI = React.memo(GameUI);
+const MemoizedRunningCharacters = React.memo(RunningCharacters);
+const MemoizedZombieCharacter = React.memo(ZombieCharacter);
 
-const MemoizedRunningCharacters = React.memo(
-  RunningCharacters,
-  (prevProps, nextProps) => {
-    return (
-      prevProps.players === nextProps.players &&
-      prevProps.playerStates === nextProps.playerStates &&
-      prevProps.zombieState.targetPlayerId === nextProps.zombieState.targetPlayerId &&
-      prevProps.gameMode === nextProps.gameMode &&
-      prevProps.centerX === nextProps.centerX &&
-      prevProps.completedPlayers === nextProps.completedPlayers
-    );
-  }
-);
+export interface Participant {
+  id: string;
+  nickname: string;
+  character_type: string;
+  score: number;
+  correct_answers: number;
+  health: { max: number; current: number; speed: number };
+  is_alive: boolean;
+  joined_at: string;
+  answers: any[];
+  finished_at: string | null;
+}
 
-const MemoizedZombieCharacter = React.memo(
-  ZombieCharacter,
-  (prevProps, nextProps) => {
-    const prevZ = prevProps.zombieState;
-    const nextZ = nextProps.zombieState;
-    return (
-      prevZ.isAttacking === nextZ.isAttacking &&
-      prevZ.targetPlayerId === nextZ.targetPlayerId &&
-      prevZ.attackProgress === nextZ.attackProgress &&
-      prevProps.gameMode === nextProps.gameMode &&
-      prevProps.centerX === nextProps.centerX &&
-      prevProps.chaserType === nextProps.chaserType &&
-      prevProps.players === nextProps.players
-    );
-  }
-);
+interface Session {
+  id: string;
+  game_pin: string;
+  status: "waiting" | "active" | "finished";
+  difficulty: string;
+  question_limit: number;
+  total_time_minutes: number;
+  started_at: string | null;
+}
 
 interface PlayerState {
   id: string;
@@ -69,7 +58,6 @@ interface PlayerState {
   speed: number;
   position: number;
   attackIntensity: number;
-  countdown?: number;
 }
 
 interface ZombieState {
@@ -80,11 +68,110 @@ interface ZombieState {
   currentPosition: number;
 }
 
+const syncResultsToMainSupabase = async (sessionId: string) => {
+  try {
+    // 1. Ambil session dari mysupa (QuizRush)
+    const { data: sess, error: sessError } = await mysupa
+      .from("sessions")
+      .select("*")
+      .eq("id", sessionId)
+      .single();
+
+    if (sessError || !sess) {
+      console.error("Session query error:", sessError);
+      throw new Error("Session tidak ditemukan");
+    }
+
+    const totalQuestions = sess.question_limit || sess.current_questions.length;
+
+    // 2. Ambil semua participant
+    const { data: participants, error: partError } = await mysupa
+      .from("participants")
+      .select("id, user_id, nickname, character_type, score, correct_answers, answers, finished_at, health")
+      .eq("session_id", sessionId);
+
+    if (partError) {
+      console.error("Participant query error:", partError);
+    }
+
+    if (!participants || participants.length === 0) return;
+
+    // 3. Format participants (PERSIS SAMA KAYAK CRAZYRACE)
+    const formattedParticipants = participants.map(p => {
+      const correctCount = p.correct_answers || 0;
+      const accuracy = totalQuestions > 0
+        ? Number(((correctCount / totalQuestions) * 100).toFixed(2))
+        : 0;
+
+      const duration = p.finished_at && sess.started_at
+        ? Math.floor((new Date(p.finished_at).getTime() - new Date(sess.started_at).getTime()) / 1000)
+        : 0;
+
+      return {
+        id: p.id,
+        user_id: p.user_id || null,
+        nickname: p.nickname,
+        character: p.character_type || "robot1",
+        score: p.score || 0,
+        correct: correctCount,
+        completion: p.finished_at !== null,
+        duration: duration,
+        total_question: totalQuestions,
+        current_question: p.answers?.length || 0,
+        accuracy: accuracy.toFixed(2),
+      };
+    });
+
+    // 4. Format responses (PERSIS SAMA KAYAK CRAZYRACE)
+    const formattedResponses = participants
+      .filter(p => (p.answers || []).length > 0)
+      .map(p => ({
+        id: generateXID(),
+        participant: p.id,
+        answers: p.answers || []
+      }));
+
+    console.log("Sync data:", {
+      game_pin: sess.game_pin,
+      started_at: sess.started_at,
+      ended_at: sess.ended_at,
+      totalQuestions,
+      participantsCount: formattedParticipants.length
+    });
+
+    // 5. Kirim ke gameforsmart pake client supabase (bukan mysupa)
+    const { error } = await supabase
+      .from("game_sessions")
+      .upsert({
+        game_pin: sess.game_pin,
+        quiz_id: sess.quiz_id,
+        host_id: sess.host_id,
+        status: "finished",
+        application: "quizrush",
+        total_time_minutes: sess.total_time_minutes || 5,
+        question_limit: totalQuestions.toString(),
+        started_at: sess.started_at,
+        ended_at: sess.ended_at || new Date().toISOString(),
+        participants: formattedParticipants,
+        responses: formattedResponses,
+        current_questions: sess.current_questions,
+        quiz_detail: sess.quiz_detail,
+        difficulty: sess.difficulty
+      }, { onConflict: "game_pin" });
+
+    if (error) throw error;
+
+    console.log("QuizRush → gameforsmart: SUCCESS");
+  } catch (err: any) {
+    console.error("Gagal sync ke gameforsmart:", err.message);
+  }
+};
+
 export default function HostGamePage() {
   const { t } = useTranslation();
   const params = useParams();
   const router = useRouter();
-  const roomCode = params.roomCode as string;
+  const gamePin = params.roomCode as string;
 
   const [animationTime, setAnimationTime] = useState(0);
   const [gameMode, setGameMode] = useState<"normal" | "panic">("normal");
@@ -92,14 +179,12 @@ export default function HostGamePage() {
   const [screenWidth, setScreenWidth] = useState(1200);
   const [screenHeight, setScreenHeight] = useState(800);
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
-  const prevGameRoom = usePrevious(gameRoom); // <-- Track previous gameRoom state
-  const [chaserType, setChaserType] = useState<"zombie" | "monster1" | "monster2" | "monster3" | "darknight">("zombie");
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadingError, setLoadingError] = useState<string | null>(null);
-  const [completedPlayers, setCompletedPlayers] = useState<Player[]>([]);
-  const [playerStates, setPlayerStates] = useState<{ [playerId: string]: PlayerState }>({});
+
+  const [session, setSession] = useState<Session | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const prevParticipants = usePrevious(participants);
+
+  const [playerStates, setPlayerStates] = useState<{ [id: string]: PlayerState }>({});
   const [zombieState, setZombieState] = useState<ZombieState>({
     isAttacking: false,
     targetPlayerId: null,
@@ -107,207 +192,192 @@ export default function HostGamePage() {
     basePosition: 500,
     currentPosition: 500,
   });
-  const [attackQueue, setAttackQueue] = useState<string[]>([]);
-  const [backgroundFlash, setBackgroundFlash] = useState<boolean>(false);
+
   const attackIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useHostGuard(roomCode);
+  useHostGuard(gamePin);
 
-  const memoizedZombieState = useMemo(() => ({
-    isAttacking: zombieState.isAttacking,
-    targetPlayerId: zombieState.targetPlayerId,
-    attackProgress: zombieState.attackProgress,
-    basePosition: zombieState.basePosition,
-    currentPosition: zombieState.currentPosition,
-  }), [zombieState.isAttacking, zombieState.targetPlayerId, zombieState.attackProgress, zombieState.basePosition, zombieState.currentPosition]);
+  // Fetch session + participants
+  const fetchData = useCallback(async () => {
+    if (!gamePin) return;
 
-  const initializePlayerStates = useCallback((playersData: Player[]) => {
-    const newStates: { [playerId: string]: PlayerState } = {};
-    playersData.forEach((player, index) => {
-      newStates[player.player_id] = {
-        id: player.player_id,
-        health: player.health.current,
-        maxHealth: player.health.max,
-        speed: player.health.speed,
-        position: index,
+    const { data: sess, error: sessErr } = await mysupa
+      .from("sessions")
+      .select("*")
+      .eq("game_pin", gamePin.toUpperCase())
+      .single();
+
+    if (sessErr || !sess) {
+      router.replace("/");
+      return;
+    }
+
+    setSession(sess);
+
+    const { data: parts } = await mysupa
+      .from("participants")
+      .select("*")
+      .eq("session_id", sess.id)
+      .order("joined_at", { ascending: true });
+
+    setParticipants(parts || []);
+  }, [gamePin, router]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Realtime
+  useEffect(() => {
+    if (!session?.id) return;
+
+    const channel = mysupa
+      .channel(`host-${session.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
+        (p) => setSession(p.new as Session)
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "participants", filter: `session_id=eq.${session.id}` },
+        (p) => {
+          const updated = p.new as Participant;
+          setParticipants((prev) =>
+            prev.some((x) => x.id === updated.id)
+              ? prev.map((x) => (x.id === updated.id ? updated : x))
+              : [...prev, updated]
+          );
+        }
+      )
+      .subscribe();
+
+    return () => { mysupa.removeChannel(channel); };
+  }, [session?.id]);
+
+  // Update playerStates
+  useEffect(() => {
+    const states: { [id: string]: PlayerState } = {};
+    participants.forEach((p, i) => {
+      states[p.id] = {
+        id: p.id,
+        health: p.health.current,
+        maxHealth: p.health.max,
+        speed: p.health.speed,
+        position: i,
         attackIntensity: 0,
       };
     });
-    setPlayerStates(newStates);
-  }, []);
+    setPlayerStates(states);
+  }, [participants]);
 
-  const updatePlayerState = useCallback(async (playerId: string, updates: Partial<Player>) => {
-    if (!gameRoom) return;
-    const currentPlayers = gameRoom.players || [];
-    const playerIndex = currentPlayers.findIndex((p: Player) => p.player_id === playerId);
-    if (playerIndex === -1) return;
-
-    const originalPlayer = currentPlayers[playerIndex];
-    const updatedPlayer = {
-      ...originalPlayer,
-      ...updates,
-      health: { ...originalPlayer.health, ...(updates.health || {}) },
-    };
-    
-    const updatedPlayers = [...currentPlayers];
-    updatedPlayers[playerIndex] = updatedPlayer;
-
-    await supabase.from("game_rooms").update({ players: updatedPlayers }).eq("id", gameRoom.id);
-  }, [gameRoom]);
-
-  const handleZombieAttack = useCallback((playerId: string) => {
-    const player = gameRoom?.players.find((p) => p.player_id === playerId);
-    if (!player || !player.is_alive || zombieState.isAttacking) return;
-
-    if (attackIntervalRef.current) clearInterval(attackIntervalRef.current);
-
-    setZombieState({ isAttacking: true, targetPlayerId: playerId, attackProgress: 0, basePosition: 500, currentPosition: 500 });
-    setGameMode("panic");
-
-    let progress = 0;
-    attackIntervalRef.current = setInterval(() => {
-      progress += 0.0333;
-      setZombieState((prev) => ({ ...prev, attackProgress: progress, currentPosition: prev.basePosition * (1 - progress * 0.8) }));
-
-      if (progress >= 1) {
-        clearInterval(attackIntervalRef.current!);;
-        attackIntervalRef.current = null;
-        setZombieState({ isAttacking: false, targetPlayerId: null, attackProgress: 0, basePosition: 500, currentPosition: 500 });
-        setGameMode("normal");
-      }
-    }, 30);
-  }, [gameRoom, zombieState.isAttacking]);
-  const fetchGameData = useCallback(async () => {
-    if (!roomCode) {
-      setLoadingError(t("error.invalidRoomCode"));
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      const { data: room, error: roomError } = await supabase.from("game_rooms").select("*").eq("room_code", roomCode.toUpperCase()).single();
-      if (roomError || !room) throw new Error(t("error.roomNotFound"));
-      setGameRoom(room as GameRoom);
-    } catch (error) {
-      console.error(t("log.fetchGameDataError", { error }));
-      setLoadingError(t("error.loadGame"));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [roomCode, t]);
-
-  // Initial fetch
+  // Zombie attack ketika health turun
   useEffect(() => {
-    fetchGameData();
-  }, [fetchGameData]);
+    if (!prevParticipants) return;
 
-  // Supabase Realtime Subscription (simplified)
-  useEffect(() => {
-    if (!gameRoom?.id) return;
-    const roomChannel = supabase.channel(`room-${gameRoom.id}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "game_rooms", filter: `id=eq.${gameRoom.id}` },
-        (payload) => {
-          setGameRoom(payload.new as GameRoom);
-        }
-      ).subscribe();
-    return () => { supabase.removeChannel(roomChannel); };
-  }, [gameRoom?.id]);
+    participants.forEach((curr) => {
+      const prev = prevParticipants.find((p) => p.id === curr.id);
+      if (
+        prev &&
+        curr.health.current < prev.health.current &&
+        curr.is_alive &&
+        !zombieState.isAttacking
+      ) {
+        setZombieState({ isAttacking: true, targetPlayerId: curr.id, attackProgress: 0, basePosition: 500, currentPosition: 500 });
+        setGameMode("panic");
 
-  // Effect to react to gameRoom changes from Realtime
-  useEffect(() => {
-    if (prevGameRoom && gameRoom) {
-      // 1. Update players and states
-      const playersData = (gameRoom.players as Player[] || []).sort((a: Player, b: Player) => new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime());
-      setPlayers(playersData);
-      initializePlayerStates(playersData);
-      setChaserType(gameRoom.chaser_type || "zombie");
-
-      // 2. Check for health decrease to trigger attack
-      gameRoom.players.forEach(newPlayer => {
-        const oldPlayer = prevGameRoom.players.find(p => p.player_id === newPlayer.player_id);
-        if (oldPlayer && newPlayer.health.current < oldPlayer.health.current && newPlayer.is_alive) {
-          if (!zombieState.isAttacking) {
-            handleZombieAttack(newPlayer.player_id);
-          } else {
-            setAttackQueue(prev => prev.includes(newPlayer.player_id) ? prev : [...prev, newPlayer.player_id]);
+        let progress = 0;
+        if (attackIntervalRef.current) clearInterval(attackIntervalRef.current);
+        attackIntervalRef.current = setInterval(() => {
+          progress += 0.033;
+          setZombieState((s) => ({
+            ...s,
+            attackProgress: progress,
+            currentPosition: s.basePosition * (1 - progress * 0.8),
+          }));
+          if (progress >= 1) {
+            clearInterval(attackIntervalRef.current!);
+            setZombieState({ isAttacking: false, targetPlayerId: null, attackProgress: 0, basePosition: 500, currentPosition: 500 });
+            setGameMode("normal");
           }
-        }
-      });
-
-      // 3. Check for game end
-      if (gameRoom.status === "finished") {
-        router.push(`/host/${roomCode}/result`);
+        }, 30);
       }
-    }
-  }, [gameRoom, prevGameRoom, initializePlayerStates, router, roomCode, handleZombieAttack, zombieState.isAttacking]);
+    });
+  }, [participants, prevParticipants, zombieState.isAttacking]);
 
-  // Effect for handling screen size and orientation
+  // Auto finish game
+  useEffect(() => {
+    if (!session || session.status === "finished") return;
+
+    // Cek: semua player sudah tidak hidup ATAU sudah selesai (finished_at ada)
+    const allFinishedOrDead = participants.length > 0 && participants.every((p) => {
+      // Player dianggap "selesai" jika: health habis (is_alive false) ATAU sudah submit jawaban akhir (finished_at ada)
+      return !p.is_alive || p.finished_at !== null;
+    });
+
+    if (allFinishedOrDead) {
+      // LANGSUNG UPDATE STATUS + REDIRECT HOST
+      const finishAndSync = async () => {
+        try {
+          // 1. Update status di QuizRush (mysupa)
+          await mysupa
+            .from("sessions")
+            .update({
+              status: "finished",
+              ended_at: new Date().toISOString()
+            })
+            .eq("id", session.id);
+
+          // 2. Sync ke gameforsmart (supabase client)
+          await syncResultsToMainSupabase(session.id);
+
+          // 3. Redirect host
+          router.push(`/host/${gamePin}/result`);
+        } catch (err) {
+          console.error("Gagal finish game:", err);
+          // Tetap redirect biar host gak stuck
+          router.push(`/host/${gamePin}/result`);
+        }
+      }
+      finishAndSync();
+    }
+  }, [participants, session, router, gamePin]);
+
+  // Redirect jika game selesai
+  useEffect(() => {
+    if (session?.status === "finished") {
+      router.push(`/host/${gamePin}/result`);
+    }
+  }, [session?.status, router, gamePin]);
+
+  // Screen resize
   useEffect(() => {
     setIsClient(true);
-    
-    const handleResize = () => {
+    const handle = () => {
       setScreenWidth(window.innerWidth);
       setScreenHeight(window.innerHeight);
-      const isMobile = window.innerWidth <= 768;
-      const isPortrait = window.matchMedia("(orientation: portrait)").matches;
-      setIsPortraitMobile(isMobile && isPortrait);
+      setIsPortraitMobile(window.innerWidth <= 768 && window.matchMedia("(orientation: portrait)").matches);
     };
-
-    handleResize(); // Initial check
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("orientationchange", handleResize);
-
+    handle();
+    window.addEventListener("resize", handle);
+    window.addEventListener("orientationchange", handle);
     return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleResize);
+      window.removeEventListener("resize", handle);
+      window.removeEventListener("orientationchange", handle);
     };
   }, []);
 
-  // New useEffect to handle game end when no players are active
   useEffect(() => {
-    if (gameRoom && gameRoom.status !== 'finished' && players.length > 0) {
-      const activePlayers = players.filter(p => p.is_alive && p.health.current > 0 && !completedPlayers.some(cp => cp.player_id === p.player_id));
-      if (activePlayers.length === 0) {
-        const finishGame = async () => {
-          await supabase
-            .from("game_rooms")
-            .update({ status: "finished" })
-            .eq("id", gameRoom.id);
-        };
-        // Add a small delay to allow final animations to complete
-        const timer = setTimeout(finishGame, 1500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [players, completedPlayers, gameRoom, supabase]);
-
-  useEffect(() => {
-    const interval = setInterval(() => setAnimationTime(prev => prev + 1), gameMode === "panic" ? 30 : 100);
-    return () => clearInterval(interval);
+    const i = setInterval(() => setAnimationTime((p) => p + 1), gameMode === "panic" ? 30 : 100);
+    return () => clearInterval(i);
   }, [gameMode]);
 
-  const activePlayers = useMemo(() => {
-    return players.filter((p) => !completedPlayers.some((c) => c.player_id === p.player_id));
-  }, [players, completedPlayers]);
+  const activePlayers = participants.filter((p) => p.is_alive && p.health.current > 0 && !p.finished_at);
+  const centerX = screenWidth / 2;
+  const chaserType = session?.difficulty?.split(":")[0] as any || "zombie";
 
-  const centerX = useMemo(() => screenWidth / 2, [screenWidth]);
-
-  useEffect(() => {
-    const zombiesAudio = new Audio('/musics/zombies.mp3');
-    const bgAudio = new Audio('/musics/background-music.mp3');
-    zombiesAudio.play().catch(console.warn);
-    bgAudio.loop = true;
-    bgAudio.play().catch(console.warn);
-    return () => {
-      zombiesAudio.pause();
-      bgAudio.pause();
-    };
-  }, []);
-
-  if (!isClient || isLoading) {
+  if (!isClient || !session) {
     return (
-      <div className="relative w-full h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">{loadingError ? loadingError : t("loading")}</div>
+      <div className="w-full h-screen bg-black flex-center text-white text-xl">
+        {t("loading")}
       </div>
     );
   }
@@ -320,7 +390,7 @@ export default function HostGamePage() {
 
   return (
     <div className={mainContentClass} style={wrapperStyle}>
-      {/* <MemoizedBackground3 isFlashing={false} /> */}
+      <MemoizedBackground3 isFlashing={false} />
       <motion.header
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -328,17 +398,11 @@ export default function HostGamePage() {
         className="flex flex-col gap-3 mb-10 px-4"
       >
         <div className="flex justify-between items-center">
-          <h1
-            className="text-5xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
-            style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-          >
-            {t("title")}
-          </h1>
-          <div className="flex w-fit gap-2 items-center">
-            <Image src={`/logo/gameforsmartlogo-horror.png`} alt="" width={254} height={0} className="z-20" />
-          </div>
+          <h1 className="text-5xl font-bold font-mono text-red-500 drop-shadow-lg">{t("title")}</h1>
+          <Image src="/logo/gameforsmartlogo-horror.png" alt="logo" width={254} height={80} />
         </div>
       </motion.header>
+
       <MemoizedRunningCharacters
         players={activePlayers}
         playerStates={playerStates}
@@ -346,21 +410,23 @@ export default function HostGamePage() {
         animationTime={animationTime}
         gameMode={gameMode}
         centerX={centerX}
-        completedPlayers={completedPlayers}
+        completedPlayers={[]}
       />
+
       <MemoizedZombieCharacter
-        zombieState={memoizedZombieState}
+        zombieState={zombieState}
         gameMode={gameMode}
         centerX={centerX}
         chaserType={chaserType}
         players={activePlayers}
         animationTime={animationTime}
-        screenHeight={screenHeight} // Add screenHeight prop
-        isPortraitMobile={isPortraitMobile} // Add isPortraitMobile prop
-        mobileHorizontalShift={ZOMBIE_MOBILE_HORIZONTAL_OFFSET} // Pass the horizontal offset
+        screenHeight={screenHeight}
+        isPortraitMobile={isPortraitMobile}
+        mobileHorizontalShift={ZOMBIE_MOBILE_HORIZONTAL_OFFSET}
       />
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-        <MemoizedGameUI roomCode={roomCode} />
+
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
+        <MemoizedGameUI roomCode={gamePin} />
       </div>
     </div>
   );
