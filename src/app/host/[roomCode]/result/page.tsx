@@ -217,7 +217,6 @@ export default function ResultsHostPage() {
           total_time_minutes: oldSess.total_time_minutes,
           difficulty: oldSess.difficulty,
           current_questions: selectedQuestions,
-          application: "quizrush"
         });
 
       if (mysupaErr) throw mysupaErr;
