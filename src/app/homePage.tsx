@@ -526,7 +526,7 @@ export default function HomePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-red-400/80 text-base sm:text-lg md:text-2xl tracking-wider mt-2"
+              className="text-red-400/80 text-sm sm:text-lg md:text-2xl tracking-wider mt-1 sm:mt-2"
             >
               {atmosphereText}
             </motion.p>
@@ -541,50 +541,62 @@ export default function HomePage() {
             )}
           </motion.div>
           <div className="w-full max-w-4xl">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl w-full px-4">
-              <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.8 }} whileHover={{ scale: 1.02 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-4xl w-full">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                whileHover={{ scale: 1.02 }}
+                className="group sm:order-1 order-2"
+              >
                 <Card className="bg-black/40 border-red-900/50 hover:border-red-500 transition-all duration-300 h-full shadow-[0_0_15px_rgba(239,68,68,0.3)]">
                   <CardHeader className="text-center pb-6">
-                    <motion.div className="w-20 h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6" whileHover={{ rotate: 5 }}>
-                      <Users className="w-10 h-10 text-red-400" />
+                    <motion.div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6" whileHover={{ rotate: 5 }}>
+                      <Users className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
                     </motion.div>
-                    <CardTitle className="text-3xl font-bold text-red-400 font-mono">{t("hostGame")}</CardTitle>
-                    <CardDescription className="text-red-400/80 text-lg font-mono">{t("hostDescription")}</CardDescription>
+                    <CardTitle className="text-2xl md:text-3xl font-bold text-red-400 font-mono">{t("hostGame")}</CardTitle>
+                    <CardDescription className="text-sm md:text-lg text-red-400/80 font-mono">{t("hostDescription")}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button onClick={handleHostGame} disabled={isCreating || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white font-mono text-lg py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                      <Play className="w-5 h-5 mr-2" />
+                    <Button onClick={handleHostGame} disabled={isCreating || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white font-mono text-sm sm:text-base md:text-lg py-2 sm:py-3 md:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                      <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                       {isCreating ? t("creatingRoom") : t("createRoomButton")}
                     </Button>
                   </CardContent>
                 </Card>
               </motion.div>
 
-              <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.8 }} whileHover={{ scale: 1.02 }}>
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                whileHover={{ scale: 1.02 }}
+                className="group sm:order-2 order-1"
+              >
                 <Card className="bg-black/40 border-red-900/50 hover:border-red-500 transition-all duration-300 h-full shadow-[0_0_15px_rgba(239,68,68,0.3)]">
                   <CardHeader className="text-center pb-3">
-                    <motion.div className="w-20 h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6" whileHover={{ rotate: -3 }}>
-                      <Play className="w-10 h-10 text-red-400" />
+                    <motion.div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6" whileHover={{ rotate: -3 }}>
+                      <Play className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
                     </motion.div>
-                    <CardTitle className="text-3xl font-bold text-red-400 font-mono">{t("joinGame")}</CardTitle>
-                    <CardDescription className="text-red-400/80 text-lg font-mono">{t("joinDescription")}</CardDescription>
+                    <CardTitle className="text-2xl md:text-3xl font-bold text-red-400 font-mono">{t("joinGame")}</CardTitle>
+                    <CardDescription className="text-sm md:text-lg text-red-400/80 font-mono">{t("joinDescription")}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-4">
                       <div className="flex items-center space-x-2">
-                        <Input placeholder={t("gameCodePlaceholder")} value={gameCode} onChange={(e) => handleGameCodeChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-xl font-mono h-12 rounded-xl flex-1" />
-                        <Button variant="outline" size="icon" onClick={() => setIsScannerOpen(true)} className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-12 w-12">
-                          <Camera className="h-5 w-5" />
+                        <Input placeholder={t("gameCodePlaceholder")} value={gameCode} onChange={(e) => handleGameCodeChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-lg md:text-xl font-mono h-10 sm:h-12 rounded-xl flex-1" />
+                        <Button variant="outline" size="icon" onClick={() => setIsScannerOpen(true)} className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-10 sm:h-12 w-10 sm:w-12">
+                          <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Input placeholder={t("nicknamePlaceholder")} value={nickname} onChange={(e) => handleNicknameChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-xl font-mono h-12 rounded-xl flex-1" maxLength={20} />
-                        <Button variant="outline" size="icon" onClick={() => setNickname(generateRandomNickname())} className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-12 w-12">
-                          <RefreshCw className="h-5 w-5" />
+                        <Input placeholder={t("nicknamePlaceholder")} value={nickname} onChange={(e) => handleNicknameChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-lg md:text-xl font-mono h-10 sm:h-12 rounded-xl flex-1" maxLength={20} />
+                        <Button variant="outline" size="icon" onClick={() => setNickname(generateRandomNickname())} className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-10 sm:h-12 w-10 sm:w-12">
+                          <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                       </div>
                     </div>
-                    <Button onClick={handleJoinGame} disabled={!gameCode || !nickname || isJoining || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white font-mono text-lg py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                    <Button onClick={handleJoinGame} disabled={!gameCode || !nickname || isJoining || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white font-mono text-sm sm:text-base md:text-lg py-2 sm:py-3 md:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
                       {isJoining ? t("joining") : t("joinButton")}
                     </Button>
                   </CardContent>
