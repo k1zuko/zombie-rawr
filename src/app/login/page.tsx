@@ -20,6 +20,7 @@ import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 import Image from "next/image";
 import LoadingScreen from "@/components/LoadingScreen";
+import { FaHandPointRight } from 'react-icons/fa';
 
 // Tipe untuk efek visual (sama seperti homepage)
 interface BloodDrip {
@@ -275,16 +276,41 @@ export default function LoginPage() {
                 )}
 
                 {/* Google Sign-in Button */}
-                <Button
-                  onClick={handleGoogleLogin}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="w-full border-red-500/50 text-red-400 hover:bg-red-500/20 font-mono text-base py-3 rounded-xl flex items-center justify-center"
-                  aria-label={t("googleLoginButton")}
-                >
-                  <FcGoogle className="w-5 h-5 mr-2" />
-                  {t("googleLoginButton")}
-                </Button>
+  <div className="relative">
+  <motion.div
+    className="absolute -left-7 md:-left-10 top-1/2 -translate-y-1/2 text-2xl md:text-3xl text-[#8B0000]" // Merah darah gelap
+    animate={{ x: [0, 10, 0] }}
+    transition={{
+      duration: 1.5,
+      repeat: Infinity,
+      repeatType: "loop",
+      ease: "easeInOut",
+    }}
+  >
+    <FaHandPointRight />
+  </motion.div>
+
+  <Button
+    type="button"
+    onClick={handleGoogleLogin}
+    disabled={isLoading}
+    variant="outline"
+    className="w-full min-h-12 sm:min-h-10 
+               border-[#8B0000]/80 text-[#8B0000] 
+               hover:text-white hover:bg-[#8B0000] hover:border-[#8B0000] 
+               pixel-button flex items-center justify-center gap-2 sm:gap-3 px-4 py-5 
+               transition-all duration-300 cursor-pointer shadow-md hover:shadow-[#8B0000]/50"
+  >
+    {/* Icon Google — tetap putih agar kontras */}
+    <FcGoogle className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
+
+    {/* Teks */}
+    <span className="text-center font-medium">
+      <span className="sm:hidden">{t("googleLoginButton")}</span>
+      <span className="hidden sm:inline">{t("googleLoginButton")}</span>
+    </span>
+  </Button>
+</div>
 
                 {/* OR Separator */}
                 <div className="relative my-4">
