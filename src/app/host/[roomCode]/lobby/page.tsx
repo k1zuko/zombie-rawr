@@ -150,6 +150,39 @@ export default function HostPage() {
     null
   );
   const [isFullscreenQrOpen, setIsFullscreenQrOpen] = useState(false);
+  const [isAssetsLoaded, setIsAssetsLoaded] = useState(false);
+
+  useEffect(() => {
+    const assetsToPreload = [
+      '/map6/1.webp',
+      '/map6/3.webp',
+      '/map6/4.webp',
+      '/map6/5.webp',
+      '/map6/7.webp',
+      '/map6/8.webp',
+    ];
+    let loadedCount = 0;
+    const totalAssets = assetsToPreload.length;
+
+    if (totalAssets === 0) {
+      setIsAssetsLoaded(true);
+      return;
+    }
+
+    const onAssetLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalAssets) {
+        setIsAssetsLoaded(true);
+      }
+    };
+
+    assetsToPreload.forEach(src => {
+      const img = new window.Image();
+      img.src = src;
+      img.onload = onAssetLoad;
+      img.onerror = onAssetLoad;
+    });
+  }, []);
 
   const setSessionStatus = async (status: Session["status"]) => {
     if (!session?.id) return;
@@ -422,11 +455,10 @@ export default function HostPage() {
     },
   ];
 
-  if (isLoading || !session)
-    return <LoadingScreen children={undefined} isReady={false} />;
+  const isPageReady = !isLoading && !!session && isAssetsLoaded;
 
   return (
-    <LoadingScreen isReady={true}>
+    <LoadingScreen isReady={isPageReady}>
       {session && (
         <div className="min-h-screen bg-black relative overflow-hidden select-none">
           <div className="absolute top-4 left-4 z-20 hidden md:block">
