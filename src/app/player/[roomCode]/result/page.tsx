@@ -263,8 +263,8 @@ export default function ResultsPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
         <div className="text-center z-10">
 
-          <p className="text-white font-mono text-xl mb-4 tracking-widest">{t("result.loadingTitle")}</p>
-          <p className="text-gray-400 font-mono text-sm">{t("result.loadingSubtitle")}</p>
+          <p className="text-white  text-xl mb-4 tracking-widest">{t("result.loadingTitle")}</p>
+          <p className="text-gray-400  text-sm">{t("result.loadingSubtitle")}</p>
         </div>
       </div>
     )
@@ -277,22 +277,22 @@ export default function ResultsPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
         <div className="text-center z-10 p-4">
           <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-          <p className="text-white font-mono text-xl mb-4 tracking-widest">{t("result.errorTitle")}</p>
-          <p className="text-yellow-400 font-mono text-sm mb-6 max-w-md mx-auto">
+          <p className="text-white  text-xl mb-4 tracking-widest">{t("result.errorTitle")}</p>
+          <p className="text-yellow-400  text-sm mb-6 max-w-md mx-auto">
             {error || t("result.errorMessage")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
 
               onClick={() => (window.location.href = "/")}
-              className="bg-gray-900 hover:bg-gray-800 text-white font-mono border border-gray-700"
+              className="bg-gray-900 hover:bg-gray-800 text-white  border border-gray-700"
             >
               <Home className="w-4 h-4 mr-2" />
               {t("common.home")}
             </Button>
             <Button
               onClick={initializePlayerData}
-              className="bg-red-900 hover:bg-red-800 text-white font-mono border border-red-700"
+              className="bg-red-900 hover:bg-red-800 text-white  border border-red-700"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               {t("common.retry")}
@@ -359,7 +359,7 @@ export default function ResultsPage() {
             <div className="hidden sm:block">
               <Link href={"/"}>
                 <Image
-                  src="/logo/quizrushlogo.png"
+                  src="/logo/quizrushfix.png"
                   alt="QuizRush Logo"
                   width={140}   // turunin sedikit biar proporsional
                   height={35}   // sesuaikan tinggi
@@ -396,7 +396,7 @@ export default function ResultsPage() {
           >
 
             <h1
-              className={`mx-3 text-5xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`mx-3 text-5xl tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.title")}
@@ -416,7 +416,7 @@ export default function ResultsPage() {
               <div className="absolute top-0 right-1/3 w-1 h-10 bg-red-900/70" />
 
               <div className="relative z-10">
-                <h2 className="text-3xl font-bold text-white mb-2 font-horror tracking-wider text-red-500">
+                <h2 className="text-3xl  text-white mb-2 font-horror tracking-wider text-red-500">
                   {getPerformanceTitle()}
                 </h2>
 
@@ -432,19 +432,19 @@ export default function ResultsPage() {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-gray-900/70 rounded-lg p-4 border border-red-900/50">
                     <Target className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white font-mono">{playerData.correct}</div>
+                    <div className="text-2xl  text-white ">{playerData.correct}</div>
                     <div className="text-xs text-gray-400 tracking-widest">{t("correct")}</div>
                   </div>
 
                   <div className="bg-gray-900/70 rounded-lg p-4 border border-red-900/50">
                     <Heart className="w-6 h-6 text-red-500 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white font-mono">{playerData.health}</div>
+                    <div className="text-2xl  text-white ">{playerData.health}</div>
                     <div className="text-xs text-gray-400 tracking-widest">{t("health")}</div>
                   </div>
 
                   <div className="bg-gray-900/70 rounded-lg p-4 border border-red-900/50">
                     <Zap className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white font-mono">
+                    <div className="text-2xl  text-white ">
                       {playerData.total > 0 ? Math.round((playerData.correct / playerData.total) * 100) : 0}%
                     </div>
                     <div className="text-xs text-gray-400 tracking-widest">{t("accuracy")}</div>
@@ -461,7 +461,7 @@ export default function ResultsPage() {
             onClick={() => router.push("/")}
             whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             whileTap={{ scale: 0.95 }}
-            className="bg-red-800 text-white px-5 py-1 border-2 border-red-600 rounded-lg z-50 font-mono inline-block"
+            className="bg-red-800 text-white px-5 py-1 border-2 border-red-600 rounded-lg z-50  inline-block"
             aria-label={t("homeButton")}
           >
             {t("homeButton")}

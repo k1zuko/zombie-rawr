@@ -235,7 +235,7 @@ export default function CharacterSelectPage() {
       <div className="relative z-10 mx-auto p-4 max-w-8xl">
         <div className="hidden md:flex items-center justify-between">
           <Image
-            src="/logo/quizrushlogo.png"
+            src="/logo/quizrushfix.png"
             alt="QuizRush Logo"
             width={140}   // turunin sedikit biar proporsional
             height={35}   // sesuaikan tinggi
@@ -246,7 +246,7 @@ export default function CharacterSelectPage() {
           <img src={`/logo/gameforsmartlogo-horror.png`} alt="Logo" className="w-40 md:w-52 lg:w-64 h-auto" />
         </div>
         <header className="flex flex-col gap-1 mb-6 text-center">
-          <h1 className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse ${flickerText ? "opacity-70" : "opacity-100"}`}
+          <h1 className={`text-4xl md:text-6xl tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse ${flickerText ? "opacity-70" : "opacity-100"}`}
             style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}>
             {t("settingsTitle")}
           </h1>
@@ -264,10 +264,10 @@ export default function CharacterSelectPage() {
           <div className="flex flex-col items-center mt-4">
             <div className="flex items-center justify-center gap-4">
               <motion.button whileTap={{ scale: 0.9 }} onClick={prevChaser} className="w-8 h-8 p-2 text-red-300 border-2 border-red-500/50 rounded-lg bg-black/40 flex items-center justify-center md:hidden"> <ChevronLeft className="w-6 h-6" /> </motion.button>
-              <p className="text-red-400 font-mono text-center font-bold text-sm md:text-base"> {currentChaser.name} </p>
+              <p className="text-red-400 text-center text-sm md:text-base"> {currentChaser.name} </p>
               <motion.button whileTap={{ scale: 0.9 }} onClick={nextChaser} className="w-8 h-8 p-2 text-red-300 border-2 border-red-500/50 rounded-lg bg-black/40 flex items-center justify-center md:hidden"> <ChevronRight className="w-6 h-6" /> </motion.button>
             </div>
-            <span className="text-red-400 font-mono text-xs mt-1">{`${currentChaserIndex + 1}/${chaserOptions.length}`}</span>
+            <span className="text-red-400 text-xs mt-1">{`${currentChaserIndex + 1}/${chaserOptions.length}`}</span>
           </div>
         </motion.div>
 
@@ -276,31 +276,31 @@ export default function CharacterSelectPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Duration */}
             <div className="p-3 bg-red-900/20 rounded border border-red-900/30">
-              <Label className="text-red-300 mb-2 block font-medium text-xs font-mono text-center">{t("gameDurationLabel")}</Label>
+              <Label className="text-red-300 mb-2 block font-medium text-xs text-center">{t("gameDurationLabel")}</Label>
               <div className="flex items-center justify-center space-x-4">
                 <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDurationChange(-5)} className="w-8 h-8 bg-red-800/50 rounded text-red-200 border border-red-600/50 flex items-center justify-center text-sm"> <Minus className="w-3 h-3" /> </motion.button>
-                <span className="text-red-400 font-mono text-xs min-w-[2rem] text-center">{gameDuration} {t("minutes")}</span>
+                <span className="text-red-400  text-xs min-w-[2rem] text-center">{gameDuration} {t("minutes")}</span>
                 <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDurationChange(5)} className="w-8 h-8 bg-red-800/50 rounded text-red-200 border border-red-600/50 flex items-center justify-center text-sm"> <Plus className="w-3 h-3" /> </motion.button>
               </div>
             </div>
 
             {/* Questions */}
             <div className="p-3 bg-red-900/20 rounded border border-red-900/30">
-              <Label className="text-red-300 mb-2 block font-medium text-xs font-mono text-center">{t("questionCountLabel")}</Label>
+              <Label className="text-red-300 mb-2 block font-medium text-xs  text-center">{t("questionCountLabel")}</Label>
               <div className="flex items-center justify-center space-x-4">
                 <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleQuestionCountChange(-5)} className="w-8 h-8 bg-red-800/50 rounded text-red-200 border border-red-600/50 flex items-center justify-center text-sm" disabled={questionCount <= 5}> <Minus className="w-3 h-3" /> </motion.button>
-                <span className="text-red-400 font-mono text-xs min-w-[2rem] text-center"> {questionCount} / {totalQuestions} </span>
+                <span className="text-red-400  text-xs min-w-[2rem] text-center"> {questionCount} / {totalQuestions} </span>
                 <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleQuestionCountChange(5)} className="w-8 h-8 bg-red-800/50 rounded text-red-200 border border-red-600/50 flex items-center justify-center text-sm" disabled={questionCount >= totalQuestions}> <Plus className="w-3 h-3" /> </motion.button>
               </div>
             </div>
 
             {/* Difficulty */}
             <div className="p-3 bg-red-900/20 rounded border border-red-900/30">
-              <Label className="text-red-300 mb-3 block font-medium text-xs font-mono text-center">{t("difficultyLevelLabel")}</Label>
+              <Label className="text-red-300 mb-3 block font-medium text-xs  text-center">{t("difficultyLevelLabel")}</Label>
               <div className="grid grid-cols-3 gap-2">
                 {difficultyOptions.map((option) => (
                   <motion.button key={option.value} whileTap={{ scale: 0.95 }} onClick={() => setDifficultyLevel(option.value)}
-                    className={`p-2 rounded-lg border font-mono text-xs flex flex-col items-center ${difficultyLevel === option.value ? "bg-red-900/60 border-red-500 text-red-200" : "bg-black/40 border-red-900/50 text-red-400"}`}>
+                    className={`p-2 rounded-lg border  text-xs flex flex-col items-center ${difficultyLevel === option.value ? "bg-red-900/60 border-red-500 text-red-200" : "bg-black/40 border-red-900/50 text-red-400"}`}>
                     <span>{t(`difficulty.${option.value}`)}</span>
                   </motion.button>
                 ))}
@@ -309,7 +309,7 @@ export default function CharacterSelectPage() {
           </div>
 
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
-            <Button onClick={saveSettings} disabled={isSaving || !isFormValid} className={`w-full bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white rounded-lg font-mono text-sm py-3 transition-all ${!isFormValid || isSaving ? "opacity-50 cursor-not-allowed" : ""}`}>
+            <Button onClick={saveSettings} disabled={isSaving || !isFormValid} className={`w-full bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white rounded-lg  text-sm py-3 transition-all ${!isFormValid || isSaving ? "opacity-50 cursor-not-allowed" : ""}`}>
               {isSaving ? t("continuing") : t("continue")}
             </Button>
           </motion.div>

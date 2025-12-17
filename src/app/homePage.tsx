@@ -399,7 +399,7 @@ export default function HomePage() {
                   transition={{ duration: 0.25, ease: "easeOut" }}
                 >
                   <DialogHeader>
-                    <DialogTitle className="text-red-500 text-2xl text-center font-mono">{t("howToPlay")}</DialogTitle>
+                    <DialogTitle className="text-red-500 text-2xl text-center ">{t("howToPlay")}</DialogTitle>
                   </DialogHeader>
                   <Tabs defaultValue="join" className="mt-4">
                     <motion.div
@@ -409,8 +409,8 @@ export default function HomePage() {
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <h3 className="text-xl font-mono mb-2">{t("joinTitle")}</h3>
-                      <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base font-mono">
+                      <h3 className="text-xlmb-2">{t("joinTitle")}</h3>
+                      <ol className="list-decimal list-outside pl-6 space-y-2 text-sm sm:text-base ">
                         {Array.isArray(t("joinSteps", { returnObjects: true }))
                           ? (t("joinSteps", { returnObjects: true }) as string[]).map((step: string, idx: number) => (
                             <li key={idx}>{step}</li>
@@ -450,7 +450,7 @@ export default function HomePage() {
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <span className="text-xl font-bold text-red-400">
+                      <span className="text-xl text-red-400">
                         {profile?.fullname?.charAt(0)?.toUpperCase() ||
                           profile?.username?.charAt(0)?.toUpperCase() ||
                           user?.email?.charAt(0)?.toUpperCase() || 'U'}
@@ -458,7 +458,7 @@ export default function HomePage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold font-mono text-red-300 truncate">
+                    <p className="text-xs text-red-300 truncate">
                       {profile?.fullname || profile?.username || user?.email?.split('@')[0] || t("user")}
                     </p>
                   </div>
@@ -471,7 +471,7 @@ export default function HomePage() {
                   aria-label="Toggle Fullscreen"
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <span className="text-sm font-mono text-red-300">
+                    <span className="text-sm  text-red-300">
                       {isFullscreen ? t("exitFullscreen") || "Exit Fullscreen" : t("fullscreen") || "Fullscreen"}
                     </span>
                   </div>
@@ -485,7 +485,7 @@ export default function HomePage() {
                 >
                   <div className="flex items-center justify-center gap-2">
 
-                    <span className="text-sm font-mono text-red-300">{t("howToPlay")}</span>
+                    <span className="text-sm text-red-300">{t("howToPlay")}</span>
                   </div>
                 </button>
                 
@@ -497,7 +497,7 @@ export default function HomePage() {
                 >
                   <div className="flex items-center justify-center gap-2">
 
-                    <span className="text-sm font-mono text-red-300">
+                    <span className="text-sm  text-red-300">
                       {isInstalled
                       ? t("appInstalled")
                       : t("installApp")}
@@ -508,7 +508,7 @@ export default function HomePage() {
                 {/* Language Button */}
                 <button
                   onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                  className="w-full p-2 bg-black/60 border-2 border-red-500/50 hover:border-red-500 text-red-300 hover:bg-red-500/20 rounded text-center font-mono"
+                  className="w-full p-2 bg-black/60 border-2 border-red-500/50 hover:border-red-500 text-red-300 hover:bg-red-500/20 rounded text-center"
                   aria-label="Language"
                 >
                   <div className="flex items-center justify-center gap-2">
@@ -541,7 +541,7 @@ export default function HomePage() {
                           onClick={() => handleLanguageChange(lang.value)}
                         >
                           <div className="flex items-center gap-3">
-                            <span className="w-6 h-6 bg-red-500/20 border border-red-500/40 rounded flex items-center justify-center text-xs font-bold text-red-300">
+                            <span className="w-6 h-6 bg-red-500/20 border border-red-500/40 rounded flex items-center justify-center text-xs text-red-300">
                               {lang.code}
                             </span>
                             <span className="flex-1">{lang.label}</span>
@@ -560,7 +560,7 @@ export default function HomePage() {
                 >
                   <div className="flex items-center justify-center gap-2">
                     <LogOut className="h-4 w-4" />
-                    <span className="text-sm font-mono text-red-300">{t("logout")}</span>
+                    <span className="text-sm text-red-300">{t("logout")}</span>
                   </div>
                 </button>
               </div>
@@ -574,13 +574,13 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-center py-8"
-          >
+          > 
             <Image
-              src="/logo/quizrushlogo.png"
+              src="/logo/quizrushfix.png"
               alt="QuizRush Logo"
               width={140}   // turunin sedikit biar proporsional
               height={35}   // sesuaikan tinggi
-              className="mx-auto w-48 md:w-64 lg:w-80 h-auto"   // ini yang paling berpengaruh
+              className="mx-auto w-78 md:w-64 lg:w-100 h-auto"   // ini yang paling berpengaruh
               unoptimized
               onClick={() => router.push("/")}
             />
@@ -596,7 +596,7 @@ export default function HomePage() {
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-red-600 text-sm sm:text-lg font-mono mt-4"
+                className="text-red-600 text-sm sm:text-lg mt-4"
               >
                 {errorMessage}
               </motion.p>
@@ -625,11 +625,11 @@ export default function HomePage() {
                     <motion.div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6" whileHover={{ rotate: 5 }}>
                       <Users className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
                     </motion.div>
-                    <CardTitle className="text-2xl md:text-3xl font-bold text-red-400 font-mono">{t("hostGame")}</CardTitle>
-                    <CardDescription className="text-sm md:text-lg text-red-400/80 font-mono">{t("hostDescription")}</CardDescription>
+                    <CardTitle className="text-2xl md:text-3xl text-red-400 ">{t("hostGame")}</CardTitle>
+                    <CardDescription className="text-sm md:text-lg text-red-400/80">{t("hostDescription")}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button onClick={handleHostGame} disabled={isCreating || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white font-mono text-sm sm:text-base md:text-lg py-2 sm:py-3 md:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                    <Button onClick={handleHostGame} disabled={isCreating || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white text-sm sm:text-base md:text-lg py-2 sm:py-3 md:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
                       <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                       {isCreating ? t("creatingRoom") : t("createRoomButton")}
                     </Button>
@@ -649,25 +649,25 @@ export default function HomePage() {
                     <motion.div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-900 to-black border-2 border-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6" whileHover={{ rotate: -3 }}>
                       <Play className="w-8 h-8 sm:w-10 sm:h-10 text-red-400" />
                     </motion.div>
-                    <CardTitle className="text-2xl md:text-3xl font-bold text-red-400 font-mono">{t("joinGame")}</CardTitle>
-                    <CardDescription className="text-sm md:text-lg text-red-400/80 font-mono">{t("joinDescription")}</CardDescription>
+                    <CardTitle className="text-2xl md:text-3xl text-red-400 ">{t("joinGame")}</CardTitle>
+                    <CardDescription className="text-sm md:text-lg text-red-400/80 ">{t("joinDescription")}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-4">
                       <div className="flex items-center space-x-2">
-                        <Input placeholder={t("gameCodePlaceholder")} value={gameCode} onChange={(e) => handleGameCodeChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-lg md:text-xl font-mono h-10 sm:h-12 rounded-xl flex-1" />
+                        <Input placeholder={t("gameCodePlaceholder")} value={gameCode} onChange={(e) => handleGameCodeChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-lg md:text-xl h-10 sm:h-12 rounded-xl flex-1" />
                         <Button variant="outline" size="icon" onClick={() => setIsScannerOpen(true)} className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-10 sm:h-12 w-10 sm:w-12">
                           <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Input placeholder={t("nicknamePlaceholder")} value={nickname} onChange={(e) => handleNicknameChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-lg md:text-xl font-mono h-10 sm:h-12 rounded-xl flex-1" maxLength={20} />
+                        <Input placeholder={t("nicknamePlaceholder")} value={nickname} onChange={(e) => handleNicknameChange(e.target.value)} className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-center text-base sm:text-lg md:text-xl h-10 sm:h-12 rounded-xl flex-1" maxLength={20} />
                         <Button variant="outline" size="icon" onClick={() => setNickname(generateRandomNickname())} className="border-red-500/50 text-red-400 hover:bg-red-500/20 h-10 sm:h-12 w-10 sm:w-12">
                           <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                       </div>
                     </div>
-                    <Button onClick={handleJoinGame} disabled={!gameCode || !nickname || isJoining || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white font-mono text-sm sm:text-base md:text-lg py-2 sm:py-3 md:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                    <Button onClick={handleJoinGame} disabled={!gameCode || !nickname || isJoining || authLoading} className="w-full bg-gradient-to-r from-red-900 to-red-700 text-white text-sm sm:text-base md:text-lg py-2 sm:py-3 md:py-4 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)]">
                       {isJoining ? t("joining") : t("joinButton")}
                     </Button>
                   </CardContent>
@@ -680,7 +680,7 @@ export default function HomePage() {
         <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
           <DialogContent className="bg-black/90 border-red-500/50 max-w-md mx-auto p-0">
             <DialogHeader className="p-4 border-b border-red-500/20">
-              <DialogTitle className="text-red-500 text-center text-lg font-mono">
+              <DialogTitle className="text-red-500 text-center text-lg">
                 Scan QR Code Room
               </DialogTitle>
             </DialogHeader>
@@ -710,24 +710,24 @@ export default function HomePage() {
                   exit={{ opacity: 0, scale: 0.95 }}
                 >
                   <DialogHeader>
-                    <DialogTitle className="text-red-500 text-2xl font-mono text-center">
+                    <DialogTitle className="text-red-500 text-2xl  text-center">
                       {t("logoutConfirm.title")}
                     </DialogTitle>
                   </DialogHeader>
-                  <div className="mt-4 text-center text-red-400/80 font-mono">
+                  <div className="mt-4 text-center text-red-400/80 ">
                     {t("logoutConfirm.message")}
                   </div>
                   <div className="mt-6 grid grid-cols-2 gap-4">
                     <Button
                       variant="outline"
                       onClick={() => setIsLogoutConfirmOpen(false)}
-                      className="border-red-500/50 text-red-400 hover:bg-red-500/20 font-mono"
+                      className="border-red-500/50 text-red-400 hover:bg-red-500/20 "
                     >
                       {t("cancel")}
                     </Button>
                     <Button
                       onClick={confirmLogout}
-                      className="bg-red-800 hover:bg-red-700 text-white font-mono"
+                      className="bg-red-800 hover:bg-red-700 text-white"
                     >
                       {t("logout")}
                     </Button>

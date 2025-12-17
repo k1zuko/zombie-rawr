@@ -64,7 +64,7 @@ export default function SoulStatus({
       <div className="relative z-10 space-y-4 text-center">
         {/* Nama Player */}
         <p className={cn(
-          "font-mono font-bold tracking-wider text-shadow-lg text-xl sm:text-2xl",
+          "  tracking-wider text-shadow-lg text-xl sm:text-2xl",
           nameColor,
           isCurrentPlayer && "drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]",
           isHost && "drop-shadow-[0_0_10px_rgba(34,211,238,0.7)]"

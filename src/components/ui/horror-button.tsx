@@ -35,7 +35,7 @@ const HorrorButton = forwardRef<HTMLButtonElement, HorrorButtonProps>(
       <Button
         ref={ref}
         className={cn(
-          "font-mono border-2 transition-all duration-300 relative overflow-hidden group",
+          " border-2 transition-all duration-300 relative overflow-hidden group",
           variants[variant],
           sizes[size],
           glowing && "animate-pulse",

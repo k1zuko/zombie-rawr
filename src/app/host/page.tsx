@@ -354,7 +354,7 @@ export default function QuizSelectPage() {
           >
         <div className="hidden md:flex items-center justify-between">
           <Image
-            src="/logo/quizrushlogo.png"
+            src="/logo/quizrushfix.png"
             alt="QuizRush Logo"
             width={140}   // turunin sedikit biar proporsional
             height={35}   // sesuaikan tinggi
@@ -380,7 +380,7 @@ export default function QuizSelectPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="bg-black/70 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-base font-mono h-12 rounded-full focus:border-red-500 focus:ring-red-500/30 backdrop-blur-sm pr-12"
+                    className="bg-black/70 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-base  h-12 rounded-full focus:border-red-500 focus:ring-red-500/30 backdrop-blur-sm pr-12"
                   />
                   {searchTerm && (
                     <Button
@@ -450,7 +450,7 @@ export default function QuizSelectPage() {
 
           <div className="w-full max-w-8xl mx-auto flex flex-col flex-1 px-2 md:px-8 gap-5">
             {paginatedQuizzes.length === 0 ? (
-              <div className="text-center text-red-400/80 text-base font-mono flex-1 flex items-center justify-center">
+              <div className="text-center text-red-400/80 text-base  flex-1 flex items-center justify-center">
                 {t("noQuizzesAvailable")}
               </div>
             ) : (
@@ -479,7 +479,7 @@ export default function QuizSelectPage() {
                             <TooltipProvider>
                               <Tooltip delayDuration={500}>
                                 <TooltipTrigger asChild>
-                                  <CardTitle className="text-red-400 font-mono text-base line-clamp-3">{quiz.title}</CardTitle>
+                                  <CardTitle className="text-red-400  text-base line-clamp-3">{quiz.title}</CardTitle>
                                 </TooltipTrigger>
                                 <TooltipContent
                                   side="top"
@@ -492,9 +492,9 @@ export default function QuizSelectPage() {
                           </CardHeader>
                           <CardFooter className="pt-2 flex justify-between items-center flex-shrink-0 mt-auto">
                             {quiz.category && (
-                              <span className="text-red-300 text-xs font-mono capitalize">{quiz.category}</span>
+                              <span className="text-red-300 text-xs  capitalize">{quiz.category}</span>
                             )}
-                            <div className="flex items-center gap-1 text-red-300 text-xs font-mono">
+                            <div className="flex items-center gap-1 text-red-300 text-xs ">
                               <HelpCircle className="h-3 w-3" />
                               {quiz.question_count ?? 0}
                             </div>
@@ -520,7 +520,7 @@ export default function QuizSelectPage() {
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
-                    <span className="text-red-400 font-mono text-sm self-center">
+                    <span className="text-red-400  text-sm self-center">
                       {t("pageInfo", { current: currentPage, total: totalPages })}
                     </span>
                     <Button

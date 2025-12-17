@@ -68,7 +68,7 @@ const PlayerStatus = React.memo(function PlayerStatus({
               {characterEmojis[currentPlayer.character_type as keyof typeof characterEmojis]}
             </motion.div>
             <div>
-              <div className="text-white font-bold text-lg">{currentPlayer.nickname}</div>
+              <div className="text-white  text-lg">{currentPlayer.nickname}</div>
               <div className="text-gray-400 text-sm flex items-center gap-4">
                 <span>{currentPlayer.correct_answers} jiwa diselamatkan</span>
                 <span>•</span>
@@ -90,7 +90,7 @@ const PlayerStatus = React.memo(function PlayerStatus({
           </div>
           <div className="text-right">
             <motion.div
-              className="text-white font-bold text-2xl"
+              className="text-white  text-2xl"
               animate={{
                 scale: hasAnswered && selectedAnswer === currentQuestion?.correct ? [1, 1.2, 1] : 1,
               }}

@@ -50,14 +50,14 @@ export default function LoadingScreenPreload() {
 
       <div className="relative text-center">
         <motion.h1
-          className="text-4xl sm:text-6xl font-bold text-red-600 tracking-widest font-mono"
+          className="text-4xl sm:text-6xl  text-red-600 tracking-widest "
           style={{ textShadow: "0 0 20px #ff0000, 4px 4px 0 #000" }}
           animate={{ x: [-2, 2, -2, 2, 0] }}
           transition={{ duration: 0.1, repeat: Infinity, repeatDelay: 1 }}
         >
           PREPARING GAME{dots}
         </motion.h1>
-        <p className="text-sm text-red-500 mt-4 opacity-80 animate-pulse font-mono">
+        <p className="text-sm text-red-500 mt-4 opacity-80 animate-pulse ">
           Please wait a moment...
         </p>
       </div>

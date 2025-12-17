@@ -64,7 +64,7 @@ const HorrorAccordionTrigger = forwardRef<
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex flex-1 items-center justify-between py-4 px-6 font-mono text-lg text-red-200",
+        "flex flex-1 items-center justify-between py-4 px-6  text-lg text-red-200",
         "hover:bg-red-900/20 transition-all duration-200",
         "[&[data-state=open]]:bg-red-900/30 [&[data-state=open]]:shadow-[0_0_10px_rgba(255,0,0,0.3)]",
         className
@@ -89,7 +89,7 @@ const HorrorAccordionContent = forwardRef<
   <AccordionPrimitive.Content
     ref={ref}
     className={cn(
-      "overflow-hidden text-red-200 font-mono text-base",
+      "overflow-hidden text-red-200  text-base",
       "data-[state=closed]:animate-slideUp data-[state=open]:animate-slideDown",
       "px-6 py-4 bg-black/90",
       className

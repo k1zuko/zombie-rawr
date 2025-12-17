@@ -240,7 +240,7 @@ export default function QuizPhase({ quizId, nickname, questionsCount, durationIn
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-red-500 font-mono text-xl animate-pulse"
+          className="text-red-500  text-xl animate-pulse"
         >
           {t("loadingQuestion", { defaultValue: "Loading question..." })}
         </motion.div>
@@ -255,13 +255,13 @@ export default function QuizPhase({ quizId, nickname, questionsCount, durationIn
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-red-500 font-mono text-xl"
+            className="text-red-500  text-xl"
           >
             {error || t("errorMessages.noQuestionsFound", { defaultValue: "No questions found for this quiz" })}
           </motion.div>
           <Button
             onClick={() => router.push("/quiz-select-tryout")}
-            className="mt-4 bg-red-800 text-white border-red-600 font-mono"
+            className="mt-4 bg-red-800 text-white border-red-600 "
           >
             {t("backToQuizSelect", { defaultValue: "Back to Quiz Selection" })}
           </Button>
@@ -283,14 +283,14 @@ export default function QuizPhase({ quizId, nickname, questionsCount, durationIn
               className="text-center"
             >
               <h1
-                className="text-4xl md:text-6xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse"
+                className="text-4xl md:text-6xl   tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse"
                 style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
               >
                 {t("title")}
               </h1>
             </motion.div>
           </div>
-          <div className="inline-flex items-center gap-x-5 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40 font-mono text-sm">
+          <div className="inline-flex items-center gap-x-5 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40  text-sm">
             <div className="flex items-center gap-x-1">
               <CircleQuestionMark className="w-4 h-4 text-purple-400" />
               <span className="text-white">
@@ -327,7 +327,7 @@ export default function QuizPhase({ quizId, nickname, questionsCount, durationIn
                     </div>
                   )}
                   <div className="flex items-start space-x-4 mb-8">
-                    <h2 className="text-2xl font-bold text-white leading-relaxed">{currentQuestion.question_text}</h2>
+                    <h2 className="text-2xl  text-white leading-relaxed">{currentQuestion.question_text}</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {currentQuestion.options.map((option: string, index: number) => (
@@ -335,12 +335,12 @@ export default function QuizPhase({ quizId, nickname, questionsCount, durationIn
                         key={index}
                         onClick={() => handleAnswerSelect(option)}
                         disabled={isAnswered || isProcessingAnswer}
-                        className={`${getAnswerButtonClass(option)} p-6 text-left justify-start font-mono text-lg border-2 transition-all duration-300 relative overflow-hidden group ${isProcessingAnswer ? "opacity-50 cursor-not-allowed" : ""
+                        className={`${getAnswerButtonClass(option)} p-6 text-left justify-start  text-lg border-2 transition-all duration-300 relative overflow-hidden group ${isProcessingAnswer ? "opacity-50 cursor-not-allowed" : ""
                           }`}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                         <div className="flex items-center space-x-3 relative z-10">
-                          <span className="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-sm font-bold">
+                          <span className="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-sm ">
                             {String.fromCharCode(65 + index)}
                           </span>
                           <span className="flex-1 whitespace-normal">{option}</span>

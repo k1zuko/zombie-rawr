@@ -129,7 +129,7 @@ const playerOptions = [
                     <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping" />
                   </div>
                   <div className="text-right">
-                    <span className="font-mono text-sm font-bold tracking-wider block">{t("youAreSafe")}</span>
+                    <span className=" text-sm  tracking-wider block">{t("youAreSafe")}</span>
                   </div>
                 </>
               ) : (
@@ -139,7 +139,7 @@ const playerOptions = [
                     <div className="absolute inset-0 rounded-full bg-red-400/20 animate-ping" />
                   </div>
                   <div className="text-right">
-                    <span className="font-mono text-sm font-bold tracking-wider block">{t("zombieApproaching")}</span>
+                    <span className=" text-sm  tracking-wider block">{t("zombieApproaching")}</span>
                   </div>
                 </>
               )}

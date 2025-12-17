@@ -69,13 +69,13 @@ export default function LoadingScreen({
 
           {/* Teks Loading */}
           <div className="text-center mt-1">
-            <h1 className="sm:hidden text-6xl font-bold text-red-600 tracking-widest font-mono"
+            <h1 className="sm:hidden text-6xl  text-red-600 tracking-widest "
               style={{ textShadow: "0 0 20px #ff0000, 4px 4px 0 #000" }}>
               LOADING
             </h1>
 
             <motion.h1
-              className="hidden sm:block text-6xl font-bold text-red-600 tracking-widest font-mono"
+              className="hidden sm:block text-6xl  text-red-600 tracking-widest "
               style={{ textShadow: "0 0 20px #ff0000, 4px 4px 0 #000" }}
               animate={{ x: [-4, 4, -4, 4, 0] }}
               transition={{ duration: 0.1, repeat: Infinity }}
@@ -83,7 +83,7 @@ export default function LoadingScreen({
               LOADING{dots}
             </motion.h1>
 
-            <p className="text-sm text-red-500 mt-4 opacity-80 animate-pulse font-mono">
+            <p className="text-sm text-red-500 mt-4 opacity-80 animate-pulse ">
               he's right behind you...
             </p>
           </div>

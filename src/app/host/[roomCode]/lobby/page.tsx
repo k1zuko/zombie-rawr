@@ -119,7 +119,7 @@ function FullscreenQrOverlay({
 
   {/* Room Code */}
   <div className="mt-4 text-center shrink-0">
-    <p className="text-black text-3xl font-bold tracking-widest">
+    <p className="text-black text-3xl  tracking-widest">
       {roomCode}
     </p>
   </div>
@@ -481,7 +481,7 @@ export default function HostPage() {
         <div className="min-h-screen bg-black relative overflow-hidden select-none">
           <div className="absolute top-4 left-4 z-20 hidden md:block">
             <Image
-              src="/logo/quizrushlogo.png"
+              src="/logo/quizrushfix.png"
               alt="QuizRush Logo"
               width={140}
               height={35}
@@ -588,7 +588,7 @@ export default function HostPage() {
                     repeat: Number.POSITIVE_INFINITY,
                     ease: "easeInOut",
                   }}
-                  className="text-[8rem] sm:text-[12rem] md:text-[16rem] lg:text-[20rem] xl:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)] flex-shrink-0"
+                  className="text-[8rem] sm:text-[12rem] md:text-[16rem] lg:text-[20rem] xl:text-[30rem] text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)] flex-shrink-0"
                 >
                   {countdown}
                 </motion.div>
@@ -624,7 +624,7 @@ export default function HostPage() {
                 className="flex justify-center items-center text-center mt-10"
               >
                 <h1
-                  className={`text-4xl md:text-5xl lg:text-6xl font-bold font-mono tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse ${
+                  className={`text-4xl md:text-5xl lg:text-6xl tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse ${
                     flickerText ? "opacity-100" : "opacity-50"
                   }`}
                   style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
@@ -649,7 +649,7 @@ export default function HostPage() {
                         key={players.length}
                         initial={{ scale: 1.2 }}
                         animate={{ scale: 1 }}
-                        className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl font-bold text-red-500 font-mono"
+                        className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl  text-red-500 "
                       >
                         {players.length}
                       </motion.div>
@@ -660,7 +660,7 @@ export default function HostPage() {
                   <CardContent>
                     <div className="flex items-center gap-1 sm:gap-2">
                       <Clock className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
-                      <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl font-bold text-red-500 font-mono">
+                      <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl  text-red-500 ">
                         {session.total_time_minutes}:00
                       </div>
                     </div>
@@ -670,7 +670,7 @@ export default function HostPage() {
                   <CardContent>
                     <div className="flex items-center gap-1 sm:gap-2">
                       <List className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
-                      <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl font-bold text-red-500 font-mono">
+                      <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl  text-red-500 ">
                         {session.question_limit}
                       </div>
                     </div>
@@ -721,7 +721,7 @@ export default function HostPage() {
                       </Button>
                     </div>
                     <div className="flex flex-col items-center">
-                      <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold text-red-500 tracking-widest break-words select-text">
+                      <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl  text-red-500 tracking-widest break-words select-text">
                         {roomCode}
                       </div>
                     </div>
@@ -749,10 +749,10 @@ export default function HostPage() {
                       </Button>
                     </div>
                     <div className="flex flex-col items-center">
-                      <div className="text-red-400 font-mono mb-1 text-xs sm:text-sm md:text-base">
+                      <div className="text-red-400  mb-1 text-xs sm:text-sm md:text-base">
                         {t("joinLink")}
                       </div>
-                      <div className="text-sm sm:text-base md:text-lg font-mono font-bold text-red-500 text-center break-words px-2">
+                      <div className="text-sm sm:text-base md:text-lg  text-red-500 text-center break-words px-2">
                         {joinUrl}
                       </div>
                     </div>
@@ -773,7 +773,7 @@ export default function HostPage() {
                             isStarting ||
                             countdown !== null
                           }
-                          className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-sm sm:text-base md:text-lg lg:text-xl px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4 lg:py-6 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
+                          className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white  text-sm sm:text-base md:text-lg lg:text-xl px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4 lg:py-6 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
                         >
                           <span className="relative z-10 flex items-center justify-center">
                             {isStarting || countdown !== null ? (
@@ -815,7 +815,7 @@ export default function HostPage() {
             >
               <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-red-500 text-base sm:text-lg md:text-xl lg:text-2xl font-mono flex items-center gap-2 sm:gap-3">
+                  <CardTitle className="text-red-500 text-base sm:text-lg md:text-xl lg:text-2xl flex items-center gap-2 sm:gap-3">
                     <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                     {t("players")}
                   </CardTitle>
@@ -838,10 +838,10 @@ export default function HostPage() {
                             ease: "easeInOut",
                           }}
                         >
-                          <p className="text-red-400 text-sm sm:text-base md:text-lg font-mono">
+                          <p className="text-red-400 text-sm sm:text-base md:text-lg ">
                             {t("waitingHost")}
                           </p>
-                          <p className="text-red-400/80 text-xs sm:text-sm font-mono mt-2">
+                          <p className="text-red-400/80 text-xs sm:text-sm  mt-2">
                             {t("shareCode")}
                           </p>
                         </motion.div>
@@ -916,13 +916,13 @@ export default function HostPage() {
                                     </div>
                                   )}
                                 </motion.div>
-                                <div className="text-red-500 font-medium text-xs sm:text-sm truncate mb-1 font-mono line-clamp-1">
+                                <div className="text-red-500 font-medium text-xs sm:text-sm truncate mb-1  line-clamp-1">
                                   {player.nickname}
                                 </div>
                                 {player.is_host && (
                                   <Badge
                                     variant="secondary"
-                                    className="text-xs bg-red-900 text-red-400 font-mono"
+                                    className="text-xs bg-red-900 text-red-400 "
                                   >
                                     {t("host")}
                                   </Badge>
@@ -942,7 +942,7 @@ export default function HostPage() {
           <Dialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
             <DialogContent className="bg-black/95 border border-red-600/70 text-red-400 rounded-xl shadow-[0_0_30px_rgba(255,0,0,0.4)] max-w-sm sm:max-w-md mx-auto">
               <DialogHeader>
-                <DialogTitle className="text-base sm:text-lg font-bold text-red-500">
+                <DialogTitle className="text-base sm:text-lg  text-red-500">
                   {t("kickPlayerConfirm", {
                     nickname: selectedPlayer?.nickname,
                   })}

@@ -85,7 +85,7 @@ function MobileCharacterSelector({ selectedCharacter, onSelect, isOpen, setIsOpe
       >
         <Image src={selected.gif} alt={selected.name} width={80} height={80} unoptimized className="rounded-lg border border-red-800/50" />
         <div className="flex-1 text-left">
-          <p className="text-white font-mono text-lg font-bold">{selected.name}</p>
+          <p className="text-white  text-lg ">{selected.name}</p>
           <p className="text-red-400 text-sm">Tap untuk ganti karakter</p>
         </div>
         {isOpen ? <ChevronUp className="w-7 h-7 text-red-500 animate-pulse" /> : <ChevronDown className="w-7 h-7 text-red-500" />}
@@ -431,7 +431,7 @@ export default function LobbyPage() {
         {/* Logos */}
         <div className="absolute top-4 left-4 z-20 hidden md:block">
           <Image
-            src="/logo/quizrushlogo.png"
+            src="/logo/quizrushfix.png"
             alt="QuizRush Logo"
             width={140}
             height={35}
@@ -463,7 +463,7 @@ export default function LobbyPage() {
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
-              className="text-[20rem] md:text-[30rem] font-mono font-bold text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
+              className="text-[20rem] md:text-[30rem]  text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
             >
               {countdown}
             </motion.div>
@@ -472,7 +472,7 @@ export default function LobbyPage() {
 
         <div className="relative z-10 mx-auto p-4 pt-6 pb-28 max-w-7xl mt-10">
           <motion.header initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-            <h1 className="text-4xl md:text-6xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse">
+            <h1 className="text-4xl md:text-6xl  tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse">
               {t("waitingRoomTitle")}
             </h1>
           </motion.header>
@@ -492,7 +492,7 @@ export default function LobbyPage() {
                   isCurrentPlayer={currentPlayer ? player.id === currentPlayer.id : false}
                 />
                 {player.is_host && (
-                  <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded font-mono">
+                  <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded ">
                     HOST
                   </div>
                 )}
@@ -523,7 +523,7 @@ export default function LobbyPage() {
                 ) : (
                   <Button
                     onClick={() => setIsCharacterSelectorOpen(true)}
-                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-mono text-xl px-10 py-6 rounded-lg shadow-lg"
+                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white text-xl px-10 py-6 rounded-lg shadow-lg"
                   >
                     {t("selectCharacter")}
                   </Button>
@@ -557,7 +557,7 @@ export default function LobbyPage() {
                 {/* Efek glow merah di sekitar karakter */}
                 <div className="" />
               </motion.div>
-              <DialogTitle className="text-2xl font-bold text-red-500 text-center mt-6 font-mono tracking-wider">
+              <DialogTitle className="text-2xl  text-red-500 text-center mt-6  tracking-wider">
                 {t("exitConfirm")}
               </DialogTitle>
             </div>
@@ -584,7 +584,7 @@ export default function LobbyPage() {
           <Dialog open={isCharacterSelectorOpen} onOpenChange={setIsCharacterSelectorOpen}>
             <DialogContent className="bg-black/95 border-red-800/60 text-white p-6 max-w-lg rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold font-mono text-red-500 mb-3"></DialogTitle>
+                <DialogTitle className="text-2xl  text-red-500 mb-3"></DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-5 gap-4 mt-6">
                 {characterOptions.map((character) => (

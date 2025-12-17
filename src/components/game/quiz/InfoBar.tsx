@@ -21,7 +21,7 @@ const InfoBar = ({
   formatTime,
 }: InfoBarProps) => {
   return (
-    <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40 font-mono text-xs md:text-sm">
+    <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40  text-xs md:text-sm">
       <div className="flex items-center gap-x-1">
         <CircleQuestionMark className="w-4 h-4 text-purple-400" />
         <span className="text-white">

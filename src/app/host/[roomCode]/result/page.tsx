@@ -352,12 +352,12 @@ export default function ResultsHostPage() {
           className="text-center flex flex-col items-center justify-center h-full"
         >
           <Ghost className="w-16 h-16 text-red-400 mb-4" />
-          <p className="text-red-400 text-2xl font-mono mb-6">{loadingError}</p>
+          <p className="text-red-400 text-2xl  mb-6">{loadingError}</p>
           <motion.button
             whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(239, 68, 68, 0.8)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => window.location.reload()}
-            className="bg-red-800 text-white font-mono py-3 px-8 border-2 border-red-600 rounded-lg"
+            className="bg-red-800 text-white  py-3 px-8 border-2 border-red-600 rounded-lg"
           >
             {t("tryAgain")}
           </motion.button>
@@ -367,7 +367,7 @@ export default function ResultsHostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 relative overflow-hidden select-none font-mono">
+    <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 relative overflow-hidden select-none ">
       <AnimatePresence>
         {showConfetti && (
           <Confetti
@@ -442,7 +442,7 @@ export default function ResultsHostPage() {
         >
           <div className="flex justify-between items-center">
             <Image
-              src="/logo/quizrushlogo.png"
+              src="/logo/quizrushfix.png"
               alt="QuizRush Logo"
               width={140}   // turunin sedikit biar proporsional
               height={35}   // sesuaikan tinggi
@@ -468,7 +468,7 @@ export default function ResultsHostPage() {
           >
 
             <h1
-              className={`text-3xl sm:text-5xl lg:text-7xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`text-3xl sm:text-5xl lg:text-7xl tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.titleLeaderboard")}
@@ -501,7 +501,7 @@ export default function ResultsHostPage() {
                     style={{ minHeight: 120 }}
                   >
                     {/* Rank bubble top-left */}
-                    <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full bg-red-700 flex items-center justify-center text-white font-bold text-lg border-2 border-red-500/80 shadow-[0_6px_18px_rgba(220,38,38,0.4)] z-10">
+                    <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full bg-red-700 flex items-center justify-center text-white text-lg border-2 border-red-500/80 shadow-[0_6px_18px_rgba(220,38,38,0.4)] z-10">
                       {player.rank}
                     </div>
 
@@ -520,17 +520,17 @@ export default function ResultsHostPage() {
                         className="flex-1 grid grid-rows-[auto_auto_auto] gap-2"
                       >
                         <div
-                          className="text-red-300 font-bold text-lg truncate font-mono"
+                          className="text-red-300  text-lg truncate "
                           title={player.nickname}
                         >
                           {player.nickname}
                         </div>
-                        <div className="flex items-center gap-2 text-red-300 text-sm font-mono">
+                        <div className="flex items-center gap-2 text-red-300 text-sm ">
                           <Clock className="w-4 h-4 text-red-400" />
                           <span>{player.duration ?? "--:--"}</span>
                         </div>
                         <div
-                          className={`inline-block px-3 py-1 rounded-md text-xs w-fit font-bold
+                          className={`inline-block px-3 py-1 rounded-md text-xs w-fit 
                   ${player.isLolos
                               ? "bg-gradient-to-r from-green-400 to-green-500 text-black border border-green-300 shadow-[0_8px_24px_rgba(34,197,94,0.12)]"
                               : "bg-gradient-to-r from-red-700 to-red-800 text-white border border-red-700"

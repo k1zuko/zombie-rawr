@@ -30,7 +30,7 @@ const HorrorTable = ({ className, ...props }: HorrorTableProps) => (
 const HorrorTableHeader = ({ className, ...props }: HorrorTableHeaderProps) => (
   <th
     className={cn(
-      "border-b-2 border-red-900/50 px-4 py-3 text-left text-red-200 font-mono text-lg uppercase tracking-wide",
+      "border-b-2 border-red-900/50 px-4 py-3 text-left text-red-200  text-lg uppercase tracking-wide",
       "bg-gradient-to-b from-black to-red-950/20",
       className
     )}
@@ -41,7 +41,7 @@ const HorrorTableHeader = ({ className, ...props }: HorrorTableHeaderProps) => (
 const HorrorTableCell = ({ className, ...props }: HorrorTableCellProps) => (
   <td
     className={cn(
-      "border-b border-red-900/30 px-4 py-3 text-red-200 font-mono text-base",
+      "border-b border-red-900/30 px-4 py-3 text-red-200  text-base",
       "hover:bg-red-900/10 transition-colors duration-200",
       className
     )}

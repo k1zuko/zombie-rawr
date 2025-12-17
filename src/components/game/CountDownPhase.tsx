@@ -79,7 +79,7 @@ export default function CountdownPhase({ initialCountdown = 10, onCountdownCompl
       >
         <div className="flex items-center justify-center mb-6">
           <Skull className="w-12 h-12 text-red-500 mr-4 animate-pulse" />
-          <h1 className="text-5xl md:text-7xl font-bold text-white font-mono tracking-wider">PENYIKSAAN DIMULAI</h1>
+          <h1 className="text-5xl md:text-7xl  text-white  tracking-wider">PENYIKSAAN DIMULAI</h1>
           <Zap className="w-12 h-12 text-yellow-500 ml-4 animate-bounce" />
         </div>
 
@@ -88,7 +88,7 @@ export default function CountdownPhase({ initialCountdown = 10, onCountdownCompl
           initial={{ scale: 1.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="text-8xl md:text-9xl font-mono font-bold text-red-500 animate-pulse drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+          className="text-8xl md:text-9xl   text-red-500 animate-pulse drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]"
         >
           {countdown}
         </motion.div>

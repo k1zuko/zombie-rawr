@@ -295,7 +295,7 @@ export default function QuizSelectTryoutPage() {
               <div className="absolute inset-0 rounded-full border-4 border-red-900 border-l-transparent border-r-transparent animate-ping" />
             </motion.div>
             <motion.p
-              className="mt-4 text-red-400 font-mono text-sm"
+              className="mt-4 text-red-400  text-sm"
               animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
@@ -343,7 +343,7 @@ export default function QuizSelectTryoutPage() {
           <div className="flex items-center justify-between mb-5 md:mb-0">
             <Link href={"/"}>
               <h1
-                className="text-2xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                className="text-2xl md:text-4xl   tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
                 style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
               >
                 {t("title")}
@@ -364,7 +364,7 @@ export default function QuizSelectTryoutPage() {
           >
             <HeartPulse className="w-10 h-10 text-red-500 mr-4 animate-pulse" />
             <h1
-              className={`text-4xl md:text-6xl font-bold font-mono tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse`}
+              className={`text-4xl md:text-6xl   tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("selectQuizTitle")}
@@ -387,7 +387,7 @@ export default function QuizSelectTryoutPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="bg-black/70 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-base font-mono h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 backdrop-blur-sm"
+                className="bg-black/70 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-base  h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 backdrop-blur-sm"
               />
               {searchTerm && (
                 <Button
@@ -454,7 +454,7 @@ export default function QuizSelectTryoutPage() {
                       aria-label={t("selectQuiz", { theme: quiz.theme })}
                     >
                       <CardHeader className="pb-2 flex-shrink-0">
-                        <CardTitle className="text-red-400 font-mono text-lg line-clamp-2">{quiz.theme}</CardTitle>
+                        <CardTitle className="text-red-400  text-lg line-clamp-2">{quiz.theme}</CardTitle>
                         <CardDescription className="text-gray-300 text-sm line-clamp-3">
                           {quiz.description || t("defaultQuizDescription")}
                         </CardDescription>
@@ -468,14 +468,14 @@ export default function QuizSelectTryoutPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="text-center text-red-400/80 text-base font-mono mt-4"
+                className="text-center text-red-400/80 text-base  mt-4"
               >
                 {t("noQuizzesFound")}
               </motion.div>
             )
           ) : (
             filteredQuizzes.length === 0 ? (
-              <div className="text-center text-red-400/80 text-base font-mono flex-1 flex items-center justify-center">
+              <div className="text-center text-red-400/80 text-base  flex-1 flex items-center justify-center">
                 {t("noQuizzesAvailable")}
               </div>
             ) : (
@@ -509,7 +509,7 @@ export default function QuizSelectTryoutPage() {
                         aria-label={t("selectQuiz", { theme: quiz.theme })}
                       >
                         <CardHeader className="pb-2 flex-shrink-0">
-                          <CardTitle className="text-red-400 font-mono text-lg line-clamp-2">{quiz.theme}</CardTitle>
+                          <CardTitle className="text-red-400  text-lg line-clamp-2">{quiz.theme}</CardTitle>
                           <CardDescription className="text-gray-300 text-sm line-clamp-3">
                             {quiz.description || t("defaultQuizDescription")}
                           </CardDescription>
@@ -532,7 +532,7 @@ export default function QuizSelectTryoutPage() {
                     >
                       {t("previousButton")}
                     </Button>
-                    <span className="text-red-400 font-mono text-sm self-center">
+                    <span className="text-red-400  text-sm self-center">
                       {t("pageInfo", { current: currentPage, total: totalPages })}
                     </span>
                     <Button
@@ -561,18 +561,18 @@ export default function QuizSelectTryoutPage() {
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -50, opacity: 0 }}
-                className="bg-gray-900 border border-red-500/50 rounded-lg p-8 w-full max-w-md font-mono text-red-400 relative"
+                className="bg-gray-900 border border-red-500/50 rounded-lg p-8 w-full max-w-md  text-red-400 relative"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center mb-1 space-x-2">
                   <Settings />
-                  <h2 className="text-2xl font-mono font-semibold text-red-500">{t("settingsTitle")}</h2>
+                  <h2 className="text-2xl  font-semibold text-red-500">{t("settingsTitle")}</h2>
                 </div>
                 <p className="text-gray-300 mb-6">{selectedQuiz.theme}</p>
 
                 {/* Pengaturan Durasi - Using Slider */}
                 <div className="mb-6">
-                  <Label htmlFor="duration" className="text-red-300 mb-2 block font-medium text-sm font-mono flex items-center">
+                  <Label htmlFor="duration" className="text-red-300 mb-2 block font-medium text-sm  flex items-center">
                     {t("duration")}
                     <Clock className="w-4 h-4 ml-2 text-red-500" />
                   </Label>
@@ -586,7 +586,7 @@ export default function QuizSelectTryoutPage() {
                     className="w-full mb-4"
                     aria-label={t("duration")}
                   />
-                  <p className="text-red-400 font-mono text-sm">
+                  <p className="text-red-400  text-sm">
                     {duration / 60} {t("minutes")}
                   </p>
                   {durationError && (
@@ -602,7 +602,7 @@ export default function QuizSelectTryoutPage() {
 
                 {/* Pengaturan Jumlah Soal - Using Slider */}
                 <div className="mb-6">
-                  <Label htmlFor="numQuestions" className="text-red-300 mb-2 block font-medium text-sm font-mono flex items-center">
+                  <Label htmlFor="numQuestions" className="text-red-300 mb-2 block font-medium text-sm  flex items-center">
                     {t("questionCountLabel")}
                     <List className="w-4 h-4 ml-2 text-red-500" />
                   </Label>
@@ -616,7 +616,7 @@ export default function QuizSelectTryoutPage() {
                     className="w-full"
                     aria-label={t("selectQuestionCount")}
                   />
-                  <p className="text-red-400 font-mono text-sm mt-2">
+                  <p className="text-red-400  text-sm mt-2">
                     {numQuestions} {t("questions")} {numQuestions === totalQuestions ? `(${t("allLabel")})` : ""}
                   </p>
                   {questionError && (

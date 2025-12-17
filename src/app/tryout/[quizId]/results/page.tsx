@@ -65,7 +65,7 @@ export default function TryoutResultsPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-red-500 font-mono text-xl animate-pulse"
+          className="text-red-500  text-xl animate-pulse"
         >
           {t("loading")}
         </motion.div>
@@ -87,7 +87,7 @@ export default function TryoutResultsPage() {
             <div>
               <Link href={"/"}>
                 <h1
-                  className="text-xl md:text-4xl font-bold font-mono tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                  className="text-xl md:text-4xl   tracking-wider text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
                   style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
                 >
                   {t("title")}
@@ -112,7 +112,7 @@ export default function TryoutResultsPage() {
           >
             <Skull className="w-12 h-12 text-red-500 animate-pulse" />
             <h1
-              className={`mx-3 text-5xl font-bold font-mono tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
+              className={`mx-3 text-5xl   tracking-wider transition-all duration-150 animate-pulse text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`}
               style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             >
               {t("result.title")}
@@ -126,7 +126,7 @@ export default function TryoutResultsPage() {
             <div className="absolute top-0 right-1/3 w-1 h-10 bg-red-900/70" />
 
             <div className="relative z-10 space-y-7">
-              <h2 className="text-3xl font-bold text-white font-horror tracking-wider text-red-500 py-3">
+              <h2 className="text-3xl  text-white font-horror tracking-wider text-red-500 py-3">
                 {result.nickname}
               </h2>
 
@@ -134,21 +134,21 @@ export default function TryoutResultsPage() {
                 {/* Correct */}
                 <div className="bg-gray-900/70 rounded-lg p-4 border border-green-900/50">
                   <Target className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-white font-mono">{result.correctAnswers}</div>
+                  <div className="text-2xl  text-white ">{result.correctAnswers}</div>
                   <div className="text-xs text-gray-400 tracking-widest">{t("correct")}</div>
                 </div>
 
                 {/* Time Spent */}
                 <div className="bg-gray-900/70 rounded-lg p-4 border border-blue-900/50">
                   <Clock className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-white font-mono">{formatTime(result.timeSpent)}</div>
+                  <div className="text-2xl  text-white ">{formatTime(result.timeSpent)}</div>
                   <div className="text-xs text-gray-400 tracking-widest">{t("duration")}</div>
                 </div>
 
                 {/* Accuracy */}
                 <div className="bg-gray-900/70 rounded-lg p-4 border border-purple-900/50">
                   <Zap className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-white font-mono">
+                  <div className="text-2xl  text-white ">
                     {getPercentage(result.correctAnswers, result.totalQuestions)}
                   </div>
                   <div className="text-xs text-gray-400 tracking-widest">{t("accuracy")}</div>

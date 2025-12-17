@@ -464,7 +464,7 @@ export default function HostGamePage() {
 {/* QuizRush Logo - Top Left */}
 <div className="absolute top-4 left-4 z-50 hidden lg:block">
   <Image
-    src="/logo/quizrushlogo.png"
+    src="/logo/quizrushfix.png"
     alt="QuizRush Logo"
     width={200}
     height={50}

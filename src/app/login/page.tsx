@@ -49,7 +49,7 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isClient, setIsClient] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const router = useRouter();
+  const router = useRouter(); 
   const { user, profile, loading } = useAuth(); // Use the useAuth hook
 
   const registerUrl =
@@ -259,7 +259,7 @@ export default function LoginPage() {
           >
             <Card className="bg-black/40 border-red-900/50 hover:border-red-500 transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
               <CardHeader className="text-center pb-4">
-                <CardTitle className="text-3xl font-bold text-red-400 font-mono">
+                <CardTitle className="text-3xl  text-red-400 ">
                   {t("loginTitle")}
                 </CardTitle>
               </CardHeader>
@@ -268,7 +268,7 @@ export default function LoginPage() {
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-red-600 text-sm font-mono flex items-center justify-center"
+                    className="text-red-600 text-sm  flex items-center justify-center"
                   >
                     <AlertCircle className="w-4 h-4 mr-2" />
                     {errorMessage}
@@ -318,7 +318,7 @@ export default function LoginPage() {
                     <div className="w-full border-t border-red-500/30" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-black/40 text-red-400/80 font-mono">{t("or")}</span>
+                    <span className="px-2 bg-black/40 text-red-400/80 ">{t("or")}</span>
                   </div>
                 </div>
 
@@ -331,7 +331,7 @@ export default function LoginPage() {
                       placeholder={t("emailPlaceholder")} // New placeholder
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
-                      className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-sm sm:text-base font-mono h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 pl-10"
+                      className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-sm sm:text-base  h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 pl-10"
                       aria-label="Email or Username"
                     />
                   </div>
@@ -342,7 +342,7 @@ export default function LoginPage() {
                       placeholder={t("passwordPlaceholder")}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-sm sm:text-base font-mono h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 pl-10 pr-10"
+                      className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-sm sm:text-base  h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 pl-10 pr-10"
                       aria-label="Password"
                     />
                     <Button
@@ -361,7 +361,7 @@ export default function LoginPage() {
                 <Button
                   onClick={handleEmailLogin}
                   disabled={!identifier || !password || isLoading}
-                  className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white font-mono text-base py-3 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white  text-base py-3 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50"
                   aria-label={isLoading ? t("loggingIn") : t("loginButton")}
                 >
                   <LogIn className="w-5 h-5 mr-2" aria-hidden="true" />
@@ -372,7 +372,7 @@ export default function LoginPage() {
                 <div
                   className="mt-6 text-center"
                 >
-                  <p className="text-red-300/90 text-xs sm:text-sm font-mono">
+                  <p className="text-red-300/90 text-xs sm:text-sm ">
                     {t("login.noAccount")}{" "}
                     <a
                       href={registerUrl}

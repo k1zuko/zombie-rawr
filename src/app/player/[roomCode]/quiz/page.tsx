@@ -548,7 +548,7 @@ useEffect(() => {
         {/* QuizRush Logo - Top Left */}
 <div className="absolute top-4 left-0 z-50 hidden md:block">
   <Image
-    src="/logo/quizrushlogo.png"
+    src="/logo/quizrushfix.png"
     alt="QuizRush Logo"
     width={200}           // ukuran asli dalam piksel (untuk optimasi Next.js)
     height={50}
@@ -583,7 +583,7 @@ useEffect(() => {
           </div>
 
           {/* 1-BAR INFO ROW */}
-          <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40 font-mono text-xs md:text-sm">
+          <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40  text-xs md:text-sm">
             <div className="flex items-center gap-x-1">
               <CircleQuestionMark className="w-4 h-4 text-purple-400" />
               <span className="text-white">
@@ -634,7 +634,7 @@ useEffect(() => {
 
                 {/* PERTANYAAN */}
                 <div className="mb-8 min-h-[6rem] flex items-center justify-center px-4">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white leading-relaxed text-center drop-shadow-lg">
+                  <h2 className="text-2xl sm:text-3xl  text-white leading-relaxed text-center drop-shadow-lg">
                     {currentQuestion?.question ?? "Menunggu soal berikutnya..."}
                   </h2>
                 </div>
@@ -652,7 +652,7 @@ useEffect(() => {
                         onClick={() => handleAnswerSelect(item.answer, index)}
                         disabled={isAnswered || isProcessingAnswer}
                         className={`
-                          p-6 min-h-fit text-left justify-start font-mono text-base md:text-lg border-2 
+                          p-6 min-h-fit text-left justify-start  text-base md:text-lg border-2 
                           transition-all duration-300 relative overflow-hidden group
                           ${isProcessingAnswer ? "opacity-50 cursor-not-allowed" : "hover:scale-105"}
                           ${!isAnswered
@@ -668,7 +668,7 @@ useEffect(() => {
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
                         <div className="flex items-center space-x-3 md:space-x-4 relative z-10 w-full">
-                          <span className="w-10 h-10 rounded-full border-2 border-current flex items-center justify-center text-lg font-bold flex-shrink-0 mt-0.5">
+                          <span className="w-10 h-10 rounded-full border-2 border-current flex items-center justify-center text-lg  flex-shrink-0 mt-0.5">
                             {String.fromCharCode(65 + index)}
                           </span>
                           <span className="flex-1 text-left break-words whitespace-normal py-0.5">{item.answer}</span>

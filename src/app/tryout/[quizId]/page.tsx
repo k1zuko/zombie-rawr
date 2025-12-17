@@ -44,7 +44,7 @@ export default function TryoutPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-red-500 font-mono text-xl animate-pulse"
+          className="text-red-500  text-xl animate-pulse"
         >
           Loading...
         </motion.div>
