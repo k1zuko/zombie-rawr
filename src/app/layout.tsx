@@ -38,13 +38,11 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-
 const zombiefont2Font = localFont({
   src: "../fonts/zombiefont2.ttf",
   variable: "--font-zombiefont2",
   display: "swap",
 });
-
 
 export default function RootLayout({
   children,
