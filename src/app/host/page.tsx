@@ -543,21 +543,49 @@ export default function QuizSelectPage() {
                             }}
                             aria-label={t("selectQuiz", { theme: quiz.title })}
                           >
-                            <CardHeader className="flex-shrink-0">
-                              <TooltipProvider>
-                                <Tooltip delayDuration={500}>
-                                  <TooltipTrigger asChild>
-                                    <CardTitle className="text-red-400  text-base line-clamp-3">{quiz.title}</CardTitle>
-                                  </TooltipTrigger>
-                                  <TooltipContent
-                                    side="top"
-                                    className="bg-black/80 text-red-400 border border-red-500/50 whitespace-normal break-words max-w-xs"
-                                  >
-                                    {quiz.title}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </CardHeader>
+<CardHeader className="flex-shrink-0">
+  <TooltipProvider>
+    <Tooltip delayDuration={300}>
+      <TooltipTrigger asChild>
+<CardTitle 
+  className="
+    text-red-400 
+    
+    md:text-2xl
+    lg:text-2xl
+    font-serif
+    [font-family:'Times_New_Roman','Times New Roman',Times,serif]
+    font-bold
+    leading-snug
+    antialiased
+    subpixel-antialiased
+    drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]
+    whitespace-normal
+    break-words
+  "
+>
+  {quiz.title}
+</CardTitle>
+      </TooltipTrigger>
+      <TooltipContent 
+        side="top" 
+        className="
+          bg-black/95 
+          text-red-300 
+          border-2 border-red-600 
+          text-lg 
+          p-4 
+          max-w-lg 
+          whitespace-normal 
+          break-words 
+          shadow-2xl
+        "
+      >
+        <p className="font-semibold">{quiz.title}</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+</CardHeader>
                             <CardFooter className="pt-2 flex justify-between items-center flex-shrink-0 mt-auto">
                               {quiz.category && (
                                 <span className="text-red-300 text-xs  capitalize">{quiz.category}</span>
