@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react"
 import { AlertTriangle, CheckCircle, CircleQuestionMark, Clock, Heart, Skull, XCircle, Zap } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
-import { mysupa } from "@/lib/supabase"
+import { mysupa } from "@/lib/supabase" 
 import { AnimatePresence, motion } from "framer-motion"
 import { Progress } from "@/components/ui/progress"
 import { Card } from "@/components/ui/card"
@@ -44,16 +44,15 @@ interface Participant {
     current: number
     max: number
     speed: number
-    last_attack_time: string | null
-    is_being_attacked: boolean
   }
-  position_x: number
-  position_y: number
+  position_x?: number
+  position_y?: number
   is_alive: boolean
-  power_ups: number
+  power_ups?: number
   joined_at: string
   answers: any[]                  // jsonb → array jawaban
-  finished_at: string
+  finished_at: string | null
+  completion?: boolean
 }
 
 // === GANTI SEMUA TIPE LAMA ===
@@ -77,6 +76,7 @@ export default function QuizPage() {
   const [showFeedback, setShowFeedback] = useState(false)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [isProcessingAnswer, setIsProcessingAnswer] = useState(false)
+  const [lastActivityTime, setLastActivityTime] = useState<number>(Date.now())
 
   // Ambil pertanyaan dari session
   const questions = session?.current_questions ?? []
@@ -117,6 +117,7 @@ export default function QuizPage() {
           setCorrectAnswers(parsed.currentPlayer.correct_answers || 0);
           const answeredCount = parsed.currentPlayer.answers?.length || 0;
           setCurrentQuestionIndex(answeredCount);
+          setLastActivityTime(new Date(parsed.currentPlayer.joined_at).getTime());
 
           // Hapus prefetch data setelah digunakan (cleanup)
           localStorage.removeItem("quizPrefetchData");
@@ -179,6 +180,7 @@ export default function QuizPage() {
       setPlayerHealth(participantData.health.current);
       setPlayerSpeed(participantData.health.speed || 1);
       setCorrectAnswers(participantData.correct_answers || 0);
+      setLastActivityTime(new Date(participantData.joined_at).getTime());
 
       // Hitung index pertanyaan berikutnya dari answers.length
       const answeredCount = participantData.answers?.length || 0;
@@ -258,9 +260,16 @@ useEffect(() => {
 
   useEffect(() => {
     if (timeLoaded && timeLeft <= 0 && !isProcessingAnswer) {
-      redirectToResults(playerHealth, correctAnswers, currentQuestionIndex, true);
+      redirectToResults(playerHealth, correctAnswers, totalQuestions, true);
     }
-  }, [timeLeft, timeLoaded, isProcessingAnswer, playerHealth, correctAnswers, currentQuestionIndex]);
+  }, [timeLeft, timeLoaded, isProcessingAnswer, playerHealth, correctAnswers, totalQuestions]);
+
+  // Check for elimination due to health drain (e.g., inactivity)
+  useEffect(() => {
+    if (currentPlayer?.is_alive === false || playerHealth <= 0) {
+      redirectToResults(0, correctAnswers, totalQuestions, true);
+    }
+  }, [currentPlayer?.is_alive, playerHealth, correctAnswers, totalQuestions]);
 
   // Feedback and question progression
   useEffect(() => {
@@ -289,8 +298,8 @@ useEffect(() => {
   }, [showFeedback, playerHealth, currentQuestionIndex, totalQuestions, correctAnswers]);
 
   const getDangerLevel = () => {
-    if (playerHealth <= 1) return 3
-    if (playerHealth <= 2) return 2
+    if (playerHealth <= 25) return 3
+    if (playerHealth <= 50) return 2
     return 1
   }
   const dangerLevel = getDangerLevel()
@@ -402,6 +411,7 @@ useEffect(() => {
     // Update local UI state agar speed, health & skor berubah langsung
     setPlayerHealth(newHealthValue);
     setPlayerSpeed(newSpeed);
+    setLastActivityTime(Date.now()); // Reset activity timer on answer
     setCurrentPlayer(prev => {
       if (!prev) return prev;
       return {
@@ -410,7 +420,6 @@ useEffect(() => {
           ...prev.health,
           current: newHealthValue,
           speed: newSpeed,
-          last_answer_time: new Date().toISOString(),
         },
         correct_answers: correctCount,
         score: newScore,
@@ -602,7 +611,7 @@ useEffect(() => {
               {currentPlayer && [...Array(currentPlayer.health.max)].map((_, i) => (<Heart
                 key={i}
                 className={`w-4 h-4 transition-all ${i < playerHealth
-                  ? playerHealth <= 1
+                  ? playerHealth <= 25
                     ? "text-red-500 fill-red-500 animate-pulse"
                     : "text-green-500 fill-green-500"
                   : "text-gray-600 fill-gray-600"
