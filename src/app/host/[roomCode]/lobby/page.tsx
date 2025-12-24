@@ -75,7 +75,9 @@ function FullscreenQrOverlay({
   roomCode: string;
 }) {
   useEffect(() => {
-    if (open) document.body.style.overflow = "hidden";
+    if (open) {
+      document.body.style.overflow = "hidden"; // Cegah scroll
+    }
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -86,45 +88,59 @@ function FullscreenQrOverlay({
   const joinUrl = `${window.location.origin}/join/${roomCode}`;
 
   return (
-<motion.div
-  className="
-    relative
-    w-full md:w-[80%] lg:w-[25%]
-    aspect-square
-    bg-white
-    border border-red-900/50
-    rounded
-    flex flex-col
-  "
-  onClick={(e) => e.stopPropagation()}
->
-  {/* Close Button */}
-  <Button
-    onClick={onClose}
-    variant="ghost"
-    size="icon"
-    className="absolute top-4 right-4 z-10"
-  >
-    <X className="w-8 h-8 text-black" />
-  </Button>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={onClose} // Tutup saat klik backdrop
+      >
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.8, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="
+            relative
+            w-full max-w-md md:max-w-lg lg:max-w-2xl
+            aspect-square
+            bg-white
+            border-2 border-red-900/50 rounded-xl
+            flex flex-col
+            shadow-2xl
+          "
+          onClick={(e) => e.stopPropagation()} // Jangan tutup saat klik QR
+        >
+          {/* Close Button */}
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 z-10 bg-black/20 hover:bg-black/30 rounded-full"
+          >
+            <X className="w-6 h-6 text-black" />
+          </Button>
 
-  {/* QR FULL AREA - Tanpa padding, full container */}
-  <div className="flex-1 w-full h-full">
-    <QRCode
-      value={joinUrl}
-      style={{ width: "100%", height: "100%" }}
-      viewBox="0 0 256 256"
-    />
-  </div>
+          {/* QR FULL AREA */}
+          <div className="flex-1 w-full h-full p-4">
+            <QRCode
+              value={joinUrl}
+              style={{ width: "100%", height: "100%" }}
+              viewBox="0 0 256 256"
+            />
+          </div>
 
-  {/* Room Code */}
-  <div className="mt-4 text-center shrink-0">
-    <p className="text-black text-3xl  tracking-widest">
-      {roomCode}
-    </p>
-  </div>
-</motion.div>
-
+          {/* Room Code */}
+          <div className="p-4 text-center shrink-0 border-t border-red-900/20">
+            <p className="text-black text-xl md:text-2xl lg:text-3xl tracking-widest font-bold">
+              {roomCode}
+            </p>
+            <p className="text-gray-600 text-sm mt-2">Scan to Join</p>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -989,11 +1005,16 @@ export default function HostPage() {
             }
           `}</style>
 
-          <FullscreenQrOverlay
-            open={isFullscreenQrOpen}
-            onClose={() => setIsFullscreenQrOpen(false)}
-            roomCode={roomCode}
-          />
+          {/* Overlay QR dengan AnimatePresence */}
+          <AnimatePresence>
+            {isFullscreenQrOpen && (
+              <FullscreenQrOverlay
+                open={isFullscreenQrOpen}
+                onClose={() => setIsFullscreenQrOpen(false)}
+                roomCode={roomCode}
+              />
+            )}
+          </AnimatePresence>
         </div>
       )}
     </LoadingScreen>
