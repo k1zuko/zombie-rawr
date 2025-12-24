@@ -454,16 +454,16 @@ export default function StressTestPage() {
             <div className="relative p-3 z-10 min-h-screen overflow-y-auto">
                 {/* Header */}
                 <div className="hidden md:flex items-center justify-between">
-                          <Image
-                            src="/logo/quizrush.png"
-                            alt="QuizRush Logo"
-                            width={140}   // turunin sedikit biar proporsional
-                            height={35}   // sesuaikan tinggi
-                            className="w-32 md:w-40 lg:w-48 h-auto"   // ini yang paling berpengaruh
-                            unoptimized
-                          />
-                          <img src={`/logo/gameforsmartlogo-horror.png`} alt="Logo" className="w-40 md:w-52 lg:w-64 h-auto" />
-                        </div>
+                    <Image
+                        src="/logo/quizrush.png"
+                        alt="QuizRush Logo"
+                        width={140}   // turunin sedikit biar proporsional
+                        height={35}   // sesuaikan tinggi
+                        className="w-32 md:w-40 lg:w-48 h-auto"   // ini yang paling berpengaruh
+                        unoptimized
+                    />
+                    <img src={`/logo/gameforsmartlogo-horror.png`} alt="Logo" className="w-40 md:w-52 lg:w-64 h-auto" />
+                </div>
 
                 {/* Content */}
                 <div className="max-w-4xl mx-auto p-4 pt-0 space-y-4">
@@ -501,9 +501,9 @@ export default function StressTestPage() {
                                     <Slider
                                         value={[userCount]}
                                         onValueChange={([v]) => setUserCount(v)}
-                                        min={10}
-                                        max={100}
-                                        step={10}
+                                        min={50}
+                                        max={500}
+                                        step={50}
                                         disabled={isRunning}
                                         className="mt-3"
                                     />
