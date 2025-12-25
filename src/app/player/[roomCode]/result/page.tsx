@@ -414,7 +414,10 @@ export default function ResultsPage() {
         {/* Tombol Home (hanya terlihat di mobile, di bagian bawah) */}
         <div className="text-center">
           <motion.button
-            onClick={() => router.push("/")}
+            onClick={() => {
+            sessionStorage.removeItem("redirectTo");  // ← tambahkan ini
+            router.push("/");
+          }}
             whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             whileTap={{ scale: 0.95 }}
             className="bg-red-800 text-white px-5 py-1 border-2 border-red-600 rounded-lg z-50  inline-block"

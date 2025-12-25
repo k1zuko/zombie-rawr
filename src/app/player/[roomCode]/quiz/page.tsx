@@ -316,7 +316,7 @@ export default function QuizPage() {
               } else {
                 console.error("Max retries reached - falling back to polling only");
                 // Start polling as primary
-                pollInterval = setInterval(refetchParticipant, 5000);
+                pollInterval = setInterval(refetchParticipant, 15000);
               }
             } else if (status === 'SUBSCRIBED') {
               console.log("Realtime sub OK - polling as backup");
