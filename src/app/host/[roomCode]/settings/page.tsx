@@ -229,7 +229,6 @@ export default function CharacterSelectPage() {
   return (
     <div className="min-h-screen relative overflow-hidden select-none bg-black">
       <div className="absolute inset-0 z-0" style={{ backgroundImage: "url('/background/10.gif')", backgroundSize: "cover", backgroundPosition: "center", transform: "rotate(180deg) scaleX(-1)" }}></div>
-      <audio src="/musics/background-music-room.mp3" autoPlay loop />
       <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 via-black to-purple-900/5" />
 
       {bloodDrips.map((drip) => (

@@ -185,6 +185,8 @@ export default function HostGamePage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const prevParticipants = usePrevious(participants);
 
+  const lastAnswerTimesRef = useRef<{ [id: string]: number }>({});
+
   const [playerStates, setPlayerStates] = useState<{ [id: string]: PlayerState }>({});
   const [zombieState, setZombieState] = useState<ZombieState>({
     isAttacking: false,
@@ -222,9 +224,44 @@ export default function HostGamePage() {
       .order("joined_at", { ascending: true });
 
     setParticipants(parts || []);
+
+    // Set initial lastAnswerTimes based on joined_at
+    const initialTimes: { [id: string]: number } = {};
+    (parts || []).forEach((p) => {
+      initialTimes[p.id] = new Date(p.joined_at).getTime();
+    });
+    lastAnswerTimesRef.current = initialTimes;
   }, [gamePin, router]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Update lastAnswerTimes when participants change
+  useEffect(() => {
+    if (!prevParticipants) {
+      // Initial set already handled in fetchData
+      return;
+    }
+
+    const newTimes: { [id: string]: number } = { ...lastAnswerTimesRef.current };
+
+    participants.forEach((curr) => {
+      const prevPart = prevParticipants.find((p) => p.id === curr.id);
+      if (!prevPart) {
+        // New participant
+        newTimes[curr.id] = new Date(curr.joined_at).getTime();
+      } else {
+        const prevLen = (prevPart.answers || []).length;
+        const currLen = (curr.answers || []).length;
+        if (currLen > prevLen) {
+          // Answers increased (activity)
+          newTimes[curr.id] = Date.now();
+        }
+        // Else, keep existing time
+      }
+    });
+
+    lastAnswerTimesRef.current = newTimes;
+  }, [participants, prevParticipants]);
 
   // Realtime
   useEffect(() => {
@@ -303,6 +340,62 @@ export default function HostGamePage() {
       }
     });
   }, [participants, prevParticipants, zombieState.isAttacking]);
+
+  // Inactivity health drain
+  useEffect(() => {
+    if (!session || session.status !== "active") return;
+
+    const interval = setInterval(async () => {
+      const now = Date.now();
+      const toUpdate: Participant[] = [];
+      const updatedTimes: { [id: string]: number } = {};
+
+      participants.forEach((p) => {
+        if (p.is_alive && p.health.current > 0 && !p.finished_at) {
+          const lastTime = lastAnswerTimesRef.current[p.id];
+          if (lastTime && now - lastTime > 15000) {
+            toUpdate.push(p);
+            // Reset timer after drain
+            updatedTimes[p.id] = now;
+          }
+        }
+      });
+
+      if (toUpdate.length > 0) {
+        await Promise.all(
+          toUpdate.map(async (p) => {
+            const decreaseAmount = 1;
+            const newCurrent = Math.max(0, p.health.current - decreaseAmount);
+            const updates: any = {
+              health: {
+                ...p.health,
+                current: newCurrent,
+              },
+            };
+
+            if (newCurrent <= 0) {
+              updates.is_alive = false;
+              updates.finished_at = new Date().toISOString();
+            }
+
+            const { error } = await mysupa
+              .from("participants")
+              .update(updates)
+              .eq("id", p.id);
+
+            if (error) {
+              console.error("Error updating inactive player health:", error);
+            }
+          })
+        );
+
+        // Update local lastAnswerTimes after successful drain
+        lastAnswerTimesRef.current = { ...lastAnswerTimesRef.current, ...updatedTimes };
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [participants, session]);
 
   // Auto finish game
   useEffect(() => {
