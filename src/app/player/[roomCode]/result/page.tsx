@@ -414,9 +414,9 @@ export default function ResultsPage() {
         {/* Tombol Home (hanya terlihat di mobile, di bagian bawah) */}
         <div className="text-center">
           <motion.button
-            onClick={() => {
-            sessionStorage.removeItem("redirectTo");  // ← tambahkan ini
-            router.push("/");
+          onClick={() => {
+            sessionStorage.removeItem("redirectTo");
+            window.location.href = "/";  // Force full reload ke homepage
           }}
             whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             whileTap={{ scale: 0.95 }}
