@@ -569,13 +569,11 @@ export default function HostGamePage() {
 
 <div
   className="
-    absolute right-4 z-50 hidden lg:block
-    md:top-10        /* tablet */
-    lg:-top-8        /* desktop ≈ mt-3 */
+    absolute right-4 top-3 z-50 hidden lg:block
   "
 >
   <Image
-    src="/logo/gameforsmartlogo.png"
+    src="/logo/gameforsmartlogo-horror.png"
     alt="GameForSmart Logo"
     width={200}
     height={50}

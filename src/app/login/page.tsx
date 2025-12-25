@@ -49,12 +49,12 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isClient, setIsClient] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const router = useRouter(); 
+  const router = useRouter();
   const { user, profile, loading } = useAuth(); // Use the useAuth hook
 
   const registerUrl =
     typeof window !== "undefined" &&
-    window.location.hostname.includes("gameforsmart.com")
+      window.location.hostname.includes("gameforsmart.com")
       ? "https://gameforsmart.com/auth/register"
       : "https://gameforsmart2025.vercel.app/auth/register";
 
@@ -265,14 +265,14 @@ export default function LoginPage() {
 
               </CardHeader>
               <CardContent className="space-y-4 pt-0">
-                                       <motion.p
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="mb-3 text-sm text-center text-[#8B0000]/80"
-                        >
-                        Tekan tombol di bawah untuk masuk dengan cepat
-                        </motion.p> 
+                <motion.p
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mb-3 text-sm text-center text-[#8B0000]/80"
+                >
+                  Tekan tombol di bawah untuk masuk dengan cepat
+                </motion.p>
                 {errorMessage && (
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -285,44 +285,44 @@ export default function LoginPage() {
                 )}
 
                 {/* Google Sign-in Button */}
-  <div className="relative">
-
-    
-  <motion.div
-    className="absolute -left-7 md:-left-10 top-1/2 -translate-y-1/2 text-2xl md:text-3xl text-[#8B0000]" // Merah darah gelap
-    animate={{ x: [0, 10, 0] }}
-    transition={{
-      duration: 1.5,
-      repeat: Infinity,
-      repeatType: "loop",
-      ease: "easeInOut",
-    }}
-  >
-    <FaHandPointRight />
-  </motion.div>
+                <div className="relative">
 
 
-  <Button
-    type="button"
-    onClick={handleGoogleLogin}
-    disabled={isLoading}
-    variant="outline"
-    className="w-full min-h-12 sm:min-h-10 
+                  <motion.div
+                    className="absolute -left-7 md:-left-10 top-1/2 -translate-y-1/2 text-2xl md:text-3xl text-[#8B0000]" // Merah darah gelap
+                    animate={{ x: [0, 10, 0] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatType: "loop",
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <FaHandPointRight />
+                  </motion.div>
+
+
+                  <Button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                    variant="outline"
+                    className="w-full min-h-12 sm:min-h-10 
                border-[#8B0000]/80 text-[#8B0000] 
                hover:text-white hover:bg-[#8B0000] hover:border-[#8B0000] 
                pixel-button flex items-center justify-center gap-2 sm:gap-3 px-4 py-5 
                transition-all duration-300 cursor-pointer shadow-md hover:shadow-[#8B0000]/50"
-  >
-    {/* Icon Google — tetap putih agar kontras */}
-    <FcGoogle className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
+                  >
+                    {/* Icon Google — tetap putih agar kontras */}
+                    <FcGoogle className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
 
-    {/* Teks */}
-    <span className="text-center font-medium">
-      <span className="sm:hidden">{t("googleLoginButton")}</span>
-      <span className="hidden sm:inline">{t("googleLoginButton")}</span>
-    </span>
-  </Button>
-</div>
+                    {/* Teks */}
+                    <span className="text-center font-medium">
+                      <span className="sm:hidden">{t("googleLoginButton")}</span>
+                      <span className="hidden sm:inline">{t("googleLoginButton")}</span>
+                    </span>
+                  </Button>
+                </div>
 
                 {/* OR Separator */}
                 <div className="relative my-4">
@@ -335,7 +335,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Email/Username and Password Inputs */}
-                <div className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); handleEmailLogin(); }} className="space-y-4">
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-red-400/50" />
                     <Input
@@ -358,6 +358,7 @@ export default function LoginPage() {
                       aria-label="Password"
                     />
                     <Button
+                      type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => setShowPassword(!showPassword)}
@@ -367,18 +368,18 @@ export default function LoginPage() {
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </Button>
                   </div>
-                </div>
 
-                {/* Email/Username Login Button */}
-                <Button
-                  onClick={handleEmailLogin}
-                  disabled={!identifier || !password || isLoading}
-                  className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white  text-base py-3 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50"
-                  aria-label={isLoading ? t("loggingIn") : t("loginButton")}
-                >
-                  <LogIn className="w-5 h-5 mr-2" aria-hidden="true" />
-                  {isLoading ? t("loggingIn") : t("loginButton")}
-                </Button>
+                  {/* Email/Username Login Button */}
+                  <Button
+                    type="submit"
+                    disabled={!identifier || !password || isLoading}
+                    className="w-full bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white  text-base py-3 rounded-xl border-2 border-red-700 shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50"
+                    aria-label={isLoading ? t("loggingIn") : t("loginButton")}
+                  >
+                    <LogIn className="w-5 h-5 mr-2" aria-hidden="true" />
+                    {isLoading ? t("loggingIn") : t("loginButton")}
+                  </Button>
+                </form>
 
                 {/* REGISTER LINK */}
                 <div

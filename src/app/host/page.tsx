@@ -265,6 +265,7 @@ export default function QuizSelectPage() {
 
   const handleQuizSelect = useCallback(
     async (quizId: string) => {
+      if (isCreating) return; // Prevent double-click
       setIsCreating(true);
       try {
         const gamePin = generateGamePin();
@@ -330,7 +331,7 @@ export default function QuizSelectPage() {
         setIsCreating(false);
       }
     },
-    [router, profile?.id, t]
+    [router, profile?.id, t, isCreating, user?.id]
   );
 
   const handlePageChange = useCallback((page: number) => {
@@ -343,7 +344,7 @@ export default function QuizSelectPage() {
 
   // ==== RENDER ====
   return (
-    <LoadingScreen minDuration={500} isReady={!isLoadingInitial}>
+    <LoadingScreen minDuration={500} isReady={!isLoadingInitial && !isCreating}>
       <div className="min-h-screen relative overflow-hidden select-none flex flex-col main-background bg-black" style={{ backgroundImage: "url('/background/12.gif')", backgroundPosition: "center" }}>
 
         {/* Blood drips */}
@@ -543,12 +544,12 @@ export default function QuizSelectPage() {
                             }}
                             aria-label={t("selectQuiz", { theme: quiz.title })}
                           >
-<CardHeader className="flex-shrink-0">
-  <TooltipProvider>
-    <Tooltip delayDuration={300}>
-      <TooltipTrigger asChild>
-<CardTitle 
-  className="
+                            <CardHeader className="flex-shrink-0">
+                              <TooltipProvider>
+                                <Tooltip delayDuration={300}>
+                                  <TooltipTrigger asChild>
+                                    <CardTitle
+                                      className="
     text-red-400 
     
     md:text-2xl
@@ -563,13 +564,13 @@ export default function QuizSelectPage() {
     whitespace-normal
     break-words
   "
->
-  {quiz.title}
-</CardTitle>
-      </TooltipTrigger>
-      <TooltipContent 
-        side="top" 
-        className="
+                                    >
+                                      {quiz.title}
+                                    </CardTitle>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="
           bg-black/95 
           text-red-300 
           border-2 border-red-600 
@@ -580,12 +581,12 @@ export default function QuizSelectPage() {
           break-words 
           shadow-2xl
         "
-      >
-        <p className="font-semibold">{quiz.title}</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-</CardHeader>
+                                  >
+                                    <p className="font-semibold">{quiz.title}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </CardHeader>
                             <CardFooter className="pt-2 flex justify-between items-center flex-shrink-0 mt-auto">
                               {quiz.category && (
                                 <span className="text-red-300 text-xs  capitalize">{quiz.category}</span>

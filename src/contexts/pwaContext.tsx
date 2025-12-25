@@ -53,7 +53,7 @@ export function PWAInstallProvider({ children }: { children: ReactNode }) {
     installPrompt.prompt();
 
     // const { outcome } = await installPrompt.userChoice;
-
+    
     // if (outcome === "accepted") {
     //   console.log("User accepted the PWA installation");
     // } else {

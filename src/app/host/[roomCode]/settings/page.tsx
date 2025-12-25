@@ -171,7 +171,7 @@ export default function CharacterSelectPage() {
       }
 
       toast.dismiss();
- 
+
       router.push(`/host/${roomCode}/lobby`);
 
     } catch (error: any) {
@@ -189,9 +189,14 @@ export default function CharacterSelectPage() {
     setGameDuration(newValue);
   };
 
+  const questionOptions = [5, 10, 20].filter(q => q <= totalQuestions);
+
   const handleQuestionCountChange = (delta: number) => {
-    const newValue = Math.max(5, Math.min(totalQuestions, questionCount + delta));
-    setQuestionCount(newValue);
+    const currentIndex = questionOptions.indexOf(questionCount);
+    let newIndex = currentIndex + delta;
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= questionOptions.length) newIndex = questionOptions.length - 1;
+    setQuestionCount(questionOptions[newIndex]);
   };
 
   const nextChaser = () => {
@@ -287,9 +292,9 @@ export default function CharacterSelectPage() {
             <div className="p-3 bg-red-900/20 rounded border border-red-900/30">
               <Label className="text-red-300 mb-2 block font-medium text-xs  text-center">{t("questionCountLabel")}</Label>
               <div className="flex items-center justify-center space-x-4">
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleQuestionCountChange(-5)} className="w-8 h-8 bg-red-800/50 rounded text-red-200 border border-red-600/50 flex items-center justify-center text-sm" disabled={questionCount <= 5}> <Minus className="w-3 h-3" /> </motion.button>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleQuestionCountChange(-1)} className="w-8 h-8 bg-red-800/50 rounded text-red-200 border border-red-600/50 flex items-center justify-center text-sm" disabled={questionOptions.indexOf(questionCount) <= 0}> <Minus className="w-3 h-3" /> </motion.button>
                 <span className="text-red-400  text-xs min-w-[2rem] text-center"> {questionCount} / {totalQuestions} </span>
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleQuestionCountChange(5)} className="w-8 h-8 bg-red-800/50 rounded text-red-200 border border-red-600/50 flex items-center justify-center text-sm" disabled={questionCount >= totalQuestions}> <Plus className="w-3 h-3" /> </motion.button>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleQuestionCountChange(1)} className="w-8 h-8 bg-red-800/50 rounded text-red-200 border border-red-600/50 flex items-center justify-center text-sm" disabled={questionOptions.indexOf(questionCount) >= questionOptions.length - 1}> <Plus className="w-3 h-3" /> </motion.button>
               </div>
             </div>
 

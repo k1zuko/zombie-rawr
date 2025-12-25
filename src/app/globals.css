@@ -311,3 +311,36 @@
     transform-origin: center;
   }
 }
+
+/* ================================
+   Custom Scrollbar - Red/Horror Theme
+   ================================ */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a0000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 50%, #450a0a 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%);
+}
+
+::-webkit-scrollbar-corner {
+  background: #1a0000;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #7f1d1d #1a0000;
+}
