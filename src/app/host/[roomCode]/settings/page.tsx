@@ -85,7 +85,6 @@ export default function CharacterSelectPage() {
 
   useEffect(() => {
     if (!roomCode) {
-
       router.push("/");
       return;
     }
@@ -143,11 +142,11 @@ export default function CharacterSelectPage() {
     fetchSessionDetails();
   }, [roomCode, router, t, chaserOptions]);
 
-
   const saveSettings = async () => {
     if (!sessionData || !quiz || !isFormValid) return;
+    
+    // Langsung tampilkan loading screen tanpa jeda
     setIsSaving(true);
-
 
     try {
       // 1. Prepare settings object
@@ -167,18 +166,17 @@ export default function CharacterSelectPage() {
       if (error) {
         console.warn("Could not save settings to DB:", error);
         toast.error("Warning: Secondary DB update failed.");
-        setIsSaving(false);
+        setIsSaving(false); // Kembali ke form jika error
+        return; // Jangan navigasi jika error
       }
 
       toast.dismiss();
-
       router.push(`/host/${roomCode}/lobby`);
 
     } catch (error: any) {
       console.error(t("errorMessages.saveSettingsFailedLog"), error);
-      toast.dismiss();
-
-      setIsSaving(false);
+      toast.error(t("errorMessages.saveSettingsFailed")); // Asumsi ada key ini di i18n
+      setIsSaving(false); // Kembali ke form
     }
   };
 
@@ -222,8 +220,14 @@ export default function CharacterSelectPage() {
     return () => clearInterval(flickerInterval);
   }, []);
 
+  // Langsung tampilkan loading screen jika sedang saving (instan, tanpa jeda "continuing")
+  if (isSaving) {
+    return <LoadingScreen children={undefined} />;
+  }
+
+  // Fix untuk loading awal
   if (isLoading || !sessionData) {
-    <LoadingScreen children={undefined} />
+    return <LoadingScreen children={undefined} />;
   }
 
   return (
@@ -241,9 +245,9 @@ export default function CharacterSelectPage() {
           <Image
             src="/logo/quizrush.png"
             alt="QuizRush Logo"
-            width={140}   // turunin sedikit biar proporsional
-            height={35}   // sesuaikan tinggi
-            className="w-32 md:w-40 lg:w-48 h-auto"   // ini yang paling berpengaruh
+            width={140}
+            height={35}
+            className="w-32 md:w-40 lg:w-48 h-auto"
             unoptimized
             onClick={() => router.push("/")}
           />
@@ -313,8 +317,8 @@ export default function CharacterSelectPage() {
           </div>
 
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
-            <Button onClick={saveSettings} disabled={isSaving || !isFormValid} className={`w-full bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white rounded-lg  text-sm py-3 transition-all ${!isFormValid || isSaving ? "opacity-50 cursor-not-allowed" : ""}`}>
-              {isSaving ? t("continuing") : t("continue")}
+            <Button onClick={saveSettings} disabled={!isFormValid} className={`w-full bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white rounded-lg  text-sm py-3 transition-all ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""}`}>
+              {t("continue")}
             </Button>
           </motion.div>
         </motion.div>
