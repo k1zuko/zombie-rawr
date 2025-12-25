@@ -9,7 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+  } from "@/components/ui/card";
 import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -174,7 +174,9 @@ export default function LoginPage() {
     }
   }, [t]);
 
-  if (isLoading) <LoadingScreen children={undefined} />
+  if (isLoading) {
+    return <LoadingScreen children={undefined} />;
+  }
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden select-none">
@@ -343,7 +345,7 @@ export default function LoginPage() {
                       placeholder={t("emailPlaceholder")} // New placeholder
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
-                      className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-sm sm:text-base  h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 pl-10"
+                      className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-sm sm:text-base  h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 pl-10 font-['Times_New_Roman']"
                       aria-label="Email or Username"
                     />
                   </div>
@@ -354,7 +356,7 @@ export default function LoginPage() {
                       placeholder={t("passwordPlaceholder")}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-sm sm:text-base  h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 pl-10 pr-10"
+                      className="bg-black/50 border-red-500/50 text-red-400 placeholder:text-red-400/50 text-sm sm:text-base  h-12 rounded-xl focus:border-red-500 focus:ring-red-500/30 pl-10 pr-10 font-['Times_New_Roman']"
                       aria-label="Password"
                     />
                     <Button
