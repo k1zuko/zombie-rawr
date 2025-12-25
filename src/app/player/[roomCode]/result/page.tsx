@@ -106,6 +106,7 @@ export default function ResultsPage() {
   const [recentActivities, setRecentActivities] = useState<GameActivity[]>([])
   const [room, setRoom] = useState<GameRoom | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isNavigating, setIsNavigating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [playerData, setPlayerData] = useState<PlayerData | null>(null) // State untuk data pemain
   const [characterGif, setCharacterGif] = useState<string>()
@@ -259,6 +260,13 @@ export default function ResultsPage() {
   }
 
 
+
+  // Tampilan jika sedang navigating ke home
+  if (isNavigating) {
+    return (
+      <LoadingScreen children={undefined} />
+    );
+  }
 
   // Tampilan jika data pemain tidak bisa dimuat tapi data lain mungkin ada
   if (!playerData) {
@@ -415,8 +423,11 @@ export default function ResultsPage() {
         <div className="text-center">
           <motion.button
           onClick={() => {
+            setIsNavigating(true);
             sessionStorage.removeItem("redirectTo");
-            window.location.href = "/";  // Force full reload ke homepage
+            setTimeout(() => {
+              window.location.href = "/";  // Force full reload ke homepage
+            }, 500); // Delay singkat agar loading screen tampil
           }}
             whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             whileTap={{ scale: 0.95 }}

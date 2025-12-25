@@ -128,6 +128,7 @@ export default function ResultsHostPage() {
 
 
   const [isLoading, setIsLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false); // ← State baru untuk loading screen saat button ditekan
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -183,9 +184,16 @@ export default function ResultsHostPage() {
     return [leftColumn, rightColumn].filter((column) => column.length > 0);
   }, []);
 
+  // ← Handler navigasi umum untuk tombol Home
+  const handleNavigateHome = () => {
+    setShowLoading(true);
+    router.push("/");
+  };
+
   const handlePlayAgain = async () => {
     if (!roomCode) return;
     setIsCreatingNewSession(true);
+    setShowLoading(true); // ← Tampilkan loading screen
 
     try {
       // 1. Ambil session lama dari mysupa (QuizRush)
@@ -249,6 +257,7 @@ export default function ResultsHostPage() {
       console.error("Gagal restart game:", err);
       alert("Gagal membuat game baru: " + err.message);
       setIsCreatingNewSession(false);
+      setShowLoading(false); // ← Sembunyikan loading jika error
     }
   };
 
@@ -551,10 +560,11 @@ export default function ResultsHostPage() {
       {/* Tombol Aksi Terapung */}
       {/* Tombol Home */}
       <motion.button
-        onClick={() => router.push("/")}
+        onClick={handleNavigateHome} // ← Diubah untuk tampilkan loading
         whileHover={{ scale: 1.1, boxShadow: "0 0 15px rgba(239, 68, 68, 0.8)" }}
         whileTap={{ scale: 0.95 }}
-        className="fixed top-1/2 -translate-y-1/2 left-4 z-50 bg-red-800 text-white p-3 border-2 border-red-600 rounded-full shadow-lg"
+        disabled={showLoading} // ← Disable saat loading
+        className="fixed top-1/2 -translate-y-1/2 left-4 z-50 bg-red-800 text-white p-3 border-2 border-red-600 rounded-full shadow-lg disabled:opacity-50"
         aria-label={t("homeButton")}
       >
         <Home className="w-6 h-6" />
@@ -563,7 +573,7 @@ export default function ResultsHostPage() {
       {/* Tombol Play Again */}
       <motion.button
         onClick={handlePlayAgain}
-        disabled={isCreatingNewSession}
+        disabled={isCreatingNewSession || showLoading}
         whileHover={{ scale: 1.1, boxShadow: "0 0 15px rgba(239, 68, 68, 0.8)" }}
         whileTap={{ scale: 0.95 }}
         className="fixed top-1/2 -translate-y-1/2 right-4 z-50 bg-red-800 text-white p-3 border-2 border-red-600 rounded-full shadow-lg disabled:opacity-50"
@@ -577,6 +587,20 @@ export default function ResultsHostPage() {
           <RotateCw className="w-6 h-6" />
         )}
       </motion.button>
+
+      {/* ← Overlay LoadingScreen saat button ditekan */}
+      <AnimatePresence>
+        {showLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          >
+            <LoadingScreen children={undefined} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
