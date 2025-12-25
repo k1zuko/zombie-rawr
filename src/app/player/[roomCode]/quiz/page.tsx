@@ -119,6 +119,9 @@ export default function QuizPage() {
           setCurrentQuestionIndex(answeredCount);
           setLastActivityTime(new Date(parsed.currentPlayer.joined_at).getTime());
 
+          // Pastikan playerId di-sync ke localStorage
+          localStorage.setItem("playerId", parsed.currentPlayer.id);
+
           // Hapus prefetch data setelah digunakan (cleanup)
           localStorage.removeItem("quizPrefetchData");
 
@@ -176,6 +179,11 @@ export default function QuizPage() {
         return;
       }
 
+      // Sync playerId ke localStorage jika mismatch (edge case)
+      if (participantData.id !== playerId) {
+        localStorage.setItem("playerId", participantData.id);
+      }
+
       setCurrentPlayer(participantData);
       setPlayerHealth(participantData.health.current);
       setPlayerSpeed(participantData.health.speed || 1);
@@ -192,50 +200,153 @@ export default function QuizPage() {
     loadInitialData();
   }, [gamePin, router]);
 
-  // Realtime: Dengarkan perubahan di session & participant
-useEffect(() => {
-  if (!session?.id) return;
+  // Realtime: Dengarkan perubahan di session & participant + FALLBACK POLLING
+  useEffect(() => {
+    if (!session?.id) return;
 
-  // Subscribe ke session
-  const sessionChannel = mysupa
-    .channel(`session:${session.id}`)
-    .on(
-      'postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'sessions', filter: `id=eq.${session.id}` },
-      (payload) => {
-        setSession(payload.new as Session);
-      }
-    )
-    .subscribe();
+    let pollInterval: NodeJS.Timeout | null = null;
+    let subRetries = 0;
+    const MAX_RETRIES = 3;
 
-  // Subscribe ke participant (hanya diri sendiri)
-  const playerId = localStorage.getItem("playerId");
-  if (playerId) {
-    const participantChannel = mysupa
-      .channel(`participant:${playerId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'participants', filter: `id=eq.${playerId}` },
-        (payload) => {
-          const updated = payload.new as Participant;
-          
+    // Helper: Refetch participant manual (untuk polling)
+    const refetchParticipant = async () => {
+      const playerId = localStorage.getItem("playerId");
+      if (!playerId) return;
+
+      try {
+        const { data: updated, error } = await mysupa
+          .from("participants")
+          .select("*")
+          .eq("id", playerId)
+          .single();
+
+        if (error) {
+          console.error("Polling error:", error);
+          return;
+        }
+
+        if (updated && updated.health.current !== playerHealth) {
+          console.log("Polling detected health change:", updated.health.current); // Debug: Polling trigger
           setCurrentPlayer(updated);
           setPlayerHealth(updated.health.current);
           setPlayerSpeed(updated.health.speed || 1);
           setCorrectAnswers(updated.correct_answers || 0);
+          const nextQuestionIndex = updated.answers?.length || 0;
+          setCurrentQuestionIndex(nextQuestionIndex);
 
-          // INI YANG KAMU CARI → index soal ikut jumlah jawaban
-          // const nextQuestionIndex = updated.answers?.length || 0;
-          // setCurrentQuestionIndex(nextQuestionIndex);
+          // Check elimination via polling
+          if (updated.health.current <= 0 || !updated.is_alive) {
+            redirectToResults(0, updated.correct_answers || 0, totalQuestions, true);
+          }
+        }
+      } catch (err) {
+        console.error("Polling failed:", err);
+      }
+    };
+
+    // Visibility handler: Pause polling kalau tab hidden
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && pollInterval) {
+        // Resume polling
+        pollInterval = setInterval(refetchParticipant, 5000); // 5s
+        console.log("Polling resumed (tab visible)");
+      } else if (pollInterval) {
+        // Pause
+        clearInterval(pollInterval);
+        pollInterval = null;
+        console.log("Polling paused (tab hidden)");
+      }
+    };
+
+    // Subscribe ke session (tetep sama)
+    const sessionChannel = mysupa
+      .channel(`session:${session.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'sessions', filter: `id=eq.${session.id}` },
+        (payload) => {
+          console.log("Session realtime update:", payload);
+          setSession(payload.new as Session);
         }
       )
-      .subscribe();
-  }
+      .subscribe((status) => {
+        console.log("Session channel status:", status);
+      });
 
-  return () => {
-    mysupa.removeAllChannels();
-  };
-}, [session?.id]);
+    // Subscribe ke participant (dengan retry)
+    const playerId = localStorage.getItem("playerId");
+    console.log("Subscribing realtime with playerId:", playerId);
+    if (playerId) {
+      const subscribeParticipant = () => {
+        const participantChannel = mysupa
+          .channel(`participant:${playerId}`)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'participants', filter: `id=eq.${playerId}` },
+            (payload) => {
+              console.log("Realtime payload for participant:", payload);
+              if (payload.eventType !== 'UPDATE') return;
+
+              const updated = payload.new as Participant;
+              console.log("Updated health from realtime:", updated.health.current);
+              
+              setCurrentPlayer(updated);
+              setPlayerHealth(updated.health.current);
+              setPlayerSpeed(updated.health.speed || 1);
+              setCorrectAnswers(updated.correct_answers || 0);
+
+              const nextQuestionIndex = updated.answers?.length || 0;
+              setCurrentQuestionIndex(nextQuestionIndex);
+
+              if (updated.health.current <= 0 || !updated.is_alive) {
+                redirectToResults(0, updated.correct_answers || 0, totalQuestions, true);
+              }
+
+              // Reset retries on success
+              subRetries = 0;
+            }
+          )
+          .subscribe((status) => {
+            console.log("Participant channel status:", status);
+            if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+              subRetries++;
+              if (subRetries <= MAX_RETRIES) {
+                console.log(`Retrying sub (${subRetries}/${MAX_RETRIES}) in 2s...`);
+                setTimeout(subscribeParticipant, 2000);
+              } else {
+                console.error("Max retries reached - falling back to polling only");
+                // Start polling as primary
+                pollInterval = setInterval(refetchParticipant, 5000);
+              }
+            } else if (status === 'SUBSCRIBED') {
+              console.log("Realtime sub OK - polling as backup");
+              // Start polling sebagai backup (5s)
+              if (document.visibilityState === 'visible') {
+                pollInterval = setInterval(refetchParticipant, 5000);
+              }
+            }
+          });
+
+        return () => { mysupa.removeChannel(participantChannel); };
+      };
+
+      // Initial subscribe
+      const unsubscribeParticipant = subscribeParticipant();
+    }
+
+    // Start polling if visible
+    if (document.visibilityState === 'visible') {
+      pollInterval = setInterval(refetchParticipant, 5000);
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      mysupa.removeAllChannels();
+    };
+  }, [session?.id, playerHealth, totalQuestions]); // Tambah playerHealth biar detect change
 
   // Game Timer → dari started_at
   useEffect(() => {
@@ -256,15 +367,13 @@ useEffect(() => {
     return () => clearInterval(interval);
   }, [session?.started_at, session?.total_time_minutes, timeLoaded]);
 
-
-
   useEffect(() => {
     if (timeLoaded && timeLeft <= 0 && !isProcessingAnswer) {
       redirectToResults(playerHealth, correctAnswers, totalQuestions, true);
     }
   }, [timeLeft, timeLoaded, isProcessingAnswer, playerHealth, correctAnswers, totalQuestions]);
 
-  // Check for elimination due to health drain (e.g., inactivity)
+  // Check for elimination due to health drain (e.g., inactivity) - sudah dihandle di realtime
   useEffect(() => {
     if (currentPlayer?.is_alive === false || playerHealth <= 0) {
       redirectToResults(0, correctAnswers, totalQuestions, true);
