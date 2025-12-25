@@ -133,7 +133,7 @@ function FullscreenQrOverlay({
 
           {/* Room Code */}
           <div className="p-4 text-center shrink-0 border-t border-red-900/20">
-            <p className="text-black text-xl md:text-2xl lg:text-3xl tracking-widest font-bold">
+            <p className="text-black text-xl md:text-2xl lg:text-3xl tracking-widest font-bold break-all">
               {roomCode}
             </p>
             <p className="text-gray-600 text-sm mt-2">Scan to Join</p>
@@ -715,7 +715,7 @@ export default function HostPage() {
                 </motion.div>
 
                 <div className="grid gap-3 w-full flex-1 lg:pl-4">
-                  <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30">
+                  <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30 overflow-hidden">
                     <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
                       <Button
                         variant="ghost"
@@ -737,13 +737,13 @@ export default function HostPage() {
                       </Button>
                     </div>
                     <div className="flex flex-col items-center">
-                      <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl  text-red-500 tracking-widest break-words select-text">
+                      <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl  text-red-500 tracking-widest break-all select-text w-full text-center px-2">
                         {roomCode}
                       </div>
                     </div>
                   </div>
 
-                  <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30">
+                  <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30 overflow-hidden">
                     <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
                       <Button
                         variant="ghost"
@@ -768,7 +768,7 @@ export default function HostPage() {
                       <div className="text-red-400  mb-1 text-xs sm:text-sm md:text-base">
                         {t("joinLink")}
                       </div>
-                      <div className="text-sm sm:text-base md:text-lg  text-red-500 text-center break-words px-2">
+                      <div className="text-sm sm:text-base md:text-lg  text-red-500 text-center break-all px-2 w-full">
                         {joinUrl}
                       </div>
                     </div>
