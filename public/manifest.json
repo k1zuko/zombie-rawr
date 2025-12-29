@@ -1,7 +1,7 @@
 {
   "name": "QuizRush",
   "short_name": "QuizRush",
-  "description": "Speed thinking or face the chase",
+  "description": "Answer • Run • Survive",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

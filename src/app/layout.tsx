@@ -12,11 +12,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(fullUrl),
     title: "QuizRush",
-    description: "Speed thinking or face the chase!",
+    description: "Answer • Run • Survive",
     manifest: "/manifest.json",
     openGraph: {
       title: "QuizRush",
-      description: "Speed thinking or face the chase!",
+      description: "Answer • Run • Survive",
       url: fullUrl,
       siteName: "QuizRush",
       images: [
