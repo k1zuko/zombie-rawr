@@ -715,7 +715,7 @@ export default function HostPage() {
                 </motion.div>
 
                 <div className="grid gap-3 w-full flex-1 lg:pl-4">
-                  <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30 overflow-hidden">
+                  <div className="relative w-full bg-black/50 p-3 rounded-2xl border border-red-500/30 overflow-hidden">
                     <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
                       <Button
                         variant="ghost"
@@ -743,7 +743,7 @@ export default function HostPage() {
                     </div>
                   </div>
 
-                  <div className="relative w-full bg-black/50 p-3 sm:p-4 rounded-2xl border border-red-500/30 overflow-hidden">
+                  <div className="relative w-full bg-black/50 p-3 rounded-2xl border border-red-500/30 overflow-hidden">
                     <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
                       <Button
                         variant="ghost"
@@ -774,14 +774,14 @@ export default function HostPage() {
                     </div>
                   </div>
 
-                  <Card className="bg-black/20 border border-red-900/50">
+                  {/* <Card className="bg-black/20 border border-red-900/50">
                     <CardContent className="px-4">
                       <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.6 }}
                         className="flex justify-center"
-                      >
+                      > */}
                         <Button
                           onClick={startGame}
                           disabled={
@@ -789,7 +789,7 @@ export default function HostPage() {
                             isStarting ||
                             countdown !== null
                           }
-                          className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white  text-sm sm:text-base md:text-lg lg:text-xl px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4 lg:py-6 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
+                          className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white mt-2 text-sm sm:text-base md:text-lg lg:text-xl px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4 lg:py-5 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
                         >
                           <span className="relative z-10 flex items-center justify-center">
                             {isStarting || countdown !== null ? (
@@ -816,9 +816,9 @@ export default function HostPage() {
                           <span className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
                           <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 animate-pulse" />
                         </Button>
-                      </motion.div>
+                      {/* </motion.div>
                     </CardContent>
-                  </Card>
+                  </Card> */}
                 </div>
               </motion.div>
             </div>
