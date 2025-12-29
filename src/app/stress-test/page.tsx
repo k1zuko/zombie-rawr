@@ -49,7 +49,7 @@ export default function StressTestPage() {
     const { isAdmin, loading: authLoading } = useAdminGuard();
 
     const [roomCode, setRoomCode] = useState("");
-    const [userCount, setUserCount] = useState(10);
+    const [userCount, setUserCount] = useState(50);
     const [minInterval, setMinInterval] = useState(3);
     const [maxInterval, setMaxInterval] = useState(10);
     const [isRunning, setIsRunning] = useState(false);
