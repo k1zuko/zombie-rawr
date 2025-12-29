@@ -180,6 +180,7 @@ export default function HostGamePage() {
   const [screenWidth, setScreenWidth] = useState(1200);
   const [screenHeight, setScreenHeight] = useState(800);
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
 
   const [session, setSession] = useState<Session | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -411,6 +412,7 @@ export default function HostGamePage() {
       // LANGSUNG UPDATE STATUS + REDIRECT HOST
       const finishAndSync = async () => {
         try {
+          setIsFinishing(true);
           // 1. Update status di QuizRush (mysupa)
           await mysupa
             .from("sessions")
@@ -449,6 +451,7 @@ export default function HostGamePage() {
     let timer: NodeJS.Timeout | null = null;
 
     const doFinish = async () => {
+      setIsFinishing(true);
       const finishAt = new Date().toISOString();
       try {
         // 1) fetch participants who haven't finished yet
@@ -507,10 +510,10 @@ export default function HostGamePage() {
 
   // Redirect jika game selesai
   useEffect(() => {
-    if (session?.status === "finished") {
+    if (session?.status === "finished" && !isFinishing) {
       router.push(`/host/${gamePin}/result`);
     }
-  }, [session?.status, router, gamePin]);
+  }, [session?.status, isFinishing, router, gamePin]);
 
   // Screen resize
   useEffect(() => {
@@ -538,7 +541,7 @@ export default function HostGamePage() {
   const centerX = screenWidth / 2;
   const chaserType = session?.difficulty?.split(":")[0] as any || "zombie";
 
-  if (!isClient || !session) {
+  if (!isClient || !session || isFinishing) {
     return (
       <LoadingScreen children={undefined} />
     );

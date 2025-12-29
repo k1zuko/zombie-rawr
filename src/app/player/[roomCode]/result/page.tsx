@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next"
 import { debounce } from "lodash"
 import Link from "next/link"
 import { Session } from "../quiz/page"
+import LoadingScreen from "@/components/LoadingScreen"
 
 // Interface tidak berubah
 interface GameCompletion {
@@ -105,6 +106,7 @@ export default function ResultsPage() {
   const [recentActivities, setRecentActivities] = useState<GameActivity[]>([])
   const [room, setRoom] = useState<GameRoom | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isNavigating, setIsNavigating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [playerData, setPlayerData] = useState<PlayerData | null>(null) // State untuk data pemain
   const [characterGif, setCharacterGif] = useState<string>()
@@ -257,50 +259,20 @@ export default function ResultsPage() {
     return `${activity.player_nickname} menghadapi ujian baru! Tetap kuat!`
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
-        <div className="text-center z-10">
 
-          <p className="text-white  text-xl mb-4 tracking-widest">{t("result.loadingTitle")}</p>
-          <p className="text-gray-400  text-sm">{t("result.loadingSubtitle")}</p>
-        </div>
-      </div>
-    )
+
+  // Tampilan jika sedang navigating ke home
+  if (isNavigating) {
+    return (
+      <LoadingScreen children={undefined} />
+    );
   }
 
   // Tampilan jika data pemain tidak bisa dimuat tapi data lain mungkin ada
   if (!playerData) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 via-black to-purple-900/10" />
-        <div className="text-center z-10 p-4">
-          <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-          <p className="text-white  text-xl mb-4 tracking-widest">{t("result.errorTitle")}</p>
-          <p className="text-yellow-400  text-sm mb-6 max-w-md mx-auto">
-            {error || t("result.errorMessage")}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-
-              onClick={() => (window.location.href = "/")}
-              className="bg-gray-900 hover:bg-gray-800 text-white  border border-gray-700"
-            >
-              <Home className="w-4 h-4 mr-2" />
-              {t("common.home")}
-            </Button>
-            <Button
-              onClick={initializePlayerData}
-              className="bg-red-900 hover:bg-red-800 text-white  border border-red-700"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              {t("common.retry")}
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
+      <LoadingScreen children={undefined} />
+    );
   }
 
   // Render utama jika playerData berhasil dimuat
@@ -376,15 +348,7 @@ export default function ResultsPage() {
                 className="w-36 md:w-52 lg:w-64 h-auto mr-3 hidden sm:block"
               />
               {/* Tombol Home (hanya terlihat di desktop) */}
-              <motion.button
-                onClick={() => router.push("/")}
-                whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-red-800 text-white p-2 border-2 border-red-600 rounded-md hidden sm:block"
-                aria-label={t("homeButton")}
-              >
-                <Home className="w-3 h-3" />
-              </motion.button>
+
             </div>
           </div>
 
@@ -458,7 +422,13 @@ export default function ResultsPage() {
         {/* Tombol Home (hanya terlihat di mobile, di bagian bawah) */}
         <div className="text-center">
           <motion.button
-            onClick={() => router.push("/")}
+          onClick={() => {
+            setIsNavigating(true);
+            sessionStorage.removeItem("redirectTo");
+            setTimeout(() => {
+              window.location.href = "/";  // Force full reload ke homepage
+            }, 500); // Delay singkat agar loading screen tampil
+          }}
             whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             whileTap={{ scale: 0.95 }}
             className="bg-red-800 text-white px-5 py-1 border-2 border-red-600 rounded-lg z-50  inline-block"
