@@ -49,7 +49,9 @@ export default function StressTestPage() {
     const { isAdmin, loading: authLoading } = useAdminGuard();
 
     const [roomCode, setRoomCode] = useState("");
-    const [userCount, setUserCount] = useState(10);
+    const [userCount, setUserCount] = useState(50);
+    const [minInterval, setMinInterval] = useState(3);
+    const [maxInterval, setMaxInterval] = useState(10);
     const [isRunning, setIsRunning] = useState(false);
     const [session, setSession] = useState<SessionData | null>(null);
     const [logs, setLogs] = useState<string[]>([]);
@@ -230,15 +232,15 @@ export default function StressTestPage() {
         const scorePerQuestion = Math.max(1, Math.floor(100 / totalQuestions));
 
         addLog(`📝 Starting game with ${totalQuestions} questions...`);
-        addLog(`🧠 Each bot thinks independently (3-10s per answer)...`);
+        addLog(`🧠 Each bot thinks independently (${minInterval}-${maxInterval}s per answer)...`);
 
         // Each bot runs independently
         const botPromises = usersRef.current.map(async (user) => {
             for (let qIndex = 0; qIndex < totalQuestions; qIndex++) {
                 if (stopRef.current || user.completed || user.health <= 0) break;
 
-                // Random thinking time 3-10 seconds
-                await randomDelayRange(3000, 10000);
+                // Random thinking time based on user config
+                await randomDelayRange(minInterval * 1000, maxInterval * 1000);
                 if (stopRef.current) break;
 
                 const question = questions[qIndex];
@@ -436,7 +438,7 @@ export default function StressTestPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black relative overflow-hidden">
+        <div className="min-h-screen bg-black relative overflow-hidden font-serif">
             {/* Blood drips background */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -474,8 +476,8 @@ export default function StressTestPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
                         >
-                            <h1 className="text-3xl font-bold text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
-                                🧪 Stress Test
+                            <h1 className="text-3xl font-bold font-serif text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                                Stress Test
                             </h1>
                         </motion.div>
                     </div>
@@ -510,6 +512,44 @@ export default function StressTestPage() {
                                 </div>
                             </div>
 
+                            {/* Answer Interval Config */}
+                            <div className="grid grid-cols-2 gap-4 mb-5">
+                                <div>
+                                    <label className="text-sm text-red-400">
+                                        Min Interval: <span className="text-red-300 font-bold">{minInterval}s</span>
+                                    </label>
+                                    <Slider
+                                        value={[minInterval]}
+                                        onValueChange={([v]) => {
+                                            setMinInterval(v);
+                                            if (v > maxInterval) setMaxInterval(v);
+                                        }}
+                                        min={1}
+                                        max={30}
+                                        step={1}
+                                        disabled={isRunning}
+                                        className="mt-2"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm text-red-400">
+                                        Max Interval: <span className="text-red-300 font-bold">{maxInterval}s</span>
+                                    </label>
+                                    <Slider
+                                        value={[maxInterval]}
+                                        onValueChange={([v]) => {
+                                            setMaxInterval(v);
+                                            if (v < minInterval) setMinInterval(v);
+                                        }}
+                                        min={1}
+                                        max={60}
+                                        step={1}
+                                        disabled={isRunning}
+                                        className="mt-2"
+                                    />
+                                </div>
+                            </div>
+
                             <div className="flex gap-3">
                                 {!isRunning ? (
                                     <Button
@@ -540,63 +580,40 @@ export default function StressTestPage() {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <Card className="bg-black/60 border-blue-500/50">
-                            <CardContent className="p-4 text-center">
+                            <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-blue-400">{joinedCount}</div>
                                 <div className="text-xs text-blue-400/70">Joined</div>
                             </CardContent>
                         </Card>
                         <Card className="bg-black/60 border-yellow-500/50">
-                            <CardContent className="p-4 text-center">
+                            <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-yellow-400">{answeringCount}</div>
                                 <div className="text-xs text-yellow-400/70">Question</div>
                             </CardContent>
                         </Card>
                         <Card className="bg-black/60 border-green-500/50">
-                            <CardContent className="p-4 text-center">
+                            <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-green-400">{completedCount}</div>
                                 <div className="text-xs text-green-400/70">Finished</div>
                             </CardContent>
                         </Card>
                         <Card className="bg-black/60 border-red-500/50">
-                            <CardContent className="p-4 text-center">
+                            <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-red-400">{eliminatedCount}</div>
                                 <div className="text-xs text-red-400/70">Eliminated</div>
                             </CardContent>
                         </Card>
                         <Card className="bg-black/60 border-gray-500/50">
-                            <CardContent className="p-4 text-center">
+                            <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-gray-400">{errorCount}</div>
                                 <div className="text-xs text-gray-400/70">Errors</div>
                             </CardContent>
                         </Card>
                     </div>
 
-                    {/* Session Info
-                    {session && (
-                        <Card className="bg-black/60 border-red-500/30">
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-3 h-3 rounded-full ${session.status === "waiting" ? "bg-yellow-500" :
-                                        session.status === "active" ? "bg-green-500 animate-pulse" :
-                                            "bg-gray-500"
-                                        }`} />
-                                    <span className="text-gray-300">
-                                        Session: <span className="font-mono text-white">{roomCode}</span>
-                                    </span>
-                                </div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${session.status === "waiting" ? "bg-yellow-500/20 text-yellow-400" :
-                                    session.status === "active" ? "bg-green-500/20 text-green-400" :
-                                        "bg-gray-500/20 text-gray-400"
-                                    }`}>
-                                    {session.status.toUpperCase()}
-                                </span>
-                            </CardContent>
-                        </Card>
-                    )} */}
-
                     {/* Logs */}
-                    <Card className="bg-black/60 border-red-500/30">
-                        <CardHeader className="pb-2">
+                    <Card className="bg-black/60 border-red-500/30 gap-3">
+                        <CardHeader>
                             <CardTitle className="text-sm text-red-400">📜 Live Logs</CardTitle>
                         </CardHeader>
                         <CardContent>
