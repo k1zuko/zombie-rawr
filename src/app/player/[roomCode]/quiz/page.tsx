@@ -1,22 +1,17 @@
-// Ganti import jika perlu (tetap sama)
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { AlertTriangle, CheckCircle, CircleQuestionMark, Clock, Heart, Skull, XCircle, Zap } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { CircleQuestionMark, Clock, Heart, XCircle, Zap, CheckCircle } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
-import { mysupa } from "@/lib/supabase" 
-import { AnimatePresence, motion } from "framer-motion"
-import { Progress } from "@/components/ui/progress"
+import { mysupa } from "@/lib/supabase"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import ZombieFeedback from "@/components/game/ZombieFeedback"
-import { useTranslation } from "react-i18next"
 import toast from "react-hot-toast"
 import LoadingScreen from "@/components/LoadingScreen"
 import { generateXID } from "@/lib/id-generator"
 import Image from "next/image"
 
-// === TIPE BARU YANG SESUAI DENGAN SKEMA BARU ===
 export interface Session {
   id: string
   game_pin: string
@@ -25,7 +20,7 @@ export interface Session {
   question_limit: number
   total_time_minutes: number
   difficulty: string
-  current_questions: any[]        // jsonb → array pertanyaan
+  current_questions: any[]
   host_id: string | null
   created_at: string
   started_at: string | null
@@ -45,22 +40,17 @@ interface Participant {
     max: number
     speed: number
   }
-  position_x?: number
-  position_y?: number
   is_alive: boolean
-  power_ups?: number
   joined_at: string
-  answers: any[]                  // jsonb → array jawaban
+  answers: any[]
   finished_at: string | null
   completion?: boolean
 }
 
-// === GANTI SEMUA TIPE LAMA ===
 export default function QuizPage() {
-  const { t } = useTranslation()
   const router = useRouter()
   const params = useParams()
-  const gamePin = params.roomCode as string   // ← sekarang game_pin, bukan room_code
+  const gamePin = params.roomCode as string
 
   const [session, setSession] = useState<Session | null>(null)
   const [currentPlayer, setCurrentPlayer] = useState<Participant | null>(null)
@@ -70,638 +60,348 @@ export default function QuizPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [isAnswered, setIsAnswered] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [playerHealth, setPlayerHealth] = useState(100)     // ← sekarang 100, bukan 3
-  const [playerSpeed, setPlayerSpeed] = useState(1)        // ← default speed dari health json
+  const [playerHealth, setPlayerHealth] = useState(100)
+  const [playerSpeed, setPlayerSpeed] = useState(1)
   const [correctAnswers, setCorrectAnswers] = useState(0)
   const [showFeedback, setShowFeedback] = useState(false)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [isProcessingAnswer, setIsProcessingAnswer] = useState(false)
-  const [lastActivityTime, setLastActivityTime] = useState<number>(Date.now())
 
-  // Ambil pertanyaan dari session
   const questions = session?.current_questions ?? []
   const totalQuestions = session?.question_limit ?? questions.length ?? 0
   const currentQuestion = questions[currentQuestionIndex] ?? null
 
   const pulseIntensity = timeLeft <= 30 ? (31 - timeLeft) / 30 : 0
-  const FEEDBACK_DURATION = 1200
+  const FEEDBACK_DURATION = 1400
 
-  // Initial data loading → MODIFIKASI: Prioritaskan prefetch dari localStorage
+  // ── LOAD DATA AWAL ───────────────────────────────────────────────────────────
   useEffect(() => {
-    const loadInitialData = async () => {
-      if (!gamePin) {
-        router.replace("/");
-        return;
-      }
+    const loadData = async () => {
+      if (!gamePin) return router.replace("/")
 
-      // TAMBAHAN: Cek apakah ada data prefetch dari LobbyPage
-      const prefetchData = localStorage.getItem("quizPrefetchData");
-      if (prefetchData) {
+      const prefetch = localStorage.getItem("quizPrefetchData")
+      if (prefetch) {
         try {
-          const parsed = JSON.parse(prefetchData) as {
-            session: Session;
-            currentPlayer: Participant;
-            questions: any[];
-          };
+          const { session: s, currentPlayer: p } = JSON.parse(prefetch)
+          if (s.game_pin !== gamePin || !p?.id) throw new Error("Invalid prefetch")
 
-          // Validasi data dasar
-          if (parsed.session.game_pin !== gamePin || !parsed.currentPlayer.id) {
-            throw new Error("Prefetch data invalid");
-          }
-
-          // Set state dari prefetch
-          setSession(parsed.session);
-          setCurrentPlayer(parsed.currentPlayer);
-          setPlayerHealth(parsed.currentPlayer.health.current);
-          setPlayerSpeed(parsed.currentPlayer.health.speed || 1);
-          setCorrectAnswers(parsed.currentPlayer.correct_answers || 0);
-          const answeredCount = parsed.currentPlayer.answers?.length || 0;
-          setCurrentQuestionIndex(answeredCount);
-          setLastActivityTime(new Date(parsed.currentPlayer.joined_at).getTime());
-
-          // Pastikan playerId di-sync ke localStorage
-          localStorage.setItem("playerId", parsed.currentPlayer.id);
-
-          // Hapus prefetch data setelah digunakan (cleanup)
-          localStorage.removeItem("quizPrefetchData");
-
-          console.log("Data loaded dari prefetch (no fetch needed)");
-          setIsClient(true);
-          return; // Skip fetch jika prefetch valid
-        } catch (err) {
-          console.warn("Prefetch data invalid, fallback to fetch:", err);
-          localStorage.removeItem("quizPrefetchData"); // Clear invalid data
+          setSession(s)
+          setCurrentPlayer(p)
+          setPlayerHealth(p.health.current)
+          setPlayerSpeed(p.health.speed || 1)
+          setCorrectAnswers(p.correct_answers || 0)
+          setCurrentQuestionIndex(p.answers?.length || 0)
+          localStorage.setItem("playerId", p.id)
+          localStorage.removeItem("quizPrefetchData")
+          setIsClient(true)
+          return
+        } catch {
+          localStorage.removeItem("quizPrefetchData")
         }
       }
-
-      // FALLBACK: Fetch dari Supabase jika tidak ada prefetch atau invalid
-      await fetchInitialData();
-    };
-
-    // Fungsi fetch lama (sekarang sebagai fallback)
-    const fetchInitialData = async () => {
-      // 1. Ambil session berdasarkan game_pin
-      const { data: sessionData, error: sessionError } = await mysupa
-        .from("sessions")
-        .select("*")
-        .eq("game_pin", gamePin)
-        .single();
-
-      if (sessionError || !sessionData) {
-        console.error("Session tidak ditemukan:", sessionError);
-        toast.error("Kode game salah atau sudah expired!");
-        router.replace("/");
-        return;
-      }
-
-      setSession(sessionData);
-
-      // 2. Ambil player dari localStorage (playerId tetap sama)
-      const playerId = localStorage.getItem("playerId");
-      if (!playerId) {
-        toast.error("Kamu belum bergabung ke game ini.");
-        router.replace("/");
-        return;
-      }
-
-      // 3. Cari participant di tabel participants
-      const { data: participantData, error: participantError } = await mysupa
-        .from("participants")
-        .select("*")
-        .eq("session_id", sessionData.id)
-        .eq("id", playerId)  // atau gunakan user_id jika pakai auth
-        .single();
-
-      if (participantError || !participantData) {
-        console.error("Player tidak ditemukan di session ini");
-        toast.error("Kamu tidak terdaftar di game ini.");
-        router.replace("/");
-        return;
-      }
-
-      // Sync playerId ke localStorage jika mismatch (edge case)
-      if (participantData.id !== playerId) {
-        localStorage.setItem("playerId", participantData.id);
-      }
-
-      setCurrentPlayer(participantData);
-      setPlayerHealth(participantData.health.current);
-      setPlayerSpeed(participantData.health.speed || 1);
-      setCorrectAnswers(participantData.correct_answers || 0);
-      setLastActivityTime(new Date(participantData.joined_at).getTime());
-
-      // Hitung index pertanyaan berikutnya dari answers.length
-      const answeredCount = participantData.answers?.length || 0;
-      setCurrentQuestionIndex(answeredCount);
-
-      setIsClient(true);
-    };
-
-    loadInitialData();
-  }, [gamePin, router]);
-
-  // Realtime: Dengarkan perubahan di session & participant + FALLBACK POLLING
-  useEffect(() => {
-    if (!session?.id) return;
-
-    let pollInterval: NodeJS.Timeout | null = null;
-    let subRetries = 0;
-    const MAX_RETRIES = 3;
-
-    // Helper: Refetch participant manual (untuk polling)
-    const refetchParticipant = async () => {
-      const playerId = localStorage.getItem("playerId");
-      if (!playerId) return;
 
       try {
-        const { data: updated, error } = await mysupa
+        const { data: sess, error: e1 } = await mysupa
+          .from("sessions")
+          .select("*")
+          .eq("game_pin", gamePin)
+          .single()
+        if (e1 || !sess) throw new Error("Session not found")
+        setSession(sess)
+
+        const pid = localStorage.getItem("playerId")
+        if (!pid) throw new Error("No player ID")
+
+        const { data: player, error: e2 } = await mysupa
           .from("participants")
           .select("*")
-          .eq("id", playerId)
-          .single();
+          .eq("id", pid)
+          .single()
+        if (e2 || !player) throw new Error("Player not found")
 
-        if (error) {
-          console.error("Polling error:", error);
-          return;
-        }
+        setCurrentPlayer(player)
+        setPlayerHealth(player.health.current)
+        setPlayerSpeed(player.health.speed || 1)
+        setCorrectAnswers(player.correct_answers || 0)
+        setCurrentQuestionIndex(player.answers?.length || 0)
+        setIsClient(true)
+      } catch (err) {
+        console.error(err)
+        toast.error("Gagal memuat game")
+        router.replace("/")
+      }
+    }
 
-        if (updated && updated.health.current !== playerHealth) {
-          console.log("Polling detected health change:", updated.health.current); // Debug: Polling trigger
-          setCurrentPlayer(updated);
-          setPlayerHealth(updated.health.current);
-          setPlayerSpeed(updated.health.speed || 1);
-          setCorrectAnswers(updated.correct_answers || 0);
-          const nextQuestionIndex = updated.answers?.length || 0;
-          setCurrentQuestionIndex(nextQuestionIndex);
+    loadData()
+  }, [gamePin, router])
 
-          // Check elimination via polling
-          if (updated.health.current <= 0 || !updated.is_alive) {
-            redirectToResults(0, updated.correct_answers || 0, totalQuestions, true);
+  // ── REALTIME + POLLING ───────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!session?.id || !currentPlayer?.id) return
+
+    let poll: NodeJS.Timeout | null = null
+
+    const updateFromServer = async () => {
+      if (isAnswered || showFeedback || isProcessingAnswer) return
+
+      try {
+        const { data } = await mysupa
+          .from("participants")
+          .select("*")
+          .eq("id", currentPlayer.id)
+          .single()
+        if (!data) return
+
+        const serverIndex = data.answers?.length || 0
+        if (serverIndex > currentQuestionIndex) {
+          setCurrentQuestionIndex(serverIndex)
+          setPlayerHealth(data.health.current)
+          setPlayerSpeed(data.health.speed || 1)
+          setCorrectAnswers(data.correct_answers || 0)
+          setCurrentPlayer(data)
+
+          if (data.health.current <= 0 || !data.is_alive) {
+            redirectToResults(0, data.correct_answers || 0, totalQuestions, true)
           }
         }
-      } catch (err) {
-        console.error("Polling failed:", err);
-      }
-    };
+      } catch {}
+    }
 
-    // Visibility handler: Pause polling kalau tab hidden
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && pollInterval) {
-        // Resume polling
-        pollInterval = setInterval(refetchParticipant, 5000); // 5s
-        console.log("Polling resumed (tab visible)");
-      } else if (pollInterval) {
-        // Pause
-        clearInterval(pollInterval);
-        pollInterval = null;
-        console.log("Polling paused (tab hidden)");
-      }
-    };
-
-    // Subscribe ke session (tetep sama)
-    const sessionChannel = mysupa
-      .channel(`session:${session.id}`)
+    const channel = mysupa
+      .channel(`player:${currentPlayer.id}`)
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'sessions', filter: `id=eq.${session.id}` },
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "participants", filter: `id=eq.${currentPlayer.id}` },
         (payload) => {
-          console.log("Session realtime update:", payload);
-          setSession(payload.new as Session);
+          if (payload.eventType !== "UPDATE") return
+          const upd = payload.new as Participant
+
+          if (isAnswered || showFeedback || isProcessingAnswer) return
+
+          const srvIdx = upd.answers?.length || 0
+          if (srvIdx !== currentQuestionIndex) {
+            setCurrentQuestionIndex(srvIdx)
+            setPlayerHealth(upd.health.current)
+            setPlayerSpeed(upd.health.speed || 1)
+            setCorrectAnswers(upd.correct_answers || 0)
+            setCurrentPlayer(upd)
+
+            if (upd.health.current <= 0 || !upd.is_alive) {
+              redirectToResults(0, upd.correct_answers || 0, totalQuestions, true)
+            }
+          }
         }
       )
-      .subscribe((status) => {
-        console.log("Session channel status:", status);
-      });
+      .subscribe(() => {
+        poll = setInterval(updateFromServer, 5000)
+      })
 
-    // Subscribe ke participant (dengan retry)
-    const playerId = localStorage.getItem("playerId");
-    console.log("Subscribing realtime with playerId:", playerId);
-    if (playerId) {
-      const subscribeParticipant = () => {
-        const participantChannel = mysupa
-          .channel(`participant:${playerId}`)
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'participants', filter: `id=eq.${playerId}` },
-            (payload) => {
-              console.log("Realtime payload for participant:", payload);
-              if (payload.eventType !== 'UPDATE') return;
-
-              const updated = payload.new as Participant;
-              console.log("Updated health from realtime:", updated.health.current);
-              
-              setCurrentPlayer(updated);
-              setPlayerHealth(updated.health.current);
-              setPlayerSpeed(updated.health.speed || 1);
-              setCorrectAnswers(updated.correct_answers || 0);
-
-              const nextQuestionIndex = updated.answers?.length || 0;
-              setCurrentQuestionIndex(nextQuestionIndex);
-
-              if (updated.health.current <= 0 || !updated.is_alive) {
-                redirectToResults(0, updated.correct_answers || 0, totalQuestions, true);
-              }
-
-              // Reset retries on success
-              subRetries = 0;
-            }
-          )
-          .subscribe((status) => {
-            console.log("Participant channel status:", status);
-            if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-              subRetries++;
-              if (subRetries <= MAX_RETRIES) {
-                console.log(`Retrying sub (${subRetries}/${MAX_RETRIES}) in 2s...`);
-                setTimeout(subscribeParticipant, 2000);
-              } else {
-                console.error("Max retries reached - falling back to polling only");
-                // Start polling as primary
-                pollInterval = setInterval(refetchParticipant, 15000);
-              }
-            } else if (status === 'SUBSCRIBED') {
-              console.log("Realtime sub OK - polling as backup");
-              // Start polling sebagai backup (5s)
-              if (document.visibilityState === 'visible') {
-                pollInterval = setInterval(refetchParticipant, 5000);
-              }
-            }
-          });
-
-        return () => { mysupa.removeChannel(participantChannel); };
-      };
-
-      // Initial subscribe
-      const unsubscribeParticipant = subscribeParticipant();
-    }
-
-    // Start polling if visible
-    if (document.visibilityState === 'visible') {
-      pollInterval = setInterval(refetchParticipant, 5000);
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Cleanup
     return () => {
-      if (pollInterval) clearInterval(pollInterval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      mysupa.removeAllChannels();
-    };
-  }, [session?.id, playerHealth, totalQuestions]); // Tambah playerHealth biar detect change
-
-  // Game Timer → dari started_at
-  useEffect(() => {
-    if (!session?.started_at || !session.total_time_minutes) return;
-
-    const startTime = new Date(session.started_at).getTime();
-    const durationSec = session.total_time_minutes * 60;
-
-    const updateTimer = () => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const remaining = Math.max(0, durationSec - elapsed, 0);
-      setTimeLeft(remaining);
-      if (!timeLoaded) setTimeLoaded(true);
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [session?.started_at, session?.total_time_minutes, timeLoaded]);
-
-  useEffect(() => {
-    if (timeLoaded && timeLeft <= 0 && !isProcessingAnswer) {
-      redirectToResults(playerHealth, correctAnswers, totalQuestions, true);
+      if (poll) clearInterval(poll)
+      mysupa.removeChannel(channel)
     }
-  }, [timeLeft, timeLoaded, isProcessingAnswer, playerHealth, correctAnswers, totalQuestions]);
+  }, [session?.id, currentPlayer?.id, currentQuestionIndex, isAnswered, showFeedback, isProcessingAnswer, totalQuestions])
 
-  // Check for elimination due to health drain (e.g., inactivity) - sudah dihandle di realtime
+  // ── TIMER ────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (currentPlayer?.is_alive === false || playerHealth <= 0) {
-      redirectToResults(0, correctAnswers, totalQuestions, true);
+    if (!session?.started_at) return
+
+    const start = new Date(session.started_at).getTime()
+    const durationMs = (session.total_time_minutes || 10) * 60 * 1000
+
+    const update = () => {
+      const left = Math.max(0, Math.floor((start + durationMs - Date.now()) / 1000))
+      setTimeLeft(left)
+      if (!timeLoaded) setTimeLoaded(true)
     }
-  }, [currentPlayer?.is_alive, playerHealth, correctAnswers, totalQuestions]);
 
-  // Feedback and question progression
+    update()
+    const i = setInterval(update, 1000)
+    return () => clearInterval(i)
+  }, [session?.started_at, session?.total_time_minutes, timeLoaded])
+
   useEffect(() => {
-    if (!showFeedback) return;
+    if (timeLoaded && timeLeft <= 0 && !isProcessingAnswer && !showFeedback) {
+      redirectToResults(playerHealth, correctAnswers, totalQuestions, true)
+    }
+  }, [timeLeft, timeLoaded, isProcessingAnswer, showFeedback])
 
-    const timer = setTimeout(() => {
-      setShowFeedback(false);
+  // ── FEEDBACK → NEXT ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!showFeedback) return
 
-      // Health <= 0 baru ke result, tapi tetap tunggu feedback selesai
+    const t = setTimeout(() => {
+      setShowFeedback(false)
+      setIsAnswered(false)
+      setSelectedAnswer(null)
+      setIsCorrect(null)
+
       if (playerHealth <= 0) {
-        redirectToResults(0, correctAnswers, totalQuestions, true);
-        return;
+        redirectToResults(0, correctAnswers, totalQuestions, true)
+        return
       }
 
-      // Semua soal selesai
-      // if (currentQuestionIndex >= totalQuestions) {
-      //   redirectToResults(playerHealth, correctAnswers, totalQuestions, false);
-      //   return;
-      // }
+      if (currentQuestionIndex + 1 >= totalQuestions) {
+        redirectToResults(playerHealth, correctAnswers, totalQuestions, false)
+        return
+      }
 
-      // Lanjut soal berikutnya
-      nextQuestion();
-    }, FEEDBACK_DURATION);
+      setCurrentQuestionIndex(prev => prev + 1)
+    }, FEEDBACK_DURATION)
 
-    return () => clearTimeout(timer);
-  }, [showFeedback, playerHealth, currentQuestionIndex, totalQuestions, correctAnswers]);
+    return () => clearTimeout(t)
+  }, [showFeedback])
 
-  const getDangerLevel = () => {
-    if (playerHealth <= 25) return 3
-    if (playerHealth <= 50) return 2
-    return 1
-  }
-  const dangerLevel = getDangerLevel()
+  const submitAnswer = useCallback(async (answer: string, correct: boolean) => {
+    if (!currentPlayer || !currentQuestion || isProcessingAnswer) return
 
-  // === GANTI FUNGSI calculateSurvivalDuration ===
-  const calculateSurvivalDuration = () => {
-    if (!session?.started_at) return 0;
-
-    const gameStartTime = new Date(session.started_at).getTime();
-    const nowOrFinished = currentPlayer?.finished_at
-      ? new Date(currentPlayer.finished_at).getTime()
-      : Date.now();
-
-    return Math.floor((nowOrFinished - gameStartTime) / 1000);
-  };
-
-  // === VERSI FINAL: HANYA UPDATE participants, TIDAK ADA game_completions ===
-  const saveGameCompletion = async (
-    finalHealth: number,
-    finalCorrect: number,
-    totalAnswered: number,
-    isEliminated = false,
-  ) => {
-    if (!currentPlayer || !session?.id) return;
-
-    const survivalDuration = calculateSurvivalDuration();
+    setIsProcessingAnswer(true)
 
     try {
-      // hitung skor per soal berdasarkan totalQuestions/session.question_limit
-      const questionsCount = session?.question_limit ?? (session?.current_questions?.length ?? 0);
-      const perQuestionScore = questionsCount > 0 ? Math.floor(100 / questionsCount) : 100;
+      const entry = {
+        id: generateXID(),
+        correct,
+        answer_id: currentQuestion.answers.findIndex((a: any) => a.answer === answer).toString(),
+        question_id: currentQuestion.id,
+      }
 
-      // CUKUP UPDATE participants DOANG → semua data udah lengkap di sini!
-      const { error } = await mysupa
-        .from("participants")
-        .update({
-          finished_at: new Date().toISOString(),
-          completion: true,
-          health: {
-            ...currentPlayer.health,
-            current: Math.max(0, finalHealth)
-          },
-          is_alive: finalHealth > 0
-        })
-        .eq("id", currentPlayer.id);
+      const answersNew = [...(currentPlayer.answers || []), entry]
+      const newHealth = correct ? playerHealth : Math.max(0, playerHealth - 1)
+      const newSpeed = Math.max(20, (playerSpeed || 20) + (correct ? 5 : -5))
+      const newCorrect = answersNew.filter(a => a.correct).length
+      const scorePerQ = totalQuestions > 0 ? Math.floor(100 / totalQuestions) : 100
+      const newScore = newCorrect * scorePerQ
 
-      if (error) throw error;
-
-      console.log("Player selesai! Survival:", survivalDuration, "detik");
-    } catch (error) {
-      console.error("Gagal simpan hasil akhir:", error);
-    }
-  };
-
-  const submitAnswer = async (answer: string, isCorrectAnswer: boolean) => {
-    if (!session || !currentPlayer) return;
-
-    setIsProcessingAnswer(true);
-
-    const newAnswerEntry = {
-      id: generateXID(),
-      correct: isCorrectAnswer,
-      answer_id: currentQuestion.answers.findIndex((a: any) => a.answer === answer).toString(),
-      question_id: currentQuestion.id
-    };
-
-    const updatedAnswers = [...(currentPlayer.answers || []), newAnswerEntry];
-
-    const newHealthValue = isCorrectAnswer
-      ? currentPlayer.health.current
-      : Math.max(0, currentPlayer.health.current - 1);
-
-    // adjust speed: +5 if correct, -5 if wrong, minimum 20
-    const currentSpeed = currentPlayer.health.speed ?? 20;
-    const newSpeed = Math.max(20, currentSpeed + (isCorrectAnswer ? 5 : -5));
-
-    // hitung skor per soal berdasarkan totalQuestions/session.question_limit
-    const questionsCount = session?.question_limit ?? (session?.current_questions?.length ?? 0);
-    const perQuestionScore = questionsCount > 0 ? Math.floor(100 / questionsCount) : 100;
-
-    const correctCount = updatedAnswers.filter((a: any) => a.correct === true).length;
-    const newScore = correctCount * perQuestionScore;
-
-
-    const { error } = await mysupa
-      .from("participants")
-      .update({
-        answers: updatedAnswers,
-        correct_answers: correctCount,
+      const { error } = await mysupa.from("participants").update({
+        answers: answersNew,
+        correct_answers: newCorrect,
         score: newScore,
-        health: {
-          ...currentPlayer.health,
-          current: newHealthValue,
-          speed: newSpeed,
-        },
-      })
-      .eq("id", currentPlayer.id);
+        health: { ...currentPlayer.health, current: newHealth, speed: newSpeed },
+      }).eq("id", currentPlayer.id)
 
-    setIsProcessingAnswer(false);
+      if (error) throw error
 
-    if (error) {
-      console.error("Gagal simpan jawaban:", error);
-      toast.error("Jawaban gagal dikirim!");
-      // Kembalikan tombol ke aktif kalau gagal
-      setIsAnswered(false);
-      return;
-    }
-
-    // Update local UI state agar speed, health & skor berubah langsung
-    setPlayerHealth(newHealthValue);
-    setPlayerSpeed(newSpeed);
-    setLastActivityTime(Date.now()); // Reset activity timer on answer
-    setCurrentPlayer(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        health: {
-          ...prev.health,
-          current: newHealthValue,
-          speed: newSpeed,
-        },
-        correct_answers: correctCount,
+      setPlayerHealth(newHealth)
+      setPlayerSpeed(newSpeed)
+      setCorrectAnswers(newCorrect)
+      setCurrentPlayer(p => p ? {
+        ...p,
+        answers: answersNew,
+        correct_answers: newCorrect,
         score: newScore,
-        answers: updatedAnswers,
-      };
-    });
-  };
+        health: { ...p.health, current: newHealth, speed: newSpeed },
+      } : null)
 
-  const redirectToResults = async (
-    health: number,
-    correct: number,
-    total: number,
-    isEliminated = false,
-  ) => {
-    if (!currentPlayer || !session) return;
+      setIsCorrect(correct)
+      setShowFeedback(true)
+    } catch (err) {
+      console.error(err)
+      toast.error("Gagal simpan jawaban")
+      setIsAnswered(false)
+    } finally {
+      setIsProcessingAnswer(false)
+    }
+  }, [currentPlayer, currentQuestion, playerHealth, playerSpeed, totalQuestions, isProcessingAnswer])
 
-    // Cukup panggil ini → semua data udah tersimpan rapi di participants
-    await saveGameCompletion(health, correct, total, isEliminated);
+  const handleAnswer = (ans: string, idx: number) => {
+    if (isAnswered || isProcessingAnswer || !currentQuestion) return
+    setSelectedAnswer(ans)
+    setIsAnswered(true)
+    submitAnswer(ans, idx.toString() === currentQuestion.correct)
+  }
 
-    const lastResult = {
+  const redirectToResults = async (health: number, correct: number, total: number, eliminated: boolean) => {
+    if (!currentPlayer || !session) return
+
+    await mysupa.from("participants").update({
+      finished_at: new Date().toISOString(),
+      completion: true,
+      health: { ...currentPlayer.health, current: Math.max(0, health) },
+      is_alive: health > 0,
+    }).eq("id", currentPlayer.id)
+
+    localStorage.setItem("lastGameResult", JSON.stringify({
       playerId: currentPlayer.id,
-      gamePin: gamePin,
+      gamePin,
       nickname: currentPlayer.nickname,
       character: currentPlayer.character_type,
       finalHealth: Math.max(0, health),
       correctAnswers: correct,
       totalQuestions: total,
-      survivalSeconds: calculateSurvivalDuration(),
-      eliminated: isEliminated || health <= 0,
+      survivalSeconds: Math.floor((Date.now() - new Date(session.started_at!).getTime()) / 1000),
+      eliminated,
       timestamp: Date.now(),
-    };
+    }))
 
-    localStorage.setItem("lastGameResult", JSON.stringify(lastResult));
-    router.push(`/player/${gamePin}/result`);
-  };
-
-  const nextQuestion = () => {
-    setCurrentQuestionIndex(prev => {
-      const next = prev + 1;
-      // Kalau udah habis soal → langsung ke result
-      if (next >= totalQuestions) {
-        redirectToResults(playerHealth, correctAnswers, totalQuestions, playerHealth <= 0);
-        return prev; // jangan naik lagi
-      }
-      return next;
-    });
-
-    // Reset state jawaban
-    setSelectedAnswer(null);
-    setIsAnswered(false);
-    setIsCorrect(null);
-  };
-
-  const handleAnswerSelect = async (answer: string, index: number) => {
-    if (isAnswered || !currentQuestion || isProcessingAnswer) return;
-
-    setSelectedAnswer(answer);
-    setIsAnswered(true);
-
-    const isCorrectAnswer = index.toString() === currentQuestion.correct;
-
-    setIsCorrect(isCorrectAnswer);
-    setShowFeedback(true);
-
-    await submitAnswer(answer, isCorrectAnswer);
-  };
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`
+    router.push(`/player/${gamePin}/result`)
   }
 
-  const getAnswerButtonClass = (option: string, index: number) => {
-    if (!isAnswered) {
-      return "bg-gray-800 border-gray-600 text-white"
-    }
-
-    const optionLetter = String.fromCharCode(97 + index);
-    const correctAnswerLetter = currentQuestion.correct_answer.trim().toLowerCase();
-    const isCorrectOption = optionLetter === correctAnswerLetter;
-
-    const isSelectedOption = option.trim().toLowerCase() === selectedAnswer?.trim().toLowerCase();
-
-    // Jika player jawab benar → tampilkan hijau
-    if (isCorrect && isSelectedOption) {
-      return "bg-green-600 border-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.5)]"
-    }
-    // Jika player jawab salah → tampilkan merah hanya yang dipilih, yang lain abu-abu (jangan reveal jawaban benar)
-    if (!isCorrect && isSelectedOption) {
-      return "bg-red-600 border-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)]"
-    }
-    // Tombol lain tetap abu-abu (jangan highlight jawaban benar)
-    return "bg-gray-700 border-gray-600 text-gray-400"
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60)
+    const ss = s % 60
+    return `${m}:${ss < 10 ? "0" : ""}${ss}`
   }
 
-  // Kondisi loading: tampilkan LoadingScreen jika session atau currentPlayer belum siap
-  if (!session || !currentPlayer) {
-    return <LoadingScreen children={undefined} />
-  }
+  if (!session || !currentPlayer || !isClient) return <LoadingScreen children={undefined} />
+
+  const danger = playerHealth <= 25 ? 3 : playerHealth <= 50 ? 2 : 1
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden overscroll-none">
+      {/* Background effect */}
       <div
-        className={`absolute inset-0 transition-all duration-1000 ${dangerLevel === 3
-          ? "bg-gradient-to-br from-red-900/40 via-black to-red-950/40"
-          : dangerLevel === 2
-            ? "bg-gradient-to-br from-red-950/25 via-black to-purple-950/25"
-            : "bg-gradient-to-br from-red-950/15 via-black to-purple-950/15"
-          }`}
-        style={{
-          opacity: 0.3 + pulseIntensity * 0.4,
-          filter: `hue-rotate(${pulseIntensity * 30}deg)`,
-        }}
+        className={`absolute inset-0 transition-all duration-1000 ${
+          danger === 3 ? "bg-gradient-to-br from-red-950/60 to-black" :
+          danger === 2 ? "bg-gradient-to-br from-red-950/40 to-purple-950/30" :
+          "bg-gradient-to-br from-red-950/20 to-purple-950/20"
+        }`}
+        style={{ opacity: 0.35 + pulseIntensity * 0.45 }}
       />
 
-      {isClient && (timeLeft <= 30 || dangerLevel >= 2) && (
-        <div className="absolute inset-0">
-          {[...Array(Math.floor((pulseIntensity + dangerLevel) * 5))].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-red-500 rounded-full animate-ping opacity-30"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 1}s`,
-                animationDuration: `${0.8 + Math.random() * 1}s`,
-              }}
-            />
-          ))}
+      {/* Logo Mobile - hanya QuizRush di tengah */}
+      <div className="md:hidden flex justify-center pt-5 pb-4">
+        <Image
+          src="/logo/quizrush.png"
+          alt="QuizRush Logo"
+          width={200}
+          height={50}
+          className="h-auto w-48 sm:w-56"
+          priority
+          unoptimized
+        />
+      </div>
+
+      {/* Logo Desktop/Tablet - kiri dan kanan */}
+      <div className="hidden md:block">
+        <div className="absolute top-5 left-6 lg:left-10 z-50">
+          <Image
+            src="/logo/quizrush.png"
+            alt="QuizRush Logo"
+            width={260}
+            height={65}
+            className="h-auto w-44 lg:w-60"
+            priority
+            unoptimized
+          />
         </div>
-      )}
+        <div className="absolute top-5 right-6 lg:right-10 z-50">
+          <Image
+            src="/logo/gameforsmartlogo-horror.png"
+            alt="GameForSmart Logo"
+            width={260}
+            height={65}
+            className="h-auto w-44 lg:w-60"
+            priority
+            unoptimized
+          />
+        </div>
+      </div>
 
-      <div className="relative z-10 container mx-auto px-4 pt-8">
-        {/* QuizRush Logo - Top Left */}
-<div className="absolute top-4 left-0 z-50 hidden md:block">
-  <Image
-    src="/logo/quizrush.png"
-    alt="QuizRush Logo"
-    width={200}           // ukuran asli dalam piksel (untuk optimasi Next.js)
-    height={50}
-    className="h-auto w-32 md:w-48 lg:w-64"  // lebih besar: kecil di HP, sedang di tablet, besar di desktop
-    unoptimized
-  />
-</div>
-
-{/* GameForSmart Logo - Top Right */}
-<div className="absolute top-5 right-0 z-50 hidden md:block">
-  <Image
-    src="/logo/gameforsmartlogo-horror.png"
-    alt="GameForSmart Logo"
-    width={200}
-    height={50}
-    className="h-auto w-32 md:w-48 lg:w-88"  // sama besarnya dengan QuizRush
-    unoptimized
-  />
-</div>
-
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-6">
-
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center"
-            >
-            </motion.div>
-
-          </div>
-
-          {/* 1-BAR INFO ROW */}
-          <div className="inline-flex items-center gap-x-5 md:gap-x-6 mx-auto px-4 py-2 mb-5 border border-red-500/30 rounded-full bg-black/40  text-xs md:text-sm">
+      <div className="relative z-10 container mx-auto px-4 pt-4 md:pt-24 pb-10">
+        {/* Info Bar - dipaksa 1 baris */}
+        {/* Info Bar - Tengah horizontal di semua ukuran, terutama desktop */}
+        <div className="flex justify-center mb-5">
+          <div className="inline-flex items-center gap-x-5 md:gap-x-6 px-4 py-2 border border-red-500/30 rounded-full bg-black/40 text-xs md:text-sm backdrop-blur-sm">
             <div className="flex items-center gap-x-1">
               <CircleQuestionMark className="w-4 h-4 text-purple-400" />
               <span className="text-white">
@@ -717,15 +417,17 @@ export default function QuizPage() {
               </span>
             </div>
             <div className="flex items-center gap-x-1">
-              {currentPlayer && [...Array(currentPlayer.health.max)].map((_, i) => (<Heart
-                key={i}
-                className={`w-4 h-4 transition-all ${i < playerHealth
-                  ? playerHealth <= 25
-                    ? "text-red-500 fill-red-500 animate-pulse"
-                    : "text-green-500 fill-green-500"
-                  : "text-gray-600 fill-gray-600"
+              {currentPlayer && [...Array(currentPlayer.health.max)].map((_, i) => (
+                <Heart
+                  key={i}
+                  className={`w-4 h-4 transition-all ${
+                    i < playerHealth
+                      ? playerHealth <= 25
+                        ? "text-red-500 fill-red-500 animate-pulse"
+                        : "text-green-500 fill-green-500"
+                      : "text-gray-600 fill-gray-600"
                   }`}
-              />
+                />
               ))}
             </div>
             <div className="flex items-center gap-x-1">
@@ -733,90 +435,62 @@ export default function QuizPage() {
               <span className="text-white">{playerSpeed} km/h</span>
             </div>
           </div>
-
-          <Card className="max-w-4xl mx-auto bg-gray-900/90 border-red-900/50 backdrop-blur-sm p-0">
-            <div className="p-4 sm:p-6 md:p-8 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-purple-500/5" />
-              <div className="relative z-10">
-
-                {/* GAMBAR (kalau ada) */}
-                {currentQuestion?.image && (
-                  <div className="mb-6 text-center">
-                    <img
-                      src={currentQuestion.image}
-                      alt="Question visual"
-                      className="max-w-full max-h-64 mx-auto rounded-xl shadow-2xl border-2 border-red-800/50"
-                    />
-                  </div>
-                )}
-
-                {/* PERTANYAAN */}
-                <div className="mb-8 min-h-[6rem] flex items-center justify-center px-4">
-                  <h2 className="text-2xl sm:text-3xl  text-white leading-relaxed text-center drop-shadow-lg">
-                    {currentQuestion?.question ?? "Menunggu soal berikutnya..."}
-                  </h2>
-                </div>
-
-                {/* PILIHAN JAWABAN */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {currentQuestion?.answers?.map((item: any, index: number) => {
-                    const isSelectedOption = selectedAnswer === item.answer;
-                    // Hanya highlight jawaban benar jika player menjawab benar
-                    const shouldShowCorrect = isCorrect && isSelectedOption;
-
-                    return (
-                      <Button
-                        key={index}
-                        onClick={() => handleAnswerSelect(item.answer, index)}
-                        disabled={isAnswered || isProcessingAnswer}
-                        className={`
-                          p-6 min-h-fit text-left justify-start  text-base md:text-lg border-2 
-                          transition-all duration-300 relative overflow-hidden group
-                          ${isProcessingAnswer ? "opacity-50 cursor-not-allowed" : "hover:scale-105"}
-                          ${!isAnswered
-                            ? "bg-gray-800/90 border-gray-600 hover:border-purple-500 hover:bg-gray-700/90"
-                            : shouldShowCorrect
-                              ? "bg-green-600/80 border-green-500 shadow-[0_0_25px_rgba(34,197,94,0.6)]"
-                              : isSelectedOption
-                                ? "bg-red-600/80 border-red-500 shadow-[0_0_25px_rgba(239,68,68,0.6)]"
-                                : "bg-gray-800/50 border-gray-700"
-                          }
-                        `}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-                        <div className="flex items-center space-x-3 md:space-x-4 relative z-10 w-full">
-                          <span className="w-10 h-10 rounded-full border-2 border-current flex items-center justify-center text-lg  flex-shrink-0 mt-0.5">
-                            {String.fromCharCode(65 + index)}
-                          </span>
-                          <span className="flex-1 text-left break-words whitespace-normal py-0.5">{item.answer}</span>
-
-                          {/* Icon Benar - hanya muncul jika jawab benar */}
-                          {isAnswered && shouldShowCorrect && (
-                            <CheckCircle className="w-6 h-6 md:w-7 md:h-7 text-white animate-pulse flex-shrink-0 mt-0.5" />
-                          )}
-
-                          {/* Icon Salah - hanya muncul jika jawab salah */}
-                          {isAnswered && isSelectedOption && !isCorrect && (
-                            <XCircle className="w-6 h-6 md:w-7 md:h-7 text-white animate-pulse flex-shrink-0 mt-0.5" />
-                          )}
-                        </div>
-                      </Button>
-                    );
-                  })}
-
-                  {/* Fallback kalau answers kosong */}
-                  {!currentQuestion?.answers && (
-                    <div className="col-span-2 text-center text-gray-500 py-10">
-                      Menunggu soal...
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            </div>
-          </Card>
         </div>
+
+        <Card className="max-w-3xl mx-auto bg-gray-900/85 border-red-900/50 backdrop-blur-md shadow-xl shadow-black/50">
+          <div className="p-5 sm:p-6 md:p-8">
+            {/* Pertanyaan */}
+            <div className="mb-6 sm:mb-8 min-h-[5rem] sm:min-h-[6rem] flex items-center justify-center px-2 sm:px-4">
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-center leading-tight sm:leading-relaxed break-words hyphens-auto whitespace-pre-wrap max-w-full md:max-w-[92%] mx-auto drop-shadow-lg">
+                {currentQuestion?.question ?? "Menunggu soal berikutnya..."}
+              </h2>
+            </div>
+
+            {/* Jawaban */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {currentQuestion?.answers?.map((item: any, idx: number) => {
+                const selected = selectedAnswer === item.answer
+                const showCorrect = isAnswered && selected && isCorrect
+                const showWrong = isAnswered && selected && !isCorrect
+
+                return (
+                  <Button
+                    key={idx}
+                    variant="outline"
+                    disabled={isAnswered || isProcessingAnswer}
+                    onClick={() => handleAnswer(item.answer, idx)}
+                    className={`
+                      h-auto min-h-[5rem] sm:min-h-[6rem] md:min-h-[7rem] 
+                      p-4 sm:p-5 md:p-6 text-left items-start 
+                      border-2 transition-all duration-300 relative overflow-hidden group
+                      ${isProcessingAnswer ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.02]"}
+                      ${!isAnswered
+                        ? "bg-gray-800/90 border-gray-700 hover:bg-gray-700/90 hover:border-purple-600"
+                        : showCorrect
+                          ? "bg-green-900/70 border-green-600 shadow-lg shadow-green-900/40"
+                          : showWrong
+                            ? "bg-red-900/70 border-red-600 shadow-lg shadow-red-900/40"
+                            : "bg-gray-800/60 border-gray-700 opacity-70"
+                      }
+                    `}
+                  >
+                    <div className="flex items-start gap-3 sm:gap-4 w-full">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-current flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0 mt-1">
+                        {String.fromCharCode(65 + idx)}
+                      </div>
+                      <span className="flex-1 text-sm sm:text-base md:text-lg leading-relaxed break-words hyphens-auto whitespace-pre-wrap">
+                        {item.answer}
+                      </span>
+                      {showCorrect && <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-300 flex-shrink-0 mt-1" />}
+                      {showWrong && <XCircle className="w-6 h-6 sm:w-7 sm:h-7 text-red-300 flex-shrink-0 mt-1" />}
+                    </div>
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+        </Card>
+
         <ZombieFeedback
           isCorrect={isCorrect}
           isVisible={showFeedback}
