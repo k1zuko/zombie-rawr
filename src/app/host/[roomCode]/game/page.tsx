@@ -596,14 +596,17 @@ export default function HostGamePage() {
 
       </motion.header>  
 
-      <MemoizedRunningCharacters
+<MemoizedRunningCharacters
         players={activePlayers}
         playerStates={playerStates}
         zombieState={zombieState}
         animationTime={animationTime}
         gameMode={gameMode}
+        screenHeight={screenHeight}
         centerX={centerX}
         completedPlayers={[]}
+        isPortraitMobile={isPortraitMobile} // ← sekarang dinamis
+        mobileHorizontalShift={150} 
       />
 
       <MemoizedZombieCharacter
