@@ -345,7 +345,7 @@ export default function QuizSelectPage() {
   // ==== RENDER ====
   return (
     <LoadingScreen minDuration={500} isReady={!isLoadingInitial && !isCreating}>
-      <div className="min-h-screen relative overflow-hidden select-none flex flex-col main-background bg-black" style={{ backgroundImage: "url('/background/12.gif')", backgroundPosition: "center" }}>
+      <div className="min-h-screen relative overflow-hidden select-none flex flex-col main-background bg-black">
 
         {/* Blood drips */}
         {isClient && bloodDrips.map((drip) => (
@@ -453,12 +453,12 @@ export default function QuizSelectPage() {
             <div className="flex flex-col sm:flex-row justify-center items-center gap-2 mt-4">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger className="w-[180px] bg-black/70 border-red-500/50 text-red-400 focus:border-red-500 capitalize">
-                  <SelectValue />
+                  <span>{selectedCategory === "All" ? "All Categories" : selectedCategory}</span>
                 </SelectTrigger>
                 <SelectContent className="bg-black/80 text-red-400 border-red-500/50 capitalize">
                   {categories.map((cat) => (
                     <SelectItem key={cat} value={cat} className="text-red-400">
-                      {cat}
+                      {cat === "All" ? "All Categories" : cat}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -554,9 +554,6 @@ export default function QuizSelectPage() {
     
     md:text-2xl
     lg:text-2xl
-    font-serif
-    [font-family:'Times_New_Roman','Times New Roman',Times,serif]
-    font-bold
     leading-snug
     antialiased
     subpixel-antialiased
@@ -582,14 +579,14 @@ export default function QuizSelectPage() {
           shadow-2xl
         "
                                   >
-                                    <p className="font-semibold">{quiz.title}</p>
+                                    <p>{quiz.title}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
                             </CardHeader>
                             <CardFooter className="pt-2 flex justify-between items-center flex-shrink-0 mt-auto">
                               {quiz.category && (
-                                <span className="text-red-300 text-xs  capitalize">{quiz.category}</span>
+                                <span className="text-red-300 text-sm  capitalize">{quiz.category}</span>
                               )}
                               <div className="flex items-center gap-1 text-red-300 text-xs ">
                                 <HelpCircle className="h-3 w-3" />

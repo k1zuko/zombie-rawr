@@ -27,6 +27,40 @@ const CHARACTER_OPTIONS = [
     "robot6", "robot7", "robot8", "robot9", "robot10"
 ];
 
+// Combined name list (Indonesian + Foreign, all mixed)
+const NAMES = [
+    // Indonesian
+    "Andi", "Budi", "Cahya", "Dewi", "Eka", "Fajar", "Gita", "Hendra", "Indra", "Joko",
+    "Kartika", "Lina", "Maya", "Nia", "Putra", "Rahmat", "Sari", "Tono", "Wati", "Yudi",
+    "Zahra", "Agus", "Bayu", "Dian", "Firman", "Galih", "Hesti", "Iwan", "Kevin", "Luna",
+    "Mega", "Nova", "Okta", "Prima", "Rio", "Tiara", "Vino", "Wulan", "Yoga", "Zara",
+    "Ahmad", "Bambang", "Cinta", "Deni", "Elsa", "Fandi", "Gilang", "Hana", "Irfan", "Jihan",
+    "Nur", "Dwi", "Tri", "Sri", "Adi", "Bima", "Candra", "Dewa", "Rama", "Perdana",
+    "Pratama", "Wijaya", "Saputra", "Kusuma", "Hidayat", "Santoso", "Nugraha", "Permana",
+    "Setiawan", "Wibowo", "Anggraini", "Lestari", "Putri", "Rahayu", "Utami", "Purnama",
+    // Foreign
+    "John", "James", "Michael", "David", "Chris", "Alex", "Ryan", "Daniel", "Matthew", "Andrew",
+    "Emma", "Olivia", "Sophia", "Mia", "Isabella", "Charlotte", "Amelia", "Harper", "Evelyn", "Abigail",
+    "Tom", "Jack", "Harry", "Oliver", "George", "Noah", "Liam", "Ethan", "Mason", "Lucas",
+    "William", "Benjamin", "Henry", "Sebastian", "Alexander", "Emily", "Ava", "Grace", "Chloe", "Lily",
+    "Robert", "Joseph", "Thomas", "Charles", "Edward", "Victoria", "Elizabeth", "Margaret", "Catherine", "Alice",
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Wilson", "Moore",
+    "Taylor", "Anderson", "Jackson", "White", "Harris", "Martin", "Thompson", "Lee", "Walker", "King"
+];
+
+// Helper to pick random from array
+const pickRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+// Generate random nickname with 1-4 words (pure random, with spaces)
+const generateRandomNickname = (): string => {
+    const wordCount = Math.floor(Math.random() * 4) + 1; // 1 to 4 words
+    const words: string[] = [];
+    for (let i = 0; i < wordCount; i++) {
+        words.push(pickRandom(NAMES));
+    }
+    return words.join(" ");
+};
+
 interface TestUser {
     id: string;
     nickname: string;
@@ -45,11 +79,11 @@ interface SessionData {
     current_questions: any[];
 }
 
-export default function StressTestPage() {
+export default function TestPage() {
     const { isAdmin, loading: authLoading } = useAdminGuard();
 
     const [roomCode, setRoomCode] = useState("");
-    const [userCount, setUserCount] = useState(50);
+    const [userCount, setUserCount] = useState(100);
     const [minInterval, setMinInterval] = useState(3);
     const [maxInterval, setMaxInterval] = useState(10);
     const [isRunning, setIsRunning] = useState(false);
@@ -103,7 +137,7 @@ export default function StressTestPage() {
     // Subscribe to session changes (detect game start/end)
     const subscribeToSession = (sessionId: string) => {
         sessionChannelRef.current = mysupa
-            .channel(`stress-test-session-${sessionId}`)
+            .channel(`test-session-${sessionId}`)
             .on(
                 "postgres_changes",
                 { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` },
@@ -145,7 +179,7 @@ export default function StressTestPage() {
 
             if (stopRef.current) return null;
 
-            const nickname = `Bot_${(i + 1).toString().padStart(3, "0")}`;
+            const nickname = generateRandomNickname();
             const character_type = CHARACTER_OPTIONS[Math.floor(Math.random() * CHARACTER_OPTIONS.length)];
 
             const { data: participant, error } = await mysupa
@@ -363,7 +397,7 @@ export default function StressTestPage() {
         setErrorCount(0);
         usersRef.current = [];
 
-        addLog(`🧪 Starting stress test: ${roomCode}`);
+        addLog(`🧪 Starting test: ${roomCode}`);
 
         const sess = await fetchSession(roomCode);
         if (!sess) {
@@ -421,7 +455,7 @@ export default function StressTestPage() {
             .from("participants")
             .delete()
             .eq("session_id", session.id)
-            .like("nickname", "Bot_%");
+            .is("user_id", null);
 
         addLog("✅ Cleanup complete");
         usersRef.current = [];
@@ -438,7 +472,7 @@ export default function StressTestPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black relative overflow-hidden font-serif">
+        <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Blood drips background */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -476,15 +510,15 @@ export default function StressTestPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
                         >
-                            <h1 className="text-3xl font-bold font-serif text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
-                                Stress Test
+                            <h1 className="text-5xl font-bold text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] tracking-widest">
+                                TEST
                             </h1>
                         </motion.div>
                     </div>
 
                     {/* Control Panel */}
                     <Card className="bg-black/60 border-red-500/30 backdrop-blur-sm shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                        <CardContent className="space-y-4 pt-6">
+                        <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-sm text-red-400">Room Code</label>
@@ -503,9 +537,9 @@ export default function StressTestPage() {
                                     <Slider
                                         value={[userCount]}
                                         onValueChange={([v]) => setUserCount(v)}
-                                        min={50}
-                                        max={500}
-                                        step={50}
+                                        min={100}
+                                        max={1000}
+                                        step={100}
                                         disabled={isRunning}
                                         className="mt-3"
                                     />
@@ -556,7 +590,7 @@ export default function StressTestPage() {
                                         onClick={startTest}
                                         className="flex-1 bg-gradient-to-r from-red-900 to-red-700 border-2 border-red-700 text-white hover:from-red-800 hover:to-red-600 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
                                     >
-                                        <Play className="w-4 h-4 mr-2" /> Start Test
+                                        <Play className="w-4 h-4 mr-2" /> Start
                                     </Button>
                                 ) : (
                                     <Button
@@ -579,31 +613,31 @@ export default function StressTestPage() {
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        <Card className="bg-black/60 border-blue-500/50">
+                        <Card className="bg-black/60 border-blue-500/50 py-3">
                             <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-blue-400">{joinedCount}</div>
                                 <div className="text-xs text-blue-400/70">Joined</div>
                             </CardContent>
                         </Card>
-                        <Card className="bg-black/60 border-yellow-500/50">
+                        <Card className="bg-black/60 border-yellow-500/50 py-3">
                             <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-yellow-400">{answeringCount}</div>
                                 <div className="text-xs text-yellow-400/70">Question</div>
                             </CardContent>
                         </Card>
-                        <Card className="bg-black/60 border-green-500/50">
+                        <Card className="bg-black/60 border-green-500/50 py-3">
                             <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-green-400">{completedCount}</div>
                                 <div className="text-xs text-green-400/70">Finished</div>
                             </CardContent>
                         </Card>
-                        <Card className="bg-black/60 border-red-500/50">
+                        <Card className="bg-black/60 border-red-500/50 py-3">
                             <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-red-400">{eliminatedCount}</div>
                                 <div className="text-xs text-red-400/70">Eliminated</div>
                             </CardContent>
                         </Card>
-                        <Card className="bg-black/60 border-gray-500/50">
+                        <Card className="bg-black/60 border-gray-500/50 py-3">
                             <CardContent className="p-2 text-center">
                                 <div className="text-2xl font-bold text-gray-400">{errorCount}</div>
                                 <div className="text-xs text-gray-400/70">Errors</div>
@@ -614,7 +648,7 @@ export default function StressTestPage() {
                     {/* Logs */}
                     <Card className="bg-black/60 border-red-500/30 gap-3">
                         <CardHeader>
-                            <CardTitle className="text-sm text-red-400">📜 Live Logs</CardTitle>
+                            <CardTitle className="text-sm text-red-400">📜 Logs</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="h-64 overflow-y-auto bg-black/60 rounded-lg p-3 font-mono text-xs space-y-0.5 border border-red-500/20">

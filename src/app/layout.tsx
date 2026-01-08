@@ -12,11 +12,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(fullUrl),
     title: "QuizRush",
-    description: "Answer • Run • Survive",
+    description: "Answer - Run - Survive",
     manifest: "/manifest.json",
     openGraph: {
       title: "QuizRush",
-      description: "Answer • Run • Survive",
+      description: "Answer - Run - Survive",
       url: fullUrl,
       siteName: "QuizRush",
       images: [
@@ -32,14 +32,18 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: "QuizRush",
-      description: "Speed thinking or face the chase!",
+      description: "Answer - Run - Survive",
       images: ["/icons/icon-512x512.png"],
     },
   };
 }
 
 const zombiefont2Font = localFont({
-  src: "../fonts/zombiefont2.ttf",
+  // src: "../fonts/zombiefont2.ttf",
+  // src: "../fonts/blackfang.otf",
+  // src: "../fonts/skullandvoid.otf",
+  // src: "../fonts/deadfontwalking.otf",
+  src: "../fonts/misfit2.ttf",
   variable: "--font-zombiefont2",
   display: "swap",
 });
