@@ -28,7 +28,7 @@ const GLOBAL_ASSETS = [
   "/character/player/character2-crop.webp",
   "/character/player/character3-crop.webp",
   "/character/player/character4-crop.webp",
-  "/character/player/character5.webp",
+  "/character/player/character5-resize.webp",
   "/character/player/character6.webp",
   "/character/player/character7-crop.webp",
   "/character/player/character8-crop.webp",

@@ -190,7 +190,7 @@ export default function HostPage() {
       '/character/player/character2-crop.webp',
       '/character/player/character3-crop.webp',
       '/character/player/character4-crop.webp',
-      '/character/player/character5.webp',
+      '/character/player/character5-resize.webp',
       '/character/player/character6.webp',
       '/character/player/character8-crop.webp',
       '/character/player/character9-crop.webp',
@@ -380,7 +380,7 @@ export default function HostPage() {
     else
       toast.success(
         t("kickPlayerSuccess", { nickname: selectedPlayer.nickname }) ||
-          `${selectedPlayer.nickname} dikeluarkan!`
+        `${selectedPlayer.nickname} dikeluarkan!`
       );
     setKickDialogOpen(false);
     setSelectedPlayer(null);
@@ -460,7 +460,7 @@ export default function HostPage() {
     {
       value: "robot6",
       name: "Kuning",
-      gif: "/character/player/character5.webp",
+      gif: "/character/player/character5-resize.webp",
       alt: "Karakter Kuning",
     },
     {
@@ -613,9 +613,8 @@ export default function HostPage() {
           </AnimatePresence>
 
           <div
-            className={`relative z-10 mx-auto p-4 sm:p-6 lg:p-7 ${
-              countdown !== null ? "hidden" : ""
-            }`}
+            className={`relative z-10 mx-auto p-4 sm:p-6 lg:p-7 ${countdown !== null ? "hidden" : ""
+              }`}
           >
             <motion.header
               initial={{ opacity: 0, y: -50 }}
@@ -640,9 +639,8 @@ export default function HostPage() {
                 className="flex justify-center items-center text-center mt-10"
               >
                 <h1
-                  className={`text-4xl md:text-5xl lg:text-6xl tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse ${
-                    flickerText ? "opacity-100" : "opacity-50"
-                  }`}
+                  className={`text-4xl md:text-5xl lg:text-6xl tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse ${flickerText ? "opacity-100" : "opacity-50"
+                    }`}
                   style={{ textShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
                 >
                   {t("hostRoomTitle")}
@@ -782,41 +780,41 @@ export default function HostPage() {
                         transition={{ delay: 0.6 }}
                         className="flex justify-center"
                       > */}
-                        <Button
-                          onClick={startGame}
-                          disabled={
-                            players.length === 0 ||
-                            isStarting ||
-                            countdown !== null
-                          }
-                          className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white mt-2 text-sm sm:text-base md:text-lg lg:text-xl px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4 lg:py-5 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
+                  <Button
+                    onClick={startGame}
+                    disabled={
+                      players.length === 0 ||
+                      isStarting ||
+                      countdown !== null
+                    }
+                    className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white mt-2 text-sm sm:text-base md:text-lg lg:text-xl px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4 lg:py-5 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
+                  >
+                    <span className="relative z-10 flex items-center justify-center">
+                      {isStarting || countdown !== null ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            duration: 1,
+                            repeat: Number.POSITIVE_INFINITY,
+                            ease: "linear",
+                          }}
+                          className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2"
                         >
-                          <span className="relative z-10 flex items-center justify-center">
-                            {isStarting || countdown !== null ? (
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{
-                                  duration: 1,
-                                  repeat: Number.POSITIVE_INFINITY,
-                                  ease: "linear",
-                                }}
-                                className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2"
-                              >
-                                <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-                              </motion.div>
-                            ) : (
-                              <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2" />
-                            )}
-                            <span>
-                              {isStarting
-                                ? t("startGame.starting")
-                                : t("startGame.start")}
-                            </span>
-                          </span>
-                          <span className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-                          <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 animate-pulse" />
-                        </Button>
-                      {/* </motion.div>
+                          <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                        </motion.div>
+                      ) : (
+                        <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2" />
+                      )}
+                      <span>
+                        {isStarting
+                          ? t("startGame.starting")
+                          : t("startGame.start")}
+                      </span>
+                    </span>
+                    <span className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                    <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 animate-pulse" />
+                  </Button>
+                  {/* </motion.div>
                     </CardContent>
                   </Card> */}
                 </div>

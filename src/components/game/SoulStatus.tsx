@@ -25,7 +25,7 @@ const characterOptions = [
   { value: "robot3", gif: "/character/player/character2-crop.webp" },
   { value: "robot4", gif: "/character/player/character3-crop.webp" },
   { value: "robot5", gif: "/character/player/character4-crop.webp" },
-  { value: "robot6", gif: "/character/player/character5.webp" },
+  { value: "robot6", gif: "/character/player/character5-resize.webp" },
   { value: "robot7", gif: "/character/player/character6.webp" },
   { value: "robot8", gif: "/character/player/character7-crop.webp" },
   { value: "robot9", gif: "/character/player/character8-crop.webp" },

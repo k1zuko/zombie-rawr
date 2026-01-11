@@ -43,7 +43,8 @@ const zombiefont2Font = localFont({
   // src: "../fonts/blackfang.otf",
   // src: "../fonts/skullandvoid.otf",
   // src: "../fonts/deadfontwalking.otf",
-  src: "../fonts/misfit2.ttf",
+  // src: "../fonts/misfit2.ttf",
+  src: "../fonts/family.ttf",
   variable: "--font-zombiefont2",
   display: "swap",
 });
@@ -55,7 +56,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${zombiefont2Font.variable} antialiased`}>
+      <body className={`${zombiefont2Font.variable} antialiased tracking-wider`}>
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

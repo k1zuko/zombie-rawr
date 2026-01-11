@@ -68,7 +68,7 @@ const characterConfigs = {
     mobileHorizontalOffset: -150,
   },
   robot5: {
-    src: "/character/player/character5.webp",
+    src: "/character/player/character5-resize.webp",
     alt: "Oranye",
     width: 150,
     height: 50,
@@ -199,15 +199,15 @@ const RunningCharacters = memo(function RunningCharacters({
         // ── Container style ────────────────────────────────────────────
         const containerStyle = isPortraitMobile
           ? {
-              left: `${x + shakeX}px`,
-              bottom: bottomValue,
-              transform: `translateY(${shakeY}px)`,
-            }
+            left: `${x + shakeX}px`,
+            bottom: bottomValue,
+            transform: `translateY(${shakeY}px)`,
+          }
           : {
-              left: `${x + shakeX}px`,
-              top: bottomValue,
-              transform: `translateY(${shakeY}px)`,
-            };
+            left: `${x + shakeX}px`,
+            top: bottomValue,
+            transform: `translateY(${shakeY}px)`,
+          };
 
         // ── Ukuran info bar lebih kecil & aman di mobile ───────────────
         const infoScale = isPortraitMobile ? Math.min(0.95, effectiveScaleFactor * 0.9) : effectiveScaleFactor;
@@ -223,8 +223,8 @@ const RunningCharacters = memo(function RunningCharacters({
             }}
           >
             {/* Info bar */}
-<div
-  className="
+            <div
+              className="
     absolute left-1/2 top-1/2
     -translate-x-1/2 -translate-y-[245%]
     flex items-center gap-1.5
@@ -233,23 +233,22 @@ const RunningCharacters = memo(function RunningCharacters({
     shadow-sm whitespace-nowrap
     z-50
   "
-  style={{
-    fontSize: `${Math.round(15 * infoScale)}px`,
-    padding: `${Math.round(3 * infoScale)}px ${Math.round(7 * infoScale)}px`,
-  }}
->
+              style={{
+                fontSize: `${Math.round(15 * infoScale)}px`,
+                padding: `${Math.round(3 * infoScale)}px ${Math.round(7 * infoScale)}px`,
+              }}
+            >
 
               <div className="flex gap-0.5">
                 {[...Array(player.health.max || 3)].map((_, i) => (
                   <Heart
                     key={i}
-                    className={`w-${Math.round(4.5 * infoScale)} h-${Math.round(4.5 * infoScale)} ${
-                      i < state.health
+                    className={`w-${Math.round(4.5 * infoScale)} h-${Math.round(4.5 * infoScale)} ${i < state.health
                         ? isTarget
                           ? "text-red-500 fill-red-500"
                           : "text-red-400 fill-red-400"
                         : "text-gray-700 fill-gray-700 opacity-50"
-                    }`}
+                      }`}
                   />
                 ))}
               </div>

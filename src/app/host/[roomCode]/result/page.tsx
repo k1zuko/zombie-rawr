@@ -18,7 +18,7 @@ const characterGifs = [
   { type: "robot3", name: "Merah", src: "/character/player/character2-crop.webp", alt: "Karakter Merah" },
   { type: "robot4", name: "Ungu", src: "/character/player/character3-crop.webp", alt: "Karakter Ungu" },
   { type: "robot5", name: "Oranye", src: "/character/player/character4-crop.webp", alt: "Karakter Oranye" },
-  { type: "robot6", name: "Kuning", src: "/character/player/character5.webp", alt: "Karakter Kuning" },
+  { type: "robot6", name: "Kuning", src: "/character/player/character5-resize.webp", alt: "Karakter Kuning" },
   { type: "robot7", name: "Abu-abu", src: "/character/player/character6.webp", alt: "Karakter Abu-abu" },
   { type: "robot8", name: "Pink", src: "/character/player/character7-crop.webp", alt: "Karakter Pink" },
   { type: "robot9", name: "Cokelat", src: "/character/player/character8-crop.webp", alt: "Karakter Cokelat" },
@@ -339,9 +339,8 @@ export default function ResultsHostPage() {
                 return (
                   <div
                     key={player.id}
-                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border ${
-                      rank <= 3 ? 'bg-red-950/25 border-red-600/40' : 'bg-black/35 border-gray-700'
-                    }`}
+                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border ${rank <= 3 ? 'bg-red-950/25 border-red-600/40' : 'bg-black/35 border-gray-700'
+                      }`}
                   >
                     <div className="text-red-400 font-bold text-base shrink-0">#{rank}</div>
                     <div className="flex-1 min-w-0">
@@ -384,7 +383,7 @@ export default function ResultsHostPage() {
                           <td className="py-2.5 px-4">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full overflow-hidden">
-                                <img src={char.src} alt="" className="w-full h-full object-cover" />
+                                <img src={char.src} alt="" className="w-full h-full object-contain" />
                               </div>
                               <span className="font-medium text-white">{player.nickname}</span>
                             </div>
@@ -478,11 +477,11 @@ function PodiumPosition({
         </div>
 
         <div className="mb-3">
-          <div className={`w-16 h-16 lg:w-24 lg:h-24 mx-auto overflow-hidden ${isFirst ? 'w-20 lg:w-28' : ''}`}>
+          <div className={`w-16 h-16 lg:w-24 lg:h-24 mx-auto overflow-hidden ${isFirst ? 'w-20 h-20 lg:w-28 lg:h-28' : ''}`}>
             <img
               src={char.src}
               alt={char.alt}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
           </div>
         </div>

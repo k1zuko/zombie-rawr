@@ -84,7 +84,7 @@ const characterGifs = [
   { value: "robot3", name: "Merah", gif: "/character/player/character2-crop.webp", alt: "Karakter Merah" },
   { value: "robot4", name: "Ungu", gif: "/character/player/character3-crop.webp", alt: "Karakter Ungu" },
   { value: "robot5", name: "Oranye", gif: "/character/player/character4-crop.webp", alt: "Karakter Oranye" },
-  { value: "robot6", name: "Kuning", gif: "/character/player/character5.webp", alt: "Karakter Kuning" },
+  { value: "robot6", name: "Kuning", gif: "/character/player/character5-resize.webp", alt: "Karakter Kuning" },
   { value: "robot7", name: "Abu-abu", gif: "/character/player/character6.webp", alt: "Karakter Abu-abu" },
   { value: "robot8", name: "Pink", gif: "/character/player/character7-crop.webp", alt: "Karakter Pink" },
   { value: "robot9", name: "Cokelat", gif: "/character/player/character8-crop.webp", alt: "Karakter Cokelat" },
@@ -119,7 +119,7 @@ export default function ResultsPage() {
     sessionStorage.setItem("redirectTo", window.location.pathname);
   }
 
-  const initializePlayerData = useCallback(async () => {
+  const initializePlayerData = useCallback(async (questionLimit?: number) => {
     const playerId = localStorage.getItem("playerId");
     if (!playerId) {
       setError("Player tidak ditemukan");
@@ -136,7 +136,7 @@ export default function ResultsPage() {
 
       if (error || !p) throw error;
 
-      const totalQuestions = session?.question_limit || p.answers?.length || 0;
+      const totalQuestions = questionLimit || p.answers?.length || 0;
 
       const data: PlayerData = {
         health: p.health.current,
@@ -158,19 +158,19 @@ export default function ResultsPage() {
       setError("Gagal load hasil");
       setIsLoading(false);
     }
-  }, [session?.started_at]);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
       // Ambil session dulu biar bisa hitung survival
       const { data: sess } = await mysupa
         .from("sessions")
-        .select("started_at")
+        .select("started_at, question_limit")
         .eq("game_pin", roomCode.toUpperCase())
         .single();
 
       setSession(sess);
-      await initializePlayerData();
+      await initializePlayerData(sess?.question_limit);
     };
 
     load();
@@ -422,13 +422,13 @@ export default function ResultsPage() {
         {/* Tombol Home (hanya terlihat di mobile, di bagian bawah) */}
         <div className="text-center">
           <motion.button
-          onClick={() => {
-            setIsNavigating(true);
-            sessionStorage.removeItem("redirectTo");
-            setTimeout(() => {
-              window.location.href = "/";  // Force full reload ke homepage
-            }, 500); // Delay singkat agar loading screen tampil
-          }}
+            onClick={() => {
+              setIsNavigating(true);
+              sessionStorage.removeItem("redirectTo");
+              setTimeout(() => {
+                window.location.href = "/";  // Force full reload ke homepage
+              }, 500); // Delay singkat agar loading screen tampil
+            }}
             whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(239, 68, 68, 0.7)" }}
             whileTap={{ scale: 0.95 }}
             className="bg-red-800 text-white px-5 py-1 border-2 border-red-600 rounded-lg z-50  inline-block"

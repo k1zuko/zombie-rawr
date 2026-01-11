@@ -560,6 +560,7 @@ export default function QuizSelectPage() {
     drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]
     whitespace-normal
     break-words
+    line-clamp-3
   "
                                     >
                                       {quiz.title}
