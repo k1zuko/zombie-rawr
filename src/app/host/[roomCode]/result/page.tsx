@@ -81,12 +81,12 @@ export default function ResultsHostPage() {
       const { data: participants } = await mysupa
         .from("participants")
         .select("*")
-        .eq("session_id", session.id)
-        .order("score", { ascending: false });
+        .eq("session_id", session.id);
 
       const totalQuestions = session.question_limit || 5;
 
-      const results: PlayerResult[] = (participants || []).map((p, index) => {
+      // Map participants to results first
+      const unsortedResults: PlayerResult[] = (participants || []).map((p) => {
         const survival = p.finished_at && session.started_at
           ? Math.floor((new Date(p.finished_at).getTime() - new Date(session.started_at).getTime()) / 1000)
           : 0;
@@ -95,7 +95,7 @@ export default function ResultsHostPage() {
           id: p.id,
           nickname: p.nickname,
           character_type: p.character_type || "robot1",
-          rank: index + 1,
+          rank: 0, // Will be set after sorting
           duration: formatDuration(survival),
           isLolos: p.health?.current > 0 && p.finished_at !== null,
           correctAnswers: p.correct_answers || 0,
@@ -105,6 +105,21 @@ export default function ResultsHostPage() {
           survivalSeconds: survival,
         };
       });
+
+      // Sort by score (highest first), then by finish time (fastest first)
+      const results = unsortedResults
+        .sort((a, b) => {
+          // Primary: higher score wins
+          if (b.finalScore !== a.finalScore) {
+            return b.finalScore - a.finalScore;
+          }
+          // Secondary: faster finish time wins (lower survivalSeconds)
+          return a.survivalSeconds - b.survivalSeconds;
+        })
+        .map((player, index) => ({
+          ...player,
+          rank: index + 1,
+        }));
 
       setPlayerResults(results);
 
@@ -344,7 +359,7 @@ export default function ResultsHostPage() {
                   >
                     <div className="text-red-400 font-bold text-base shrink-0">#{rank}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white text-sm truncate">{player.nickname}</p>
+                      <p className="font-medium text-white text-sm truncate" title={player.nickname}>{player.nickname}</p>
                     </div>
                     <div className={`font-bold ${style.text} text-lg`}>{player.finalScore}</div>
                   </div>
@@ -385,7 +400,7 @@ export default function ResultsHostPage() {
                               <div className="w-8 h-8 rounded-full overflow-hidden">
                                 <img src={char.src} alt="" className="w-full h-full object-contain" />
                               </div>
-                              <span className="font-medium text-white">{player.nickname}</span>
+                              <span className="font-medium text-white" title={player.nickname}>{player.nickname}</span>
                             </div>
                           </td>
                           <td className="py-2.5 px-4 font-bold text-red-400">{player.finalScore}</td>
@@ -486,7 +501,7 @@ function PodiumPosition({
           </div>
         </div>
 
-        <h3 className={`font-bold text-white text-sm lg:text-base break-words line-clamp-2 ${isFirst ? 'text-base lg:text-lg mb-1' : 'mb-0.5'}`}>
+        <h3 className={`font-bold text-white text-sm lg:text-base break-words line-clamp-1 ${isFirst ? 'text-base lg:text-lg mb-1' : 'mb-0.5'}`} title={player.nickname}>
           {player.nickname}
         </h3>
 

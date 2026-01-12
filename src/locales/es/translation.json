@@ -101,8 +101,9 @@
   "waitingHost": "Esperando que los jugadores se unan…",
   "shareCode": "¡Comparte el código del juego para invitar amigos!",
   "startGame": {
-    "start?": "¿COMENZAR?",
-    "start": "INICIAR JUEGO"
+    "start?": "INICIAR…",
+    "start": "INICIAR",
+    "starting": "Iniciando..."
   },
   "atmosphereTexts": [
     "Las paredes susurran tus pecados…",

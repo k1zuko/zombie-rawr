@@ -101,8 +101,9 @@
   "waitingHost": "Warten auf Mitspieler …",
   "shareCode": "Teile den Spielcode, um Freunde einzuladen!",
   "startGame": {
-    "start?": "START …",
-    "start": "SPIEL STARTEN"
+    "start?": "STARTEN…",
+    "start": "STARTEN",
+    "starting": "Wird gestartet..."
   },
   "atmosphereTexts": [
     "Die Wände flüstern deine Sünden…",

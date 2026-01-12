@@ -114,7 +114,8 @@
   "shareCode": "Bagikan kode ruangan untuk mengundang teman!",
   "startGame": {
     "start?": "MULAI...",
-    "start": "MULAI GAME"
+    "start": "MULAI",
+    "starting": "Memulai..."
   },
   "atmosphereTexts": [
     "Dinding-dinding berbisik tentang dosa-dosamu...",

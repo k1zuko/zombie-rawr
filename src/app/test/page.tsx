@@ -8,75 +8,89 @@ import { Slider } from "@/components/ui/slider";
 import { mysupa } from "@/lib/supabase";
 import { useAdminGuard } from "@/lib/admin-guard";
 import LoadingScreen from "@/components/LoadingScreen";
-import { generateXID } from "@/lib/id-generator";
-import { Play, Trash2, StopCircle, Skull, Heart, Zap } from "lucide-react";
+import { Play, Trash2, StopCircle } from "lucide-react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
-    DialogOverlay,
     DialogTitle,
 } from "@/components/ui/dialog";
 
-const CHARACTER_OPTIONS = [
-    "robot1", "robot2", "robot3", "robot4", "robot5",
-    "robot6", "robot7", "robot8", "robot9", "robot10"
-];
+// Import Indonesian names from JSON
+import indonesianNames from "@/data/indonesian-names.json";
 
-// Combined name list (Indonesian + Foreign, all mixed)
-const NAMES = [
-    // Indonesian
-    "Andi", "Budi", "Cahya", "Dewi", "Eka", "Fajar", "Gita", "Hendra", "Indra", "Joko",
-    "Kartika", "Lina", "Maya", "Nia", "Putra", "Rahmat", "Sari", "Tono", "Wati", "Yudi",
-    "Zahra", "Agus", "Bayu", "Dian", "Firman", "Galih", "Hesti", "Iwan", "Kevin", "Luna",
-    "Mega", "Nova", "Okta", "Prima", "Rio", "Tiara", "Vino", "Wulan", "Yoga", "Zara",
-    "Ahmad", "Bambang", "Cinta", "Deni", "Elsa", "Fandi", "Gilang", "Hana", "Irfan", "Jihan",
-    "Nur", "Dwi", "Tri", "Sri", "Adi", "Bima", "Candra", "Dewa", "Rama", "Perdana",
-    "Pratama", "Wijaya", "Saputra", "Kusuma", "Hidayat", "Santoso", "Nugraha", "Permana",
-    "Setiawan", "Wibowo", "Anggraini", "Lestari", "Putri", "Rahayu", "Utami", "Purnama",
-    // Foreign
-    "John", "James", "Michael", "David", "Chris", "Alex", "Ryan", "Daniel", "Matthew", "Andrew",
-    "Emma", "Olivia", "Sophia", "Mia", "Isabella", "Charlotte", "Amelia", "Harper", "Evelyn", "Abigail",
-    "Tom", "Jack", "Harry", "Oliver", "George", "Noah", "Liam", "Ethan", "Mason", "Lucas",
-    "William", "Benjamin", "Henry", "Sebastian", "Alexander", "Emily", "Ava", "Grace", "Chloe", "Lily",
-    "Robert", "Joseph", "Thomas", "Charles", "Edward", "Victoria", "Elizabeth", "Margaret", "Catherine", "Alice",
-    "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Wilson", "Moore",
-    "Taylor", "Anderson", "Jackson", "White", "Harris", "Martin", "Thompson", "Lee", "Walker", "King"
-];
+// Import Bot component
+import { BotInstance, BotPersonality, Question, generatePersonality } from "@/components/test/BotInstance";
 
 // Helper to pick random from array
 const pickRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
-// Generate random nickname with 1-4 words (pure random, with spaces)
-const generateRandomNickname = (): string => {
-    const wordCount = Math.floor(Math.random() * 4) + 1; // 1 to 4 words
-    const words: string[] = [];
-    for (let i = 0; i < wordCount; i++) {
-        words.push(pickRandom(NAMES));
-    }
-    return words.join(" ");
-};
+// Unique nickname generator class
+class UniqueNicknameGenerator {
+    private usedNames: Set<string> = new Set();
+    private firstNames: string[];
+    private middleNames: string[];
+    private lastNames: string[];
 
-interface TestUser {
+    constructor() {
+        this.firstNames = indonesianNames.firstNames;
+        this.middleNames = indonesianNames.middleNames;
+        this.lastNames = indonesianNames.lastNames;
+    }
+
+    generate(): string {
+        let attempts = 0;
+        const maxAttempts = 100;
+
+        while (attempts < maxAttempts) {
+            const wordCount = Math.floor(Math.random() * 4) + 1;
+            let nickname: string;
+
+            if (wordCount === 1) {
+                nickname = pickRandom(this.firstNames);
+            } else if (wordCount === 2) {
+                nickname = `${pickRandom(this.firstNames)} ${pickRandom(this.lastNames)}`;
+            } else if (wordCount === 3) {
+                nickname = `${pickRandom(this.firstNames)} ${pickRandom(this.middleNames)} ${pickRandom(this.lastNames)}`;
+            } else {
+                nickname = `${pickRandom(this.firstNames)} ${pickRandom(this.middleNames)} ${pickRandom(this.middleNames)} ${pickRandom(this.lastNames)}`;
+            }
+
+            if (!this.usedNames.has(nickname)) {
+                this.usedNames.add(nickname);
+                return nickname;
+            }
+            attempts++;
+        }
+
+        const fallback = `${pickRandom(this.firstNames)} ${pickRandom(this.middleNames)} ${pickRandom(this.middleNames)} ${pickRandom(this.lastNames)}`;
+        this.usedNames.add(fallback);
+        return fallback;
+    }
+
+    reset(): void {
+        this.usedNames.clear();
+    }
+}
+
+// Bot data structure for rendering
+interface BotData {
     id: string;
     nickname: string;
-    currentQuestion: number;
-    completed: boolean;
-    health: number;
-    correctCount: number;
+    personality: BotPersonality;
 }
 
 interface SessionData {
     id: string;
-    status: string;
+    status: "waiting" | "active" | "finished";
     difficulty: string;
     question_limit: number;
     total_time_minutes: number;
-    current_questions: any[];
+    current_questions: Question[];
 }
 
 export default function TestPage() {
@@ -84,40 +98,29 @@ export default function TestPage() {
 
     const [roomCode, setRoomCode] = useState("");
     const [userCount, setUserCount] = useState(100);
-    const [minInterval, setMinInterval] = useState(3);
-    const [maxInterval, setMaxInterval] = useState(10);
     const [isRunning, setIsRunning] = useState(false);
     const [session, setSession] = useState<SessionData | null>(null);
     const [logs, setLogs] = useState<string[]>([]);
+    const [bots, setBots] = useState<BotData[]>([]);
+    const [gameStatus, setGameStatus] = useState<"waiting" | "active" | "finished">("waiting");
+    const [questions, setQuestions] = useState<Question[]>([]);
 
     const [joinedCount, setJoinedCount] = useState(0);
     const [answeringCount, setAnsweringCount] = useState(0);
     const [completedCount, setCompletedCount] = useState(0);
     const [eliminatedCount, setEliminatedCount] = useState(0);
     const [errorCount, setErrorCount] = useState(0);
-    const [gameEnded, setGameEnded] = useState(false);
     const [showCleanupDialog, setShowCleanupDialog] = useState(false);
     const [isCleaningUp, setIsCleaningUp] = useState(false);
 
-    const stopRef = useRef(false);
-    const usersRef = useRef<TestUser[]>([]);
+    const stopSignalRef = useRef(false);
     const sessionChannelRef = useRef<any>(null);
+    const nicknameGeneratorRef = useRef(new UniqueNicknameGenerator());
 
     const addLog = useCallback((message: string) => {
         const timestamp = new Date().toLocaleTimeString();
         setLogs(prev => [`[${timestamp}] ${message}`, ...prev.slice(0, 199)]);
     }, []);
-
-    // Random delay between min and max milliseconds
-    const randomDelayRange = (minMs: number, maxMs: number) =>
-        new Promise(resolve => setTimeout(resolve, minMs + Math.random() * (maxMs - minMs)));
-
-    // Get health by difficulty
-    const getHealthByDifficulty = (difficulty: string): number => {
-        const diffLevel = difficulty?.split(":")?.[1]?.trim().toLowerCase() || "medium";
-        const healthMap: Record<string, number> = { easy: 5, medium: 3, hard: 1 };
-        return healthMap[diffLevel] ?? 3;
-    };
 
     // Fetch session
     const fetchSession = async (code: string): Promise<SessionData | null> => {
@@ -131,10 +134,10 @@ export default function TestPage() {
             addLog(`❌ Session not found: ${code}`);
             return null;
         }
-        return data;
+        return data as SessionData;
     };
 
-    // Subscribe to session changes (detect game start/end)
+    // Subscribe to session changes
     const subscribeToSession = (sessionId: string) => {
         sessionChannelRef.current = mysupa
             .channel(`test-session-${sessionId}`)
@@ -142,17 +145,21 @@ export default function TestPage() {
                 "postgres_changes",
                 { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` },
                 (payload) => {
-                    const newStatus = payload.new?.status;
-                    const newQuestions = payload.new?.current_questions;
+                    const newStatus = payload.new?.status as "waiting" | "active" | "finished";
+                    const newQuestions = payload.new?.current_questions as Question[];
 
                     if (newStatus === "finished") {
                         addLog("🛑 Host ended the game!");
-                        setGameEnded(true);
-                        stopRef.current = true;
+                        setGameStatus("finished");
+                        stopSignalRef.current = true;
+                        setBots([]); // Clear bot components
+                        setIsRunning(false); // Stop the test
                     } else if (newStatus === "active") {
                         addLog("🎮 Game started by host!");
-                        // Update session with questions
-                        setSession(prev => prev ? { ...prev, status: "active", current_questions: newQuestions || prev.current_questions } : prev);
+                        setGameStatus("active");
+                        if (newQuestions) {
+                            setQuestions(newQuestions);
+                        }
                     }
                 }
             )
@@ -161,225 +168,42 @@ export default function TestPage() {
                 { event: "DELETE", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` },
                 () => {
                     addLog("🗑️ Session deleted by host!");
-                    setGameEnded(true);
-                    stopRef.current = true;
+                    setGameStatus("finished");
+                    stopSignalRef.current = true;
+                    setBots([]); // Clear bot components
+                    setIsRunning(false); // Stop the test
                 }
             )
             .subscribe();
     };
 
-    // Phase 1: Join all users CONCURRENTLY with random delays (1-10s each)
-    const joinUsersConcurrently = async (sessionId: string, difficulty: string) => {
-        addLog(`🧟 Joining ${userCount} bots concurrently (1-10s delays)...`);
-        const healthMax = getHealthByDifficulty(difficulty);
+    // Bot callback handlers
+    const handleBotJoined = useCallback((participantId: string, nickname: string) => {
+        setJoinedCount(prev => prev + 1);
+        addLog(`✅ ${nickname} joined`);
+    }, [addLog]);
 
-        const joinPromises = Array.from({ length: userCount }, async (_, i) => {
-            // Each bot has random delay 1-10 seconds
-            await randomDelayRange(1000, 10000);
+    const handleBotAnswered = useCallback((nickname: string, questionIndex: number, correct: boolean) => {
+        addLog(`${nickname} → Q${questionIndex} ${correct ? "✓" : "✗"}`);
+        setAnsweringCount(prev => Math.max(prev, questionIndex));
+    }, [addLog]);
 
-            if (stopRef.current) return null;
+    const handleBotCompleted = useCallback((nickname: string) => {
+        setCompletedCount(prev => prev + 1);
+        addLog(`🏁 ${nickname} finished!`);
+    }, [addLog]);
 
-            const nickname = generateRandomNickname();
-            const character_type = CHARACTER_OPTIONS[Math.floor(Math.random() * CHARACTER_OPTIONS.length)];
+    const handleBotEliminated = useCallback((nickname: string) => {
+        setEliminatedCount(prev => prev + 1);
+        addLog(`💀 ${nickname} eliminated!`);
+    }, [addLog]);
 
-            const { data: participant, error } = await mysupa
-                .from("participants")
-                .insert({
-                    session_id: sessionId,
-                    nickname,
-                    character_type,
-                    is_host: false,
-                    user_id: null,
-                    score: 0,
-                    correct_answers: 0,
-                    is_alive: true,
-                    position_x: 0,
-                    position_y: 0,
-                    power_ups: 0,
-                    health: {
-                        max: healthMax,
-                        current: healthMax,
-                        speed: 20,
-                        last_answer_time: null,
-                        last_attack_time: null,
-                        is_being_attacked: false
-                    },
-                    answers: []
-                })
-                .select()
-                .single();
+    const handleBotError = useCallback((nickname: string, error: string) => {
+        setErrorCount(prev => prev + 1);
+        addLog(`❌ ${nickname}: ${error}`);
+    }, [addLog]);
 
-            if (error || !participant) {
-                setErrorCount(prev => prev + 1);
-                addLog(`❌ ${nickname} failed to join`);
-                return null;
-            }
-
-            setJoinedCount(prev => prev + 1);
-            addLog(`✅ ${nickname} joined`);
-            return {
-                id: participant.id,
-                nickname,
-                currentQuestion: 0,
-                completed: false,
-                health: healthMax,
-                correctCount: 0
-            } as TestUser;
-        });
-
-        const results = await Promise.all(joinPromises);
-        const users = results.filter(Boolean) as TestUser[];
-        usersRef.current = users;
-        addLog(`📊 Total joined: ${users.length} bots`);
-    };
-
-    // Phase 2: Lobby - CONCURRENT character changes with random delays (1-10s each)
-    const lobbyPhaseConcurrent = async () => {
-        addLog("🎭 Character selection phase...");
-
-        while (!stopRef.current) {
-            const sess = await fetchSession(roomCode);
-            // Stop if game active
-            if (sess?.status === "active") {
-                addLog("⏱️ Game starting! Stopping character changes...");
-                // Update session with fresh questions
-                setSession(sess);
-                break;
-            }
-
-            // All users change character CONCURRENTLY with random delays 1-10s
-            await Promise.all(
-                usersRef.current.map(async (user) => {
-                    await randomDelayRange(1000, 10000);
-                    if (stopRef.current) return;
-
-                    const newCharacter = CHARACTER_OPTIONS[Math.floor(Math.random() * CHARACTER_OPTIONS.length)];
-                    await mysupa.from("participants").update({ character_type: newCharacter }).eq("id", user.id);
-                })
-            );
-        }
-    };
-
-    // Phase 3: Each bot answers independently with 3-10 second intervals
-    const answerQuestionsIndependently = async (questions: any[], questionLimit: number) => {
-        const totalQuestions = Math.min(questions.length, questionLimit || questions.length);
-        const scorePerQuestion = Math.max(1, Math.floor(100 / totalQuestions));
-
-        addLog(`📝 Starting game with ${totalQuestions} questions...`);
-        addLog(`🧠 Each bot thinks independently (${minInterval}-${maxInterval}s per answer)...`);
-
-        // Each bot runs independently
-        const botPromises = usersRef.current.map(async (user) => {
-            for (let qIndex = 0; qIndex < totalQuestions; qIndex++) {
-                if (stopRef.current || user.completed || user.health <= 0) break;
-
-                // Random thinking time based on user config
-                await randomDelayRange(minInterval * 1000, maxInterval * 1000);
-                if (stopRef.current) break;
-
-                const question = questions[qIndex];
-                if (!question) continue;
-
-                const answers = question.answers || [];
-                if (answers.length === 0) continue;
-
-                // Correct answer index is stored as string in question.correct (e.g., "0", "1", "2", "3")
-                const correctAnswerIndex = parseInt(question.correct, 10);
-
-                // 70% correct answer probability
-                const wantsCorrect = Math.random() < 0.7;
-                let selectedIndex: number;
-
-                if (wantsCorrect && !isNaN(correctAnswerIndex) && correctAnswerIndex < answers.length) {
-                    selectedIndex = correctAnswerIndex;
-                } else {
-                    // Pick a random wrong answer
-                    const wrongIndices = answers.map((_: any, i: number) => i).filter((i: number) => i !== correctAnswerIndex);
-                    if (wrongIndices.length > 0) {
-                        selectedIndex = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
-                    } else {
-                        selectedIndex = Math.floor(Math.random() * answers.length);
-                    }
-                }
-
-                // Check if answer is correct by comparing index to question.correct
-                const isCorrectAnswer = selectedIndex.toString() === question.correct;
-                const newHealth = isCorrectAnswer ? user.health : Math.max(0, user.health - 1);
-                const newCorrectCount = isCorrectAnswer ? user.correctCount + 1 : user.correctCount;
-                const currentSpeed = 20 + (user.correctCount * 5) - ((qIndex - user.correctCount) * 5);
-                const newSpeed = Math.max(20, currentSpeed + (isCorrectAnswer ? 5 : -5));
-                const newScore = newCorrectCount * scorePerQuestion;
-
-                // Answer format matching player quiz page (line 353-358)
-                const newAnswer = {
-                    id: generateXID(),
-                    correct: isCorrectAnswer,
-                    answer_id: selectedIndex.toString(),  // INDEX as string, not answer.id
-                    question_id: question.id
-                };
-
-                const isLastQuestion = qIndex === totalQuestions - 1;
-                const isEliminated = newHealth <= 0;
-
-                try {
-                    // Get current participant state first
-                    const { data: currentParticipant } = await mysupa
-                        .from("participants")
-                        .select("answers, health")
-                        .eq("id", user.id)
-                        .single();
-
-                    if (!currentParticipant) continue;
-
-                    const updatedAnswers = [...(currentParticipant.answers || []), newAnswer];
-
-                    await mysupa
-                        .from("participants")
-                        .update({
-                            answers: updatedAnswers,
-                            correct_answers: newCorrectCount,
-                            score: newScore,
-                            health: {
-                                ...currentParticipant.health,
-                                current: newHealth,
-                                speed: newSpeed,
-                                last_answer_time: new Date().toISOString()
-                            },
-                            is_alive: !isEliminated,
-                            ...(isLastQuestion || isEliminated ? { finished_at: new Date().toISOString() } : {})
-                        })
-                        .eq("id", user.id);
-
-                    user.currentQuestion = qIndex + 1;
-                    user.health = newHealth;
-                    user.correctCount = newCorrectCount;
-
-                    addLog(`${user.nickname} → Q${qIndex + 1} ${isCorrectAnswer ? "✓" : "✗"}`);
-                    setAnsweringCount(prev => Math.max(prev, qIndex + 1));
-
-                    if (isEliminated) {
-                        user.completed = true;
-                        setEliminatedCount(prev => prev + 1);
-                        addLog(`💀 ${user.nickname} eliminated!`);
-                        break;
-                    }
-
-                    if (isLastQuestion) {
-                        user.completed = true;
-                        setCompletedCount(prev => prev + 1);
-                        addLog(`🏁 ${user.nickname} finished!`);
-                    }
-                } catch (err) {
-                    setErrorCount(prev => prev + 1);
-                }
-            }
-        });
-
-        await Promise.all(botPromises);
-        addLog(`🎉 All bots completed!`);
-    };
-
-    // Main test runner
+    // Start test - creates bot instances
     const startTest = async () => {
         if (!roomCode.trim()) {
             addLog("❌ Enter room code");
@@ -387,15 +211,17 @@ export default function TestPage() {
         }
 
         setIsRunning(true);
-        setGameEnded(false);
-        stopRef.current = false;
+        stopSignalRef.current = false;
         setLogs([]);
+        setBots([]);
         setJoinedCount(0);
         setAnsweringCount(0);
         setCompletedCount(0);
         setEliminatedCount(0);
         setErrorCount(0);
-        usersRef.current = [];
+        setGameStatus("waiting");
+        setQuestions([]);
+        nicknameGeneratorRef.current.reset();
 
         addLog(`🧪 Starting test: ${roomCode}`);
 
@@ -404,41 +230,46 @@ export default function TestPage() {
             setIsRunning(false);
             return;
         }
+
         setSession(sess);
+        setGameStatus(sess.status);
+        if (sess.current_questions) {
+            setQuestions(sess.current_questions);
+        }
         subscribeToSession(sess.id);
         addLog(`✅ Session found: ${sess.status}`);
 
-        await joinUsersConcurrently(sess.id, sess.difficulty);
-        if (stopRef.current) { setIsRunning(false); return; }
-
-        if (sess.status === "waiting") {
-            await lobbyPhaseConcurrent();
-        }
-        if (stopRef.current) { setIsRunning(false); return; }
-
-        // Wait for session to be active with questions
-        let attempts = 0;
-        let updatedSess = session;
-        while ((!updatedSess?.current_questions?.length || updatedSess?.status !== "active") && !stopRef.current && attempts < 60) {
-            await randomDelayRange(1000, 2000);
-            updatedSess = await fetchSession(roomCode);
-            attempts++;
+        // Generate bot data with unique personalities
+        addLog(`🧠 Creating ${userCount} bots with unique IQ personalities...`);
+        const newBots: BotData[] = [];
+        for (let i = 0; i < userCount; i++) {
+            const personality = generatePersonality();
+            const nickname = nicknameGeneratorRef.current.generate();
+            newBots.push({
+                id: `bot-${i}-${Date.now()}`,
+                nickname,
+                personality,
+            });
         }
 
-        if (!updatedSess?.current_questions?.length) {
-            addLog("❌ No questions found");
-            setIsRunning(false);
-            return;
-        }
+        // Log personality distribution
+        const iqRanges = { genius: 0, aboveAvg: 0, average: 0, belowAvg: 0, low: 0 };
+        newBots.forEach(bot => {
+            if (bot.personality.iq >= 131) iqRanges.genius++;
+            else if (bot.personality.iq >= 111) iqRanges.aboveAvg++;
+            else if (bot.personality.iq >= 91) iqRanges.average++;
+            else if (bot.personality.iq >= 71) iqRanges.belowAvg++;
+            else iqRanges.low++;
+        });
+        addLog(`📊 IQ Distribution: 🧒${iqRanges.low} | 📉${iqRanges.belowAvg} | 📊${iqRanges.average} | 📈${iqRanges.aboveAvg} | 🧠${iqRanges.genius}`);
 
-        await answerQuestionsIndependently(updatedSess.current_questions, updatedSess.question_limit);
-
-        setIsRunning(false);
-        if (!stopRef.current) addLog("🎉 Test completed successfully!");
+        setBots(newBots);
+        addLog(`🤖 ${userCount} bot components ready!`);
     };
 
     const stopTest = () => {
-        stopRef.current = true;
+        stopSignalRef.current = true;
+        setBots([]);
         if (sessionChannelRef.current) {
             mysupa.removeChannel(sessionChannelRef.current);
         }
@@ -458,7 +289,7 @@ export default function TestPage() {
             .is("user_id", null);
 
         addLog("✅ Cleanup complete");
-        usersRef.current = [];
+        setBots([]);
         setJoinedCount(0);
         setCompletedCount(0);
         setEliminatedCount(0);
@@ -493,9 +324,9 @@ export default function TestPage() {
                     <Image
                         src="/logo/quizrush.png"
                         alt="QuizRush Logo"
-                        width={140}   // turunin sedikit biar proporsional
-                        height={35}   // sesuaikan tinggi
-                        className="w-32 md:w-40 lg:w-48 h-auto"   // ini yang paling berpengaruh
+                        width={140}
+                        height={35}
+                        className="w-32 md:w-40 lg:w-48 h-auto"
                         unoptimized
                     />
                     <img src={`/logo/gameforsmartlogo-horror.png`} alt="Logo" className="w-40 md:w-52 lg:w-64 h-auto" />
@@ -542,44 +373,6 @@ export default function TestPage() {
                                         step={100}
                                         disabled={isRunning}
                                         className="mt-3"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Answer Interval Config */}
-                            <div className="grid grid-cols-2 gap-4 mb-5">
-                                <div>
-                                    <label className="text-sm text-red-400">
-                                        Min Interval: <span className="text-red-300 font-bold">{minInterval}s</span>
-                                    </label>
-                                    <Slider
-                                        value={[minInterval]}
-                                        onValueChange={([v]) => {
-                                            setMinInterval(v);
-                                            if (v > maxInterval) setMaxInterval(v);
-                                        }}
-                                        min={1}
-                                        max={30}
-                                        step={1}
-                                        disabled={isRunning}
-                                        className="mt-2"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-sm text-red-400">
-                                        Max Interval: <span className="text-red-300 font-bold">{maxInterval}s</span>
-                                    </label>
-                                    <Slider
-                                        value={[maxInterval]}
-                                        onValueChange={([v]) => {
-                                            setMaxInterval(v);
-                                            if (v < minInterval) setMinInterval(v);
-                                        }}
-                                        min={1}
-                                        max={60}
-                                        step={1}
-                                        disabled={isRunning}
-                                        className="mt-2"
                                     />
                                 </div>
                             </div>
@@ -665,7 +458,9 @@ export default function TestPage() {
                                                             log.includes("🏁") ? "text-yellow-400" :
                                                                 log.includes("🎮") ? "text-purple-400" :
                                                                     log.includes("✅") ? "text-green-400" :
-                                                                        "text-gray-300"
+                                                                        log.includes("📊") ? "text-cyan-400" :
+                                                                            log.includes("🧠") ? "text-pink-400" :
+                                                                                "text-gray-300"
                                                 }`}
                                         >
                                             {log}
@@ -677,6 +472,26 @@ export default function TestPage() {
                     </Card>
                 </div>
             </div>
+
+            {/* Render Bot Components (headless - no UI output) */}
+            {session && bots.map((bot) => (
+                <BotInstance
+                    key={bot.id}
+                    sessionId={session.id}
+                    nickname={bot.nickname}
+                    personality={bot.personality}
+                    questions={questions}
+                    questionLimit={session.question_limit}
+                    difficulty={session.difficulty}
+                    gameStatus={gameStatus}
+                    stopSignal={stopSignalRef.current}
+                    onJoined={handleBotJoined}
+                    onAnswered={handleBotAnswered}
+                    onCompleted={handleBotCompleted}
+                    onEliminated={handleBotEliminated}
+                    onError={handleBotError}
+                />
+            ))}
 
             {/* Cleanup Confirmation Dialog */}
             <Dialog open={showCleanupDialog} onOpenChange={setShowCleanupDialog}>
