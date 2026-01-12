@@ -85,7 +85,20 @@ export default function QuizPage() {
           const { session: s, currentPlayer: p } = JSON.parse(prefetch)
           if (s.game_pin !== gamePin || !p?.id) throw new Error("Invalid prefetch")
 
-          setSession(s)
+          // If started_at is missing, fetch fresh session for correct timer
+          let sessionToUse = s
+          if (!s.started_at) {
+            const { data: freshSess } = await mysupa
+              .from("sessions")
+              .select("started_at, total_time_minutes")
+              .eq("game_pin", gamePin)
+              .single()
+            if (freshSess?.started_at) {
+              sessionToUse = { ...s, started_at: freshSess.started_at, total_time_minutes: freshSess.total_time_minutes }
+            }
+          }
+
+          setSession(sessionToUse)
           setCurrentPlayer(p)
           setPlayerHealth(p.health.current)
           setPlayerSpeed(p.health.speed || 1)
@@ -164,7 +177,7 @@ export default function QuizPage() {
             redirectToResults(0, data.correct_answers || 0, totalQuestions, true)
           }
         }
-      } catch {}
+      } catch { }
     }
 
     const channel = mysupa
@@ -179,7 +192,8 @@ export default function QuizPage() {
           if (isAnswered || showFeedback || isProcessingAnswer) return
 
           const srvIdx = upd.answers?.length || 0
-          if (srvIdx !== currentQuestionIndex) {
+          // Only sync FORWARD, never backwards (prevents race with local feedback navigation)
+          if (srvIdx > currentQuestionIndex) {
             setCurrentQuestionIndex(srvIdx)
             setPlayerHealth(upd.health.current)
             setPlayerSpeed(upd.health.speed || 1)
@@ -350,11 +364,10 @@ export default function QuizPage() {
     <div className="min-h-screen bg-black text-white relative overflow-hidden overscroll-none">
       {/* Background effect */}
       <div
-        className={`absolute inset-0 transition-all duration-1000 ${
-          danger === 3 ? "bg-gradient-to-br from-red-950/60 to-black" :
+        className={`absolute inset-0 transition-all duration-1000 ${danger === 3 ? "bg-gradient-to-br from-red-950/60 to-black" :
           danger === 2 ? "bg-gradient-to-br from-red-950/40 to-purple-950/30" :
-          "bg-gradient-to-br from-red-950/20 to-purple-950/20"
-        }`}
+            "bg-gradient-to-br from-red-950/20 to-purple-950/20"
+          }`}
         style={{ opacity: 0.35 + pulseIntensity * 0.45 }}
       />
 
@@ -420,13 +433,12 @@ export default function QuizPage() {
               {currentPlayer && [...Array(currentPlayer.health.max)].map((_, i) => (
                 <Heart
                   key={i}
-                  className={`w-4 h-4 transition-all ${
-                    i < playerHealth
-                      ? playerHealth <= 25
-                        ? "text-red-500 fill-red-500 animate-pulse"
-                        : "text-green-500 fill-green-500"
-                      : "text-gray-600 fill-gray-600"
-                  }`}
+                  className={`w-4 h-4 transition-all ${i < playerHealth
+                    ? playerHealth <= 25
+                      ? "text-red-500 fill-red-500 animate-pulse"
+                      : "text-green-500 fill-green-500"
+                    : "text-gray-600 fill-gray-600"
+                    }`}
                 />
               ))}
             </div>

@@ -166,7 +166,8 @@ export default function HomePage() {
     if (authLoading) return;
     localStorage.removeItem("nickname");
     let defaultNick = generateRandomNickname();
-    if (profile?.fullname) defaultNick = profile.fullname;
+    if (profile?.nickname) defaultNick = profile.nickname;
+    else if (profile?.fullname) defaultNick = profile.fullname;
     else if (profile?.username) defaultNick = profile.username;
     else if (user?.email) defaultNick = user.email.split('@')[0];
     setNickname(defaultNick);
@@ -451,7 +452,8 @@ export default function HomePage() {
                       />
                     ) : (
                       <span className="text-xl text-red-400">
-                        {profile?.fullname?.charAt(0)?.toUpperCase() ||
+                        {profile?.nickname?.charAt(0)?.toUpperCase() ||
+                          profile?.fullname?.charAt(0)?.toUpperCase() ||
                           profile?.username?.charAt(0)?.toUpperCase() ||
                           user?.email?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
@@ -459,7 +461,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-red-300 truncate">
-                      {profile?.fullname || profile?.username || user?.email?.split('@')[0] || t("user")}
+                      {profile?.nickname || profile?.fullname || profile?.username || user?.email?.split('@')[0] || t("user")}
                     </p>
                   </div>
                 </div>

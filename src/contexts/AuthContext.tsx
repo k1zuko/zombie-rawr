@@ -7,6 +7,7 @@ interface Profile {
   id: string
   username: string
   email: string
+  nickname?: string
   fullname?: string
   avatar_url?: string
   auth_user_id: string
