@@ -488,8 +488,8 @@ export default function HomePage() {
                     <span className="text-sm text-red-300">{t("howToPlay")}</span>
                   </div>
                 </button>
-                
-                
+
+
                 <button
                   onClick={handlePWAInstall}
                   className="w-full p-2 bg-black/60 border-2 border-red-500/50 hover:border-red-500 text-red-300 hover:bg-red-500/20 rounded text-center"
@@ -499,8 +499,8 @@ export default function HomePage() {
 
                     <span className="text-sm  text-red-300">
                       {isInstalled
-                      ? t("appInstalled")
-                      : t("installApp")}
+                        ? t("appInstalled")
+                        : t("installApp")}
                     </span>
                   </div>
                 </button>
@@ -529,10 +529,6 @@ export default function HomePage() {
                       {[
                         { value: "en", label: "English", code: "EN" },
                         { value: "id", label: "Indonesia", code: "ID" },
-                        { value: "de", label: "Deutsch", code: "DE" },
-                        { value: "fr", label: "Français", code: "FR" },
-                        { value: "ja", label: "日本語", code: "JA" },
-                        { value: "es", label: "Español", code: "ES" },
                       ].map((lang) => (
                         <Button
                           key={lang.value}
@@ -574,7 +570,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-center py-8"
-          > 
+          >
             <Image
               src="/logo/quizrush.png"
               alt="QuizRush Logo"
