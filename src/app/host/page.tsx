@@ -3,14 +3,38 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skull, Bone, HeartPulse, Search, X, Clock, ArrowRight, ChevronLeft, ChevronRight, Heart, User, HelpCircle } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Skull,
+  Bone,
+  HeartPulse,
+  Search,
+  X,
+  Clock,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  User,
+  HelpCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { mysupa, supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
 import Image from "next/image";
@@ -18,7 +42,13 @@ import { preloadHostAssets } from "@/lib/preloadAssets";
 import LoadingScreen from "@/components/LoadingScreen";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateXID } from "@/lib/id-generator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { generateGamePin } from "@/utils/gameHelpers";
 import { set } from "lodash";
 
@@ -42,7 +72,9 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function QuizSelectPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const [allQuizzesForCategories, setAllQuizzesForCategories] = useState<any[]>([]);
+  const [allQuizzesForCategories, setAllQuizzesForCategories] = useState<any[]>(
+    []
+  );
   const [paginatedQuizzes, setPaginatedQuizzes] = useState<any[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,8 +84,12 @@ export default function QuizSelectPage() {
   const [isLoadingInitial, setIsLoadingInitial] = useState(true); // Untuk initial load
   const [isFetching, setIsFetching] = useState(false); // Untuk search/filter
   const [flickerText, setFlickerText] = useState(true);
-  const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([]);
-  const [atmosphereText, setAtmosphereText] = useState(t("atmosphereTextInitial"));
+  const [bloodDrips, setBloodDrips] = useState<
+    Array<{ id: number; left: number; speed: number; delay: number }>
+  >([]);
+  const [atmosphereText, setAtmosphereText] = useState(
+    t("atmosphereTextInitial")
+  );
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [profile, setProfile] = useState<any>(null);
@@ -63,16 +99,13 @@ export default function QuizSelectPage() {
   const quizzesPerPage = 15;
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const favoritesRef = useRef<string[]>([]);
 
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 400);
 
   const atmosphereTexts = useMemo(
-    () => [
-      t("atmosphereText1"),
-      t("atmosphereText2"),
-      t("atmosphereText3"),
-    ],
+    () => [t("atmosphereText1"), t("atmosphereText2"), t("atmosphereText3")],
     [t]
   );
 
@@ -100,7 +133,9 @@ export default function QuizSelectPage() {
     }, 150);
 
     const textInterval = setInterval(() => {
-      setAtmosphereText(atmosphereTexts[Math.floor(Math.random() * atmosphereTexts.length)]);
+      setAtmosphereText(
+        atmosphereTexts[Math.floor(Math.random() * atmosphereTexts.length)]
+      );
     }, 2500);
 
     return () => {
@@ -113,24 +148,24 @@ export default function QuizSelectPage() {
     const fetchProfile = async () => {
       if (!user?.id) return;
       const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('id, favorite_quiz')
-        .eq('auth_user_id', user.id)
+        .from("profiles")
+        .select("id, favorite_quiz")
+        .eq("auth_user_id", user.id)
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error("Error fetching profile:", error);
       } else {
         setProfile(profileData);
         if (profileData?.favorite_quiz) {
           try {
             let parsed = profileData.favorite_quiz;
-            if (typeof profileData.favorite_quiz === 'string') {
+            if (typeof profileData.favorite_quiz === "string") {
               parsed = JSON.parse(profileData.favorite_quiz);
             }
             setFavorites(parsed.favorites || []);
           } catch (e) {
-            console.error('Error parsing favorites:', e);
+            console.error("Error parsing favorites:", e);
             setFavorites([]);
           }
         } else {
@@ -147,25 +182,30 @@ export default function QuizSelectPage() {
     }
   }, [user]);
 
+  // Keep favoritesRef in sync with favorites state
+  useEffect(() => {
+    favoritesRef.current = favorites;
+  }, [favorites]);
+
   // Fetch all quizzes for categories (no filters, high limit)
   useEffect(() => {
     const fetchAllQuizzesForCategories = async () => {
       if (!profile?.id) return;
-      const { data, error } = await supabase.rpc('get_quizzes_paginated', {
+      const { data, error } = await supabase.rpc("get_quizzes_paginated", {
         p_user_id: profile.id,
         p_search_query: null,
         p_category_filter: null,
         p_favorites_filter: null,
         p_creator_filter: null,
         p_limit: 1000, // High limit to get all for categories
-        p_offset: 0
+        p_offset: 0,
       });
 
       if (error) {
         console.error("Error fetching quizzes for categories:", error);
       } else {
         setAllQuizzesForCategories(data || []);
-        console.log('Fetched all quizzes for categories:', data?.length);
+        console.log("Fetched all quizzes for categories:", data?.length);
       }
     };
 
@@ -182,14 +222,14 @@ export default function QuizSelectPage() {
         setIsFetching(true);
       }
 
-      const { data, error } = await supabase.rpc('get_quizzes_paginated', {
+      const { data, error } = await supabase.rpc("get_quizzes_paginated", {
         p_user_id: profile?.id || null,
         p_search_query: debouncedSearchQuery || null,
         p_category_filter: selectedCategory === "All" ? null : selectedCategory,
-        p_favorites_filter: favoritesMode ? favorites : null,
+        p_favorites_filter: favoritesMode ? favoritesRef.current : null,
         p_creator_filter: myQuizzesMode ? profile?.id : null,
         p_limit: quizzesPerPage,
-        p_offset: (currentPage - 1) * quizzesPerPage
+        p_offset: (currentPage - 1) * quizzesPerPage,
       });
 
       if (error) {
@@ -198,7 +238,12 @@ export default function QuizSelectPage() {
       } else {
         setPaginatedQuizzes(data || []);
         setTotalCount(data.length > 0 ? data[0].total_count : 0);
-        console.log('Fetched paginated quizzes:', data?.length, 'Total:', data[0]?.total_count);
+        console.log(
+          "Fetched paginated quizzes:",
+          data?.length,
+          "Total:",
+          data[0]?.total_count
+        );
       }
 
       // Reset loading states
@@ -206,7 +251,7 @@ export default function QuizSelectPage() {
       setIsLoadingInitial(false);
     };
 
-    if (profile?.id || !favoritesMode && !myQuizzesMode) {
+    if (profile?.id || (!favoritesMode && !myQuizzesMode)) {
       fetchPaginatedQuizzes();
     } else {
       setPaginatedQuizzes([]);
@@ -214,13 +259,28 @@ export default function QuizSelectPage() {
       setIsFetching(false);
       setIsLoadingInitial(false);
     }
-  }, [profile?.id, debouncedSearchQuery, selectedCategory, favoritesMode, myQuizzesMode, currentPage, favorites]);
+  }, [
+    profile?.id,
+    debouncedSearchQuery,
+    selectedCategory,
+    favoritesMode,
+    myQuizzesMode,
+    currentPage,
+  ]);
 
   const categories = useMemo(() => {
-    return ["All", ...new Set(allQuizzesForCategories.map(q => q.category).filter(Boolean))];
+    return [
+      "All",
+      ...new Set(
+        allQuizzesForCategories.map((q) => q.category).filter(Boolean)
+      ),
+    ];
   }, [allQuizzesForCategories]);
 
-  const totalPages = useMemo(() => Math.ceil(totalCount / quizzesPerPage), [totalCount]);
+  const totalPages = useMemo(
+    () => Math.ceil(totalCount / quizzesPerPage),
+    [totalCount]
+  );
 
   useEffect(() => {
     setCurrentPage(1);
@@ -282,7 +342,7 @@ export default function QuizSelectPage() {
           difficulty: "zombie:medium",
           current_questions: [],
           status: "waiting",
-        }
+        };
 
         const newMainSession = {
           ...primarySession,
@@ -290,7 +350,7 @@ export default function QuizSelectPage() {
           allow_join_after_start: false,
           participants: [],
           responses: [],
-          application: "quizrush"
+          application: "quizrush",
         };
 
         const { error: mainError } = await supabase
@@ -338,6 +398,90 @@ export default function QuizSelectPage() {
     setCurrentPage(page);
   }, []);
 
+  // Toggle Favorite Quiz
+  const handleToggleFavorite = async (e: React.MouseEvent, quizId: string) => {
+    e.stopPropagation();
+    if (!profile?.id) {
+      toast.error(
+        t("errorMessages.loginRequired") || "Please log in to favorite quizzes"
+      );
+      return;
+    }
+
+    const isFavoriting = !favorites.includes(quizId);
+    let newFavorites = [...favorites];
+
+    if (isFavoriting) {
+      newFavorites.push(quizId);
+    } else {
+      newFavorites = newFavorites.filter((id) => id !== quizId);
+    }
+
+    // Optimistic Update
+    setFavorites(newFavorites);
+
+    try {
+      // 1. Update profiles.favorite_quiz (array of quiz IDs per user)
+      const favoriteData = { favorites: newFavorites };
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ favorite_quiz: favoriteData })
+        .eq("id", profile.id);
+
+      if (profileError) throw profileError;
+
+      // 2. Update quizzes.favorite (array of user IDs per quiz)
+      // First, get current favorite array from quiz
+      const { data: quizData, error: fetchError } = await supabase
+        .from("quizzes")
+        .select("favorite")
+        .eq("id", quizId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      let quizFavorites: string[] = [];
+      if (quizData?.favorite) {
+        // Handle both string and array formats
+        if (typeof quizData.favorite === "string") {
+          try {
+            quizFavorites = JSON.parse(quizData.favorite);
+          } catch {
+            quizFavorites = [];
+          }
+        } else {
+          quizFavorites = quizData.favorite;
+        }
+      }
+
+      // Update the array
+      if (isFavoriting) {
+        if (!quizFavorites.includes(profile.id)) {
+          quizFavorites.push(profile.id);
+        }
+      } else {
+        quizFavorites = quizFavorites.filter((id) => id !== profile.id);
+      }
+
+      // Save back to quizzes table
+      const { error: quizError } = await supabase
+        .from("quizzes")
+        .update({ favorite: quizFavorites })
+        .eq("id", quizId);
+
+      if (quizError) throw quizError;
+
+      toast.success(
+        isFavoriting ? "Added to favorites!" : "Removed from favorites"
+      );
+    } catch (err) {
+      console.error("Error updating favorites:", err);
+      // Revert on error
+      setFavorites(favorites);
+      toast.error("Failed to update favorites");
+    }
+  };
+
   const goldenRatio = 1.618;
   const searchBarHeight = 12;
   const searchBarRemWidth = Math.round(searchBarHeight * goldenRatio);
@@ -346,18 +490,26 @@ export default function QuizSelectPage() {
   return (
     <LoadingScreen minDuration={500} isReady={!isLoadingInitial && !isCreating}>
       <div className="min-h-screen relative overflow-hidden select-none flex flex-col main-background bg-black">
-
         {/* Blood drips */}
-        {isClient && bloodDrips.map((drip) => (
-          <motion.div
-            key={drip.id}
-            initial={{ y: -100 }}
-            animate={{ y: "100vh" }}
-            transition={{ duration: drip.speed, delay: drip.delay, ease: "linear", repeat: Infinity }}
-            className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
-            style={{ left: `${drip.left}%`, opacity: 0.6 + Math.random() * 0.2 }}
-          />
-        ))}
+        {isClient &&
+          bloodDrips.map((drip) => (
+            <motion.div
+              key={drip.id}
+              initial={{ y: -100 }}
+              animate={{ y: "100vh" }}
+              transition={{
+                duration: drip.speed,
+                delay: drip.delay,
+                ease: "linear",
+                repeat: Infinity,
+              }}
+              className="fixed top-0 w-0.5 h-16 bg-gradient-to-b from-red-600 to-red-800/50"
+              style={{
+                left: `${drip.left}%`,
+                opacity: 0.6 + Math.random() * 0.2,
+              }}
+            />
+          ))}
 
         {/* Floating icons & effects */}
         {isClient && (
@@ -382,7 +534,12 @@ export default function QuizSelectPage() {
 
         {/* Scratch overlay & red corners */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwTDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBLNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
-        {["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"].map((pos, i) => (
+        {[
+          "top-0 left-0",
+          "top-0 right-0",
+          "bottom-0 left-0",
+          "bottom-0 right-0",
+        ].map((pos, i) => (
           <div key={i} className={`absolute w-64 h-64 opacity-20 ${pos}`}>
             <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
           </div>
@@ -392,7 +549,12 @@ export default function QuizSelectPage() {
           <motion.header
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
+            transition={{
+              duration: 1,
+              delay: 0.3,
+              type: "spring",
+              stiffness: 120,
+            }}
             className="flex flex-col gap-1 mb-10"
           >
             <div className="hidden md:flex items-center justify-between">
@@ -405,7 +567,11 @@ export default function QuizSelectPage() {
                 unoptimized
                 onClick={() => router.push("/")}
               />
-              <img src={`/logo/gameforsmartlogo-horror.png`} alt="Logo" className="w-40 md:w-52 lg:w-64 h-auto" />
+              <img
+                src={`/logo/gameforsmartlogo-horror.png`}
+                alt="Logo"
+                className="w-40 md:w-52 lg:w-64 h-auto"
+              />
             </div>
 
             <div className="flex items-center justify-center w-full">
@@ -451,9 +617,16 @@ export default function QuizSelectPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-center items-center gap-2 mt-4">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger className="w-[180px] bg-black/70 border-red-500/50 text-red-400 focus:border-red-500 capitalize">
-                  <span>{selectedCategory === "All" ? "All Categories" : selectedCategory}</span>
+                  <span>
+                    {selectedCategory === "All"
+                      ? "All Categories"
+                      : selectedCategory}
+                  </span>
                 </SelectTrigger>
                 <SelectContent className="bg-black/80 text-red-400 border-red-500/50 capitalize">
                   {categories.map((cat) => (
@@ -468,19 +641,21 @@ export default function QuizSelectPage() {
                   variant="ghost"
                   size="icon"
                   className={`h-10 w-10 rounded-full ${favoritesMode
-                    ? 'bg-red-500 text-white'
-                    : 'border-red-500 text-red-400 hover:bg-red-900/20'
+                    ? "bg-red-500 text-white"
+                    : "border-red-500 text-red-400 hover:bg-red-900/20"
                     }`}
                   onClick={toggleFavorites}
                 >
-                  <Heart className={`h-5 w-5 ${favoritesMode ? 'fill-current' : ''}`} />
+                  <Heart
+                    className={`h-5 w-5 ${favoritesMode ? "fill-current" : ""}`}
+                  />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   className={`h-10 w-10 rounded-full ${myQuizzesMode
-                    ? 'bg-red-500 text-white'
-                    : 'border-red-500 text-red-400 hover:bg-red-900/20'
+                    ? "bg-red-500 text-white"
+                    : "border-red-500 text-red-400 hover:bg-red-900/20"
                     }`}
                   onClick={toggleMyQuizzes}
                   disabled={!profile}
@@ -500,50 +675,58 @@ export default function QuizSelectPage() {
               <>
                 <div className="flex flex-col flex-1 gap-7">
                   <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {isFetching ? (
-                      // Inline Skeleton Loading
-                      Array.from({ length: quizzesPerPage }).map((_, i) => (
+                    {isFetching
+                      ? // Single Spinner Loading
+                      <div className="col-span-full flex items-center justify-center py-20">
                         <motion.div
-                          key={i}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="w-full"
-                        >
-                          <Card className="bg-black/50 border-red-500/20 h-full flex flex-col gap-3 animate-pulse">
-                            <CardHeader className="flex-shrink-0">
-                              <div className="h-4 bg-red-900/30 rounded w-3/4"></div>
-                              <div className="h-3 bg-red-900/30 rounded w-1/2 mt-2"></div>
-                              <div className="h-3 bg-red-900/30 rounded w-2/3 mt-1"></div>
-                            </CardHeader>
-                            <CardFooter className="pt-2 flex justify-between items-center flex-shrink-0 mt-auto">
-                              <span className="h-3 bg-red-900/30 rounded w-1/2"></span>
-                              <div className="flex items-center gap-1">
-                                <div className="h-3 w-3 bg-red-900/30 rounded-full"></div>
-                                <span className="h-3 bg-red-900/30 rounded w-4"></span>
-                              </div>
-                            </CardFooter>
-                          </Card>
-                        </motion.div>
-                      ))
-                    ) : (
-                      paginatedQuizzes.map((quiz) => (
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full"
+                        />
+                      </div>
+                      : paginatedQuizzes.map((quiz, index) => (
                         <motion.div
                           key={quiz.id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 * (quiz.id % 4), duration: 0.5 }}
+                          transition={{
+                            delay: 0.1 * (quiz.id % 4),
+                            duration: 0.5,
+                          }}
                           whileHover={{ scale: 1.02 }}
                           className="w-full"
                         >
                           <Card
-                            className="bg-black/50 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full flex flex-col gap-3"
+                            className="bg-black/50 border-red-500/20 hover:border-red-500 cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] h-full flex flex-col gap-3 relative"
                             onClick={() => handleQuizSelect(quiz.id)}
                             tabIndex={0}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") handleQuizSelect(quiz.id);
+                              if (e.key === "Enter" || e.key === " ")
+                                handleQuizSelect(quiz.id);
                             }}
-                            aria-label={t("selectQuiz", { theme: quiz.title })}
+                            aria-label={t("selectQuiz", {
+                              theme: quiz.title,
+                            })}
                           >
+                            {/* Favorite button - top right corner */}
+                            <button
+                              onClick={(e) =>
+                                handleToggleFavorite(e, quiz.id)
+                              }
+                              className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-red-900/30 transition-colors cursor-pointer z-10"
+                              aria-label={
+                                favorites.includes(quiz.id)
+                                  ? "Remove from favorites"
+                                  : "Add to favorites"
+                              }
+                            >
+                              <Heart
+                                className={`h-5 w-5 transition-colors ${favorites.includes(quiz.id)
+                                  ? "text-red-500 fill-red-500"
+                                  : "text-red-400/60 hover:text-red-400"
+                                  }`}
+                              />
+                            </button>
                             <CardHeader className="flex-shrink-0">
                               <TooltipProvider>
                                 <Tooltip delayDuration={300}>
@@ -586,18 +769,21 @@ export default function QuizSelectPage() {
                               </TooltipProvider>
                             </CardHeader>
                             <CardFooter className="pt-2 flex justify-between items-center flex-shrink-0 mt-auto">
-                              {quiz.category && (
-                                <span className="text-red-300 text-sm  capitalize">{quiz.category}</span>
-                              )}
-                              <div className="flex items-center gap-1 text-red-300 text-xs ">
+                              <div className="flex items-center gap-2">
+                                {quiz.category && (
+                                  <span className="text-red-300 text-sm capitalize">
+                                    {quiz.category}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 text-red-300 text-xs">
                                 <HelpCircle className="h-3 w-3" />
                                 {quiz.question_count ?? 0}
                               </div>
                             </CardFooter>
                           </Card>
                         </motion.div>
-                      ))
-                    )}
+                      ))}
                   </div>
                 </div>
                 <motion.div
@@ -617,14 +803,19 @@ export default function QuizSelectPage() {
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
                     <span className="text-red-400  text-sm self-center">
-                      {t("pageInfo", { current: currentPage, total: totalPages })}
+                      {t("pageInfo", {
+                        current: currentPage,
+                        total: totalPages,
+                      })}
                     </span>
                     <Button
                       variant="outline"
                       size="icon"
                       className="bg-black/50 border-red-500/50 text-red-400 hover:bg-red-900/20"
                       onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages || isCreating || isFetching}
+                      disabled={
+                        currentPage === totalPages || isCreating || isFetching
+                      }
                     >
                       <ChevronRight className="h-5 w-5" />
                     </Button>
@@ -637,12 +828,39 @@ export default function QuizSelectPage() {
 
         {/* Global styles */}
         <style jsx global>{`
-          .main-background { background-size: 60%; background-repeat: no-repeat; }
-          @media (min-width: 768px) { .main-background { background-size: 60%; } }
-          @keyframes float { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(180deg); } }
-          .animate-float { animation: float 20s infinite ease-in-out; }
-          .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-          .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+          .main-background {
+            background-size: 60%;
+            background-repeat: no-repeat;
+          }
+          @media (min-width: 768px) {
+            .main-background {
+              background-size: 60%;
+            }
+          }
+          @keyframes float {
+            0%,
+            100% {
+              transform: translateY(0) rotate(0deg);
+            }
+            50% {
+              transform: translateY(-20px) rotate(180deg);
+            }
+          }
+          .animate-float {
+            animation: float 20s infinite ease-in-out;
+          }
+          .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
         `}</style>
       </div>
     </LoadingScreen>

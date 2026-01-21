@@ -226,8 +226,9 @@ export function BotInstance({
         let timeoutId: NodeJS.Timeout;
 
         const changeCharacter = async () => {
-            // Only change if restlessness threshold is met
-            if (Math.random() < personality.restlessness) {
+            // Only change if restlessness threshold is met (Reduced probability to 20% of restlessness to save costs)
+            // Target: < 10 requests per 10 seconds total across all bots
+            if (Math.random() < personality.restlessness * 0.2) {
                 const newCharacter = pickRandom(CHARACTER_OPTIONS);
                 await mysupa
                     .from("participants")
@@ -235,8 +236,9 @@ export function BotInstance({
                     .eq("id", participantId);
             }
 
-            // Schedule next check (2-8 seconds based on restlessness)
-            const nextDelay = 2000 + (1 - personality.restlessness) * 6000;
+            // Schedule next check (15-25 seconds based on restlessness)
+            // Much slower to prevent rate limiting and high costs
+            const nextDelay = 15000 + (1 - personality.restlessness) * 10000;
             if (mountedRef.current && gameStatus === "waiting") {
                 timeoutId = setTimeout(changeCharacter, nextDelay);
             }
