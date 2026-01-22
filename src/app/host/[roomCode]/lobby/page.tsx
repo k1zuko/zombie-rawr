@@ -172,6 +172,10 @@ export default function HostPage() {
   );
   const [isFullscreenQrOpen, setIsFullscreenQrOpen] = useState(false);
   const [isAssetsLoaded, setIsAssetsLoaded] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [lastCursor, setLastCursor] = useState<string | null>(null);
+  const playersContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const assetsToPreload = [
@@ -236,8 +240,10 @@ export default function HostPage() {
   useHostGuard(roomCode);
 
   // ========================================
-  // 1. FETCH SESSION + PARTICIPANTS
+  // 1. FETCH SESSION + PARTICIPANTS (WITH PAGINATION)
   // ========================================
+  const PAGE_LIMIT = 32;
+
   const fetchData = useCallback(async () => {
     if (!roomCode) return;
 
@@ -260,10 +266,17 @@ export default function HostPage() {
         .from("participants")
         .select("*")
         .eq("session_id", sess.id)
-        .order("joined_at", { ascending: true });
+        .order("joined_at", { ascending: true })
+        .limit(PAGE_LIMIT);
 
       if (partsErr) console.error("Error fetch participants:", partsErr);
-      else setPlayers(parts || []);
+      else {
+        setPlayers(parts || []);
+        setHasMore((parts?.length || 0) === PAGE_LIMIT);
+        if (parts && parts.length > 0) {
+          setLastCursor(parts[parts.length - 1].joined_at);
+        }
+      }
 
       setIsLoading(false);
     } catch (err) {
@@ -275,6 +288,50 @@ export default function HostPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // ========================================
+  // LOAD MORE PARTICIPANTS
+  // ========================================
+  const loadMore = useCallback(async () => {
+    if (!session?.id || !hasMore || isLoadingMore || !lastCursor) return;
+
+    setIsLoadingMore(true);
+
+    try {
+      const { data: moreParts, error: moreErr } = await mysupa
+        .from("participants")
+        .select("*")
+        .eq("session_id", session.id)
+        .gt("joined_at", lastCursor)
+        .order("joined_at", { ascending: true })
+        .limit(PAGE_LIMIT);
+
+      if (moreErr) {
+        console.error("Error loading more participants:", moreErr);
+        toast.error("Gagal memuat lebih banyak pemain");
+      } else if (moreParts && moreParts.length > 0) {
+        setPlayers((prev) => [...prev, ...moreParts]);
+        setLastCursor(moreParts[moreParts.length - 1].joined_at);
+        setHasMore(moreParts.length === PAGE_LIMIT);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [session?.id, hasMore, isLoadingMore, lastCursor]);
+
+  // ========================================
+  // HANDLE SCROLL FOR LOAD MORE
+  // ========================================
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight <= 20) {
+      loadMore();
+    }
+  }, [loadMore]);
 
   // ========================================
   // 2. REALTIME – 2 CHANNELS
@@ -847,7 +904,7 @@ export default function HostPage() {
                         <motion.div
                           animate={{ opacity: [0.5, 1, 0.5] }}
                           transition={{
-                            duration: 2,
+                            duration: 1,
                             repeat: Number.POSITIVE_INFINITY,
                             ease: "easeInOut",
                           }}
@@ -863,88 +920,98 @@ export default function HostPage() {
                     ) : (
                       <motion.div
                         key="players"
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3 md:gap-4 lg:gap-6"
-                        transition={{
-                          layout: {
-                            type: "spring",
-                            stiffness: 200,
-                            damping: 20,
-                          },
-                        }}
+                        className="overflow-y-auto max-h-[70vh] pr-2"
+                        ref={playersContainerRef}
+                        onScroll={handleScroll}
                       >
-                        <AnimatePresence>
-                          {players.map((player, index) => {
-                            const selectedCharacter = characterOptions.find(
-                              (c) => c.value === player.character_type
-                            );
-                            return (
-                              <motion.div
-                                key={player.id}
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{
-                                  opacity: 0,
-                                  scale: 0.5,
-                                  x: Math.random() > 0.5 ? 100 : -100,
-                                  rotate: Math.random() * 180,
-                                  transition: { duration: 0.3, ease: "easeIn" },
-                                }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 200,
-                                  damping: 20,
-                                  delay: index * 0.05,
-                                }}
-                                className="bg-black/40 border border-red-900/50 rounded-lg p-2 sm:p-3 md:p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative group"
-                              >
-                                {!player.is_host && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => kickPlayer(player)}
-                                    className="absolute z-10 top-1 left-1 sm:top-2 sm:left-2 bg-black/60 text-red-500 hover:bg-red-700/60 p-1 sm:p-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                                  </Button>
-                                )}
+                        <motion.div
+                          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3 md:gap-4 lg:gap-6"
+                          transition={{
+                            layout: {
+                              type: "spring",
+                              stiffness: 200,
+                              damping: 20,
+                            },
+                          }}
+                        >
+                          <AnimatePresence>
+                            {players.map((player, index) => {
+                              const selectedCharacter = characterOptions.find(
+                                (c) => c.value === player.character_type
+                              );
+                              return (
                                 <motion.div
-                                  className="mb-1 sm:mb-2"
-                                  animate={{ rotate: [0, 5, -5, 0] }}
-                                  transition={{
-                                    duration: 3,
-                                    repeat: Number.POSITIVE_INFINITY,
-                                    delay: index * 0.1,
+                                  key={player.id}
+                                  initial={{ scale: 0.9, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{
+                                    opacity: 0,
+                                    scale: 0.5,
+                                    x: Math.random() > 0.5 ? 100 : -100,
+                                    rotate: Math.random() * 180,
+                                    transition: { duration: 0.3, ease: "easeIn" },
                                   }}
+                                  className="bg-black/40 border border-red-900/50 rounded-lg p-2 sm:p-3 md:p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative group"
                                 >
-                                  {selectedCharacter ? (
-                                    <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mt-1 sm:mt-2">
-                                      <img
-                                        src={selectedCharacter.gif}
-                                        alt={selectedCharacter.alt}
-                                        className="max-h-full max-w-full object-contain"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mb-1 sm:mb-2 text-red-400 text-xs sm:text-sm">
-                                      {player.character_type}
-                                    </div>
+                                  {!player.is_host && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => kickPlayer(player)}
+                                      className="absolute z-10 top-1 left-1 sm:top-2 sm:left-2 bg-black/60 text-red-500 hover:bg-red-700/60 p-1 sm:p-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    </Button>
+                                  )}
+                                  <motion.div
+                                    className="mb-1 sm:mb-2"
+                                    animate={{ rotate: [0, 5, -5, 0] }}
+                                    transition={{
+                                      duration: 3,
+                                      repeat: Number.POSITIVE_INFINITY,
+                                      delay: index * 0.1,
+                                    }}
+                                  >
+                                    {selectedCharacter ? (
+                                      <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mt-1 sm:mt-2">
+                                        <img
+                                          src={selectedCharacter.gif}
+                                          alt={selectedCharacter.alt}
+                                          className="max-h-full max-w-full object-contain"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mb-1 sm:mb-2 text-red-400 text-xs sm:text-sm">
+                                        {player.character_type}
+                                      </div>
+                                    )}
+                                  </motion.div>
+                                  <div className="text-red-500 font-medium text-xs sm:text-sm truncate mb-1  line-clamp-1">
+                                    {player.nickname}
+                                  </div>
+                                  {player.is_host && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs bg-red-900 text-red-400 "
+                                    >
+                                      {t("host")}
+                                    </Badge>
                                   )}
                                 </motion.div>
-                                <div className="text-red-500 font-medium text-xs sm:text-sm truncate mb-1  line-clamp-1">
-                                  {player.nickname}
-                                </div>
-                                {player.is_host && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs bg-red-900 text-red-400 "
-                                  >
-                                    {t("host")}
-                                  </Badge>
-                                )}
-                              </motion.div>
-                            );
-                          })}
-                        </AnimatePresence>
+                              );
+                            })}
+                          </AnimatePresence>
+                        </motion.div>
+                        {isLoadingMore && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex items-center gap-2 text-red-500 justify-center py-3"
+                          >
+                            <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                            <p className="text-sm">{t("loadingMore") || "Loading more..."}</p>
+                          </motion.div>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>

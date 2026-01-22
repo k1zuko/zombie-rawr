@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Users,
   Skull,
@@ -151,6 +151,10 @@ export default function LobbyPage() {
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isPrefetchingQuiz, setIsPrefetchingQuiz] = useState(false); // TAMBAHAN: Loading state untuk prefetch
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [lastCursor, setLastCursor] = useState<string | null>(null);
+  const playersContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -188,9 +192,15 @@ export default function LobbyPage() {
         const { data: parts } = await mysupa
           .from("participants")
           .select("*")
-          .eq("session_id", sess.id);
+          .eq("session_id", sess.id)
+          .order("joined_at", { ascending: true })
+          .limit(30);
 
         setPlayers(parts || []);
+        setHasMore((parts?.length || 0) === 30);
+        if (parts && parts.length > 0) {
+          setLastCursor(parts[parts.length - 1].joined_at);
+        }
 
         const playerId = localStorage.getItem("playerId");
         if (playerId) {
@@ -259,7 +269,51 @@ export default function LobbyPage() {
     }
   };
 
-  // === REALTIME: UBAH: Update questions saat session berubah
+  // ========================================
+  // LOAD MORE PARTICIPANTS
+  // ========================================
+  const loadMore = useCallback(async () => {
+    if (!session?.id || !hasMore || isLoadingMore || !lastCursor) return;
+
+    setIsLoadingMore(true);
+
+    try {
+      const { data: moreParts, error: moreErr } = await mysupa
+        .from("participants")
+        .select("*")
+        .eq("session_id", session.id)
+        .gt("joined_at", lastCursor)
+        .order("joined_at", { ascending: true })
+        .limit(30);
+
+      if (moreErr) {
+        console.error("Error loading more participants:", moreErr);
+        toast.error("Gagal memuat lebih banyak pemain");
+      } else if (moreParts && moreParts.length > 0) {
+        setPlayers((prev) => [...prev, ...moreParts]);
+        setLastCursor(moreParts[moreParts.length - 1].joined_at);
+        setHasMore(moreParts.length === 30);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [session?.id, hasMore, isLoadingMore, lastCursor]);
+
+  // ========================================
+  // HANDLE SCROLL FOR LOAD MORE
+  // ========================================
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight <= 20) {
+      loadMore();
+    }
+  }, [loadMore]);
+
+  // TAMBAHAN: REALTIME: UBAH: Update questions saat session berubah
   useEffect(() => {
     if (!session?.id) return;
 
@@ -478,26 +532,38 @@ export default function LobbyPage() {
           </motion.header>
 
           {/* Daftar Player */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 px-2">
-            {sortedPlayers.map((player) => (
-              <div
-                key={player.id}
-                className="relative bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+          <div className="overflow-y-auto max-h-[50vh] pr-2" ref={playersContainerRef} onScroll={handleScroll}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 px-2">
+              {sortedPlayers.map((player) => (
+                <div
+                  key={player.id}
+                  className="relative bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+                >
+                  <SoulStatus
+                    player={{
+                      ...player,
+                      id: player.id,
+                    }}
+                    isCurrentPlayer={currentPlayer ? player.id === currentPlayer.id : false}
+                  />
+                  {player.is_host && (
+                    <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded ">
+                      HOST
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {isLoadingMore && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-2 text-red-500 justify-center py-3"
               >
-                <SoulStatus
-                  player={{
-                    ...player,
-                    id: player.id,
-                  }}
-                  isCurrentPlayer={currentPlayer ? player.id === currentPlayer.id : false}
-                />
-                {player.is_host && (
-                  <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded ">
-                    HOST
-                  </div>
-                )}
-              </div>
-            ))}
+                <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm">{t("loadingMore") || "Loading more..."}</p>
+              </motion.div>
+            )}
           </div>
 
           {/* Tombol Bawah Non-Host */}
