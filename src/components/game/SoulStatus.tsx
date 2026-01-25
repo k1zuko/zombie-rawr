@@ -3,6 +3,12 @@
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface Player {
   id?: string
@@ -63,14 +69,24 @@ export default function SoulStatus({
     )}>
       <div className="relative z-10 space-y-4 text-center">
         {/* Nama Player */}
-        <p className={cn(
-          "  tracking-wider text-shadow-lg text-xl sm:text-2xl",
-          nameColor,
-          isCurrentPlayer && "drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]",
-          isHost && "drop-shadow-[0_0_10px_rgba(34,211,238,0.7)]"
-        )}>
-          {player.nickname}
-        </p>
+        {/* Nama Player */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className={cn(
+                "  tracking-wider text-shadow-lg text-xl sm:text-2xl line-clamp-2 cursor-default",
+                nameColor,
+                isCurrentPlayer && "drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]",
+                isHost && "drop-shadow-[0_0_10px_rgba(34,211,238,0.7)]"
+              )}>
+                {player.nickname}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent className="bg-black/95 text-red-300 border-2 border-red-600 shadow-2xl">
+              <p>{player.nickname}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Karakter GIF */}
         {selectedCharacter && (

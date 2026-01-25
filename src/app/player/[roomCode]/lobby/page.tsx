@@ -481,27 +481,32 @@ export default function LobbyPage() {
           </motion.header>
 
           {/* Daftar Player */}
-          <div className="overflow-y-auto max-h-[50vh] pr-2">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 px-2">
-              {sortedPlayers.map((player) => (
-                <div
-                  key={player.id}
-                  className="relative bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                >
-                  <SoulStatus
-                    player={{
-                      ...player,
-                      id: player.id,
-                    }}
-                    isCurrentPlayer={currentPlayer ? player.id === currentPlayer.id : false}
-                  />
-                  {player.is_host && (
-                    <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded ">
-                      HOST
-                    </div>
-                  )}
-                </div>
-              ))}
+          <div className="relative">
+            <div
+              className="overflow-y-auto pr-2 pb-[6rem] [mask-image:linear-gradient(to_bottom,black_70%,transparent)]"
+              style={{ maxHeight: '60vh' }}
+            >
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 px-2">
+                {sortedPlayers.map((player) => (
+                  <div
+                    key={player.id}
+                    className="relative bg-black/40 border border-red-900/50 rounded-lg p-4 hover:border-red-500 transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+                  >
+                    <SoulStatus
+                      player={{
+                        ...player,
+                        id: player.id,
+                      }}
+                      isCurrentPlayer={currentPlayer ? player.id === currentPlayer.id : false}
+                    />
+                    {player.is_host && (
+                      <div className="absolute -bottom-2 -right-2 text-xs bg-red-900 text-white px-2 py-1 rounded ">
+                        HOST
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -518,21 +523,12 @@ export default function LobbyPage() {
                   <ArrowLeft className="w-7 h-7" />
                 </Button>
 
-                {isMobile ? (
-                  <MobileCharacterSelector
-                    selectedCharacter={selectedCharacter}
-                    onSelect={handleCharacterSelect}
-                    isOpen={isCharacterSelectorOpen}
-                    setIsOpen={setIsCharacterSelectorOpen}
-                  />
-                ) : (
-                  <Button
-                    onClick={() => setIsCharacterSelectorOpen(true)}
-                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white text-xl px-10 py-6 rounded-lg shadow-lg"
-                  >
-                    {t("selectCharacter")}
-                  </Button>
-                )}
+                <Button
+                  onClick={() => setIsCharacterSelectorOpen(true)}
+                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-white text-xl px-10 py-6 rounded-lg shadow-lg"
+                >
+                  {t("selectCharacter")}
+                </Button>
               </div>
             </div>
           )}

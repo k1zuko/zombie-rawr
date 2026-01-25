@@ -9,7 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  } from "@/components/ui/card";
+} from "@/components/ui/card";
 import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -60,7 +60,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     if ((user || profile) && !loading) {
-      router.replace("/");
+      const pendingCode = localStorage.getItem("pendingRoomCode");
+      if (pendingCode) {
+        // Redirect back to the auto-join page
+        router.replace(`/join/${pendingCode}`);
+      } else {
+        router.replace("/");
+      }
     }
   }, [user, profile, loading, router]);
 

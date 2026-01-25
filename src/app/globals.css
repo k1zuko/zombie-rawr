@@ -133,6 +133,7 @@
   }
 
   body{
+    @apply bg-background text-foreground;
     font-family: var(--font-zombiefont2);
   }
   /* Styling tambahan untuk elemen Kahoot */

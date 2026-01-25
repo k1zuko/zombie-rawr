@@ -368,9 +368,9 @@ export default function TestPage() {
                                     <Slider
                                         value={[userCount]}
                                         onValueChange={([v]) => setUserCount(v)}
-                                        min={100}
+                                        min={10}
                                         max={1000}
-                                        step={100}
+                                        step={10}
                                         disabled={isRunning}
                                         className="mt-3"
                                     />
