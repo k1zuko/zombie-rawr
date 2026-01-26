@@ -1,7 +1,7 @@
 // lib/host-guard.ts
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { mysupa } from "@/lib/supabase";
 
 export function useHostGuard(roomCode: string) {
   const router = useRouter();
@@ -11,27 +11,22 @@ export function useHostGuard(roomCode: string) {
     if (typeof window === "undefined") return;
 
     const hostId = sessionStorage.getItem("currentHostId");
-    const redirectTo = sessionStorage.getItem("redirectTo") || "/" || `/game/${roomCode}` || `/game/${roomCode}/results`;
 
-    if (!hostId && redirectTo == "/") {
+
+    if (!hostId) {
       router.replace(`/?isHost=0`);
-    } else if (!hostId) {
-      router.replace(redirectTo);
+      return;
     }
 
     (async () => {
-      const { data: session, error } = await supabase
-        .from("game_sessions")
+      const { data: session, error } = await mysupa
+        .from("sessions")
         .select("host_id")
         .eq("game_pin", roomCode)
         .single();
 
       if (error || !session || session.host_id !== hostId) {
-        if (redirectTo == "/") {
-          router.replace(`/?isHost=0`);
-        } else if (!hostId) {
-          router.replace(redirectTo);
-        }
+        router.replace(`/?isHost=0`);
       }
     })();
   }, [roomCode, router]);

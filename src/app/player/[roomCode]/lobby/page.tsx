@@ -562,17 +562,17 @@ export default function LobbyPage() {
                 {t("exitConfirm")}
               </DialogTitle>
             </div>
-            <DialogFooter className="justify-center gap-6 mt-6 pb-8">
+            <DialogFooter className="grid grid-cols-2 gap-4 mt-6 pb-8 px-6">
               <Button
                 variant="ghost"
                 onClick={() => setIsExitDialogOpen(false)}
-                className="bg-red-800/80 hover:bg-red-700 text-white text-lg px-10"
+                className="w-full bg-red-800/80 hover:bg-red-700 text-white text-lg"
               >
                 {t("cancel")}
               </Button>
               <Button
                 onClick={handleExitLobby}
-                className="bg-red-600 hover:bg-red-500 text-white text-lg px-10"
+                className="w-full bg-red-600 hover:bg-red-500 text-white text-lg"
               >
                 {t("exit")}
               </Button>

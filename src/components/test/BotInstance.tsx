@@ -287,8 +287,6 @@ export function BotInstance({
                 }
 
                 const isCorrect = selectedIndex.toString() === question.correct;
-                const newHealth = isCorrect ? health : Math.max(0, health - 1);
-
                 // Get current state from database (like player quiz page does)
                 const { data: currentParticipant } = await mysupa
                     .from("participants")
@@ -297,6 +295,9 @@ export function BotInstance({
                     .single();
 
                 if (!currentParticipant) continue;
+
+                const currentHealth = currentParticipant.health?.current ?? health;
+                const newHealth = isCorrect ? currentHealth : Math.max(0, currentHealth - 1);
 
                 // Calculate new values based on database state (like player quiz page line 268-273)
                 const answersNew = [...(currentParticipant.answers || []), {

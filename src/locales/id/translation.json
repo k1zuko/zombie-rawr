@@ -273,5 +273,6 @@
   "logout": "Keluar",
   "logoutSuccess": "Berhasil keluar!",
   "installApp": "Instal Aplikasi",
-  "appInstalled": "Terinstal"
+  "appInstalled": "Terinstal",
+  "loadingMore": "Memuat lebih banyak..."
 }

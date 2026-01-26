@@ -359,7 +359,7 @@ export default function ResultsHostPage() {
                   >
                     <div className="text-red-400 font-bold text-base shrink-0">#{rank}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white text-sm truncate" title={player.nickname}>{player.nickname}</p>
+                      <p className={`font-medium text-sm truncate ${player.isLolos ? "text-green-500" : "text-red-500"}`} title={player.nickname}>{player.nickname}</p>
                     </div>
                     <div className={`font-bold ${style.text} text-lg`}>{player.finalScore}</div>
                   </div>
@@ -400,7 +400,7 @@ export default function ResultsHostPage() {
                               <div className="w-8 h-8 rounded-full overflow-hidden">
                                 <img src={char.src} alt="" className="w-full h-full object-contain" />
                               </div>
-                              <span className="font-medium text-white" title={player.nickname}>{player.nickname}</span>
+                              <span className={`font-medium ${player.isLolos ? "text-green-500" : "text-red-500"}`} title={player.nickname}>{player.nickname}</span>
                             </div>
                           </td>
                           <td className="py-2.5 px-4 font-bold text-red-400">{player.finalScore}</td>
@@ -501,7 +501,7 @@ function PodiumPosition({
           </div>
         </div>
 
-        <h3 className={`font-bold text-white text-sm lg:text-base break-words line-clamp-1 ${isFirst ? 'text-base lg:text-lg mb-1' : 'mb-0.5'}`} title={player.nickname}>
+        <h3 className={`font-bold text-sm lg:text-base break-words line-clamp-1 ${isFirst ? 'text-base lg:text-lg mb-1' : 'mb-0.5'} ${player.isLolos ? "text-green-500" : "text-red-500"}`} title={player.nickname}>
           {player.nickname}
         </h3>
 

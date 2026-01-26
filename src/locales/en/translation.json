@@ -267,5 +267,6 @@
   "logout": "Logout",
   "logoutSuccess": "Successfully signed out!",
   "installApp": "Install App",
-  "appInstalled": "Installed"
+  "appInstalled": "Installed",
+  "loadingMore": "Loading more..."
 }

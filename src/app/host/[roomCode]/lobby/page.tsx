@@ -27,8 +27,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  DialogFooter
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { syncServerTime, calculateCountdown } from "@/lib/server-time";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -986,9 +992,18 @@ export default function HostPage() {
                                       </div>
                                     )}
                                   </motion.div>
-                                  <div className="text-red-500 font-medium text-xs sm:text-sm truncate mb-1  line-clamp-1">
-                                    {player.nickname}
-                                  </div>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="text-red-500 font-medium text-xs sm:text-sm mb-1 line-clamp-2 cursor-pointer">
+                                          {player.nickname}
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="bg-black/95 text-red-300 border-2 border-red-600 shadow-2xl">
+                                        <p>{player.nickname}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                   {player.is_host && (
                                     <Badge
                                       variant="secondary"
