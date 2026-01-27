@@ -229,17 +229,17 @@ export default function ResultsHostPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-black">
-      {/* === LAYER BACKGROUND (dengan brightness terpisah) === */}
+      {/* === LAYER BACKGROUND (fixed, tidak mengikuti scroll) === */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: "url('/background/10.gif')",
           filter: "brightness(0.65)",
         }}
       />
 
-      <div className="absolute inset-0 bg-black/35" />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_10%,rgba(139,0,0,0.12),transparent_70%)]" />
+      <div className="fixed inset-0 bg-black/35" />
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_10%,rgba(139,0,0,0.12),transparent_70%)]" />
 
       {/* === KONTEN UTAMA === */}
       <div className="relative z-10 min-h-screen">

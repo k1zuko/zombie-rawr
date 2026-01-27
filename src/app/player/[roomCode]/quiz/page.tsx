@@ -180,7 +180,8 @@ export default function QuizPage() {
       } catch { }
     }
 
-    const channel = mysupa
+    // Listen for participant updates
+    const playerChannel = mysupa
       .channel(`player:${currentPlayer.id}`)
       .on(
         "postgres_changes",
@@ -210,11 +211,28 @@ export default function QuizPage() {
         poll = setInterval(updateFromServer, 5000)
       })
 
+    // Listen for session status changes (when host ends game)
+    const sessionChannel = mysupa
+      .channel(`session:${session.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
+        (payload) => {
+          const updSession = payload.new as Session
+          if (updSession.status === "finished") {
+            // Host ended the game, redirect to results
+            redirectToResults(playerHealth, correctAnswers, totalQuestions, playerHealth <= 0)
+          }
+        }
+      )
+      .subscribe()
+
     return () => {
       if (poll) clearInterval(poll)
-      mysupa.removeChannel(channel)
+      mysupa.removeChannel(playerChannel)
+      mysupa.removeChannel(sessionChannel)
     }
-  }, [session?.id, currentPlayer?.id, currentQuestionIndex, isAnswered, showFeedback, isProcessingAnswer, totalQuestions])
+  }, [session?.id, currentPlayer?.id, currentQuestionIndex, isAnswered, showFeedback, isProcessingAnswer, totalQuestions, playerHealth, correctAnswers])
 
   // ── TIMER ────────────────────────────────────────────────────────────────────
   useEffect(() => {

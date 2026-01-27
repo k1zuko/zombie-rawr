@@ -14,6 +14,16 @@ import Image from "next/image";
 import React from "react";
 import { generateXID } from "@/lib/id-generator";
 import LoadingScreen from "@/components/LoadingScreen";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { StopCircle } from "lucide-react";
 
 const ZOMBIE_MOBILE_VERTICAL_OFFSET = 90;
 const ZOMBIE_MOBILE_HORIZONTAL_OFFSET = 20;
@@ -181,6 +191,7 @@ export default function HostGamePage() {
   const [screenHeight, setScreenHeight] = useState(800);
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [showEndGameDialog, setShowEndGameDialog] = useState(false);
 
   const [session, setSession] = useState<Session | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -188,7 +199,7 @@ export default function HostGamePage() {
 
   const lastAnswerTimesRef = useRef<{ [id: string]: number }>({});
 
-  const [playerStates, setPlayerStates] = useState<{ [id: string]: PlayerState }>({});
+  // playerStates is now derived via useMemo below (optimization)
   const [zombieState, setZombieState] = useState<ZombieState>({
     isAttacking: false,
     targetPlayerId: null,
@@ -200,6 +211,53 @@ export default function HostGamePage() {
   const attackIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useHostGuard(gamePin);
+
+  // Manual End Game handler
+  const handleEndGame = useCallback(async () => {
+    if (!session) return;
+
+    setShowEndGameDialog(false);
+    setIsFinishing(true);
+
+    const finishAt = new Date().toISOString();
+
+    try {
+      // 1) Mark all pending participants as finished
+      const { data: pending } = await mysupa
+        .from("participants")
+        .select("*")
+        .eq("session_id", session.id)
+        .is("finished_at", null);
+
+      if (Array.isArray(pending) && pending.length > 0) {
+        await Promise.all(pending.map((p: any) => {
+          const newHealth = { ...(p.health || {}), current: 0 };
+          return mysupa
+            .from("participants")
+            .update({
+              finished_at: finishAt,
+              completion: true,
+              is_alive: false,
+              health: newHealth
+            })
+            .eq("id", p.id);
+        }));
+      }
+
+      // 2) Update session status
+      await mysupa
+        .from("sessions")
+        .update({ status: "finished", ended_at: finishAt })
+        .eq("id", session.id);
+
+      // 3) Sync and redirect
+      await syncResultsToMainSupabase(session.id);
+      router.push(`/host/${gamePin}/result`);
+    } catch (err) {
+      console.error("Error ending game:", err);
+      router.push(`/host/${gamePin}/result`);
+    }
+  }, [session, router, gamePin]);
 
   // Fetch session + participants
   const fetchData = useCallback(async () => {
@@ -292,8 +350,8 @@ export default function HostGamePage() {
     return () => { mysupa.removeChannel(channel); };
   }, [session?.id]);
 
-  // Update playerStates
-  useEffect(() => {
+  // Optimized: Derive playerStates directly using useMemo (avoids double render)
+  const playerStates = useMemo(() => {
     const states: { [id: string]: PlayerState } = {};
     participants.forEach((p, i) => {
       states[p.id] = {
@@ -305,7 +363,7 @@ export default function HostGamePage() {
         attackIntensity: 0,
       };
     });
-    setPlayerStates(states);
+    return states;
   }, [participants]);
 
   // Zombie attack ketika health turun
@@ -537,7 +595,10 @@ export default function HostGamePage() {
     return () => clearInterval(i);
   }, [gameMode]);
 
-  const activePlayers = participants.filter((p) => p.is_alive && p.health.current > 0 && !p.finished_at);
+  // Optimized: Memoize activePlayers to prevent recalculation on every animation tick
+  const activePlayers = useMemo(() =>
+    participants.filter((p) => p.is_alive && p.health.current > 0 && !p.finished_at)
+    , [participants]);
   const centerX = screenWidth / 2;
   const chaserType = session?.difficulty?.split(":")[0] as any || "zombie";
 
@@ -557,33 +618,33 @@ export default function HostGamePage() {
     <div className={mainContentClass} style={wrapperStyle}>
       <MemoizedBackground3 isFlashing={false} />
 
-{/* QuizRush Logo - Top Left */}
-<div className="absolute top-4 left-4 z-50 hidden lg:block">
-  <Image
-    src="/logo/quizrush.png"
-    alt="QuizRush Logo"
-    width={200}
-    height={50}
-    className="h-auto w-32 md:w-48 lg:w-64"
-    unoptimized
-  />
-</div>
+      {/* QuizRush Logo - Top Left */}
+      <div className="absolute top-4 left-4 z-50 hidden lg:block">
+        <Image
+          src="/logo/quizrush.png"
+          alt="QuizRush Logo"
+          width={200}
+          height={50}
+          className="h-auto w-32 md:w-48 lg:w-64"
+          unoptimized
+        />
+      </div>
 
 
-<div
-  className="
+      <div
+        className="
     absolute right-4 top-3 z-50 hidden lg:block
   "
->
-  <Image
-    src="/logo/gameforsmartlogo-horror.png"
-    alt="GameForSmart Logo"
-    width={200}
-    height={50}
-    className="h-auto w-32 md:w-48 lg:w-88"
-    unoptimized
-  />
-</div>
+      >
+        <Image
+          src="/logo/gameforsmartlogo-horror.png"
+          alt="GameForSmart Logo"
+          width={200}
+          height={50}
+          className="h-auto w-32 md:w-48 lg:w-88"
+          unoptimized
+        />
+      </div>
 
 
 
@@ -594,9 +655,9 @@ export default function HostGamePage() {
         className="flex flex-col gap-3 mb-10 px-4"
       >
 
-      </motion.header>  
+      </motion.header>
 
-<MemoizedRunningCharacters
+      <MemoizedRunningCharacters
         players={activePlayers}
         playerStates={playerStates}
         zombieState={zombieState}
@@ -606,7 +667,7 @@ export default function HostGamePage() {
         centerX={centerX}
         completedPlayers={[]}
         isPortraitMobile={isPortraitMobile} // ← sekarang dinamis
-        mobileHorizontalShift={150} 
+        mobileHorizontalShift={150}
       />
 
       <MemoizedZombieCharacter
@@ -624,6 +685,47 @@ export default function HostGamePage() {
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
         <MemoizedGameUI roomCode={gamePin} />
       </div>
+
+      {/* End Game Button */}
+      <Button
+        onClick={() => setShowEndGameDialog(true)}
+        variant="destructive"
+        size="sm"
+        className="absolute bottom-4 right-4 z-50 bg-red-900/80 hover:bg-red-800 border border-red-700 shadow-lg"
+      >
+        <StopCircle className="w-4 h-4 mr-2" />
+        {t("endGame") || "End Game"}
+      </Button>
+
+      {/* End Game Confirmation Dialog */}
+      <Dialog open={showEndGameDialog} onOpenChange={setShowEndGameDialog}>
+        <DialogContent className="bg-black/95 border-red-900/50 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-400 text-xl">
+              {t("confirmEndGame") || "End Game?"}
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              {t("confirmEndGameDesc") || "Are you sure you want to end the game now? All players will be marked as finished."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setShowEndGameDialog(false)}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              {t("cancel") || "Cancel"}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleEndGame}
+              className="bg-red-700 hover:bg-red-600"
+            >
+              {t("endGameNow") || "End Game Now"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

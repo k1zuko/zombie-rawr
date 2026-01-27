@@ -259,5 +259,9 @@
   "logout": "Cerrar sesión",
   "logoutSuccess": "¡Sesión cerrada con éxito!",
   "installApp": "Instalar aplicación",
-  "appInstalled": "Instalado"
+  "appInstalled": "Instalado",
+  "endGame": "Terminar juego",
+  "confirmEndGame": "¿Terminar juego?",
+  "confirmEndGameDesc": "¿Estás seguro de que quieres terminar el juego ahora? Todos los jugadores serán marcados como terminados.",
+  "endGameNow": "Terminar ahora"
 }

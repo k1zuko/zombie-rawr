@@ -259,5 +259,9 @@
   "logout": "Se déconnecter",
   "logoutSuccess": "Déconnecté avec succès!",
   "installApp": "Installer l'application",
-  "appInstalled": "Installé"
+  "appInstalled": "Installé",
+  "endGame": "Terminer le jeu",
+  "confirmEndGame": "Terminer le jeu ?",
+  "confirmEndGameDesc": "Êtes-vous sûr de vouloir terminer le jeu maintenant ? Tous les joueurs seront marqués comme terminés.",
+  "endGameNow": "Terminer maintenant"
 }

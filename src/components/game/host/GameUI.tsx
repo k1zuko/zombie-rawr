@@ -74,7 +74,6 @@ export default function GameUI({ roomCode }: { roomCode: string }) {
         <span
           className="text-8xl  text-red-600 select-none"
           style={{
-            fontFamily: "'Digital-7', monospace",
             textShadow: "0 0 20px rgba(220, 0, 0, 0.9), 0 0 40px rgba(255, 0, 0, 0.6)",
             letterSpacing: "4px",
           }}

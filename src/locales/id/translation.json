@@ -274,5 +274,9 @@
   "logoutSuccess": "Berhasil keluar!",
   "installApp": "Instal Aplikasi",
   "appInstalled": "Terinstal",
-  "loadingMore": "Memuat lebih banyak..."
+  "loadingMore": "Memuat lebih banyak...",
+  "endGame": "Akhiri Game",
+  "confirmEndGame": "Akhiri Game?",
+  "confirmEndGameDesc": "Apakah Anda yakin ingin mengakhiri game sekarang? Semua pemain akan ditandai selesai.",
+  "endGameNow": "Akhiri Sekarang"
 }

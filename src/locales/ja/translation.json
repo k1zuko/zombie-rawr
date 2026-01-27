@@ -259,5 +259,9 @@
   "logout": "ログアウト",
   "logoutSuccess": "正常にログアウトしました！",
   "installApp": "アプリをインストール",
-  "appInstalled": "インストール済み"
+  "appInstalled": "インストール済み",
+  "endGame": "ゲームを終了",
+  "confirmEndGame": "ゲームを終了しますか？",
+  "confirmEndGameDesc": "本当にゲームを今すぐ終了しますか？全プレイヤーが終了としてマークされます。",
+  "endGameNow": "今すぐ終了"
 }
