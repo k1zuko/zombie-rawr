@@ -244,10 +244,10 @@ const RunningCharacters = memo(function RunningCharacters({
                   <Heart
                     key={i}
                     className={`w-${Math.round(4.5 * infoScale)} h-${Math.round(4.5 * infoScale)} ${i < state.health
-                        ? isTarget
-                          ? "text-red-500 fill-red-500"
-                          : "text-red-400 fill-red-400"
-                        : "text-gray-700 fill-gray-700 opacity-50"
+                      ? isTarget
+                        ? "text-red-500 fill-red-500"
+                        : "text-red-400 fill-red-400"
+                      : "text-gray-700 fill-gray-700 opacity-50"
                       }`}
                   />
                 ))}

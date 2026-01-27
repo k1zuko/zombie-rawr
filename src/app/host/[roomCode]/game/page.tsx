@@ -114,9 +114,9 @@ const syncResultsToMainSupabase = async (sessionId: string) => {
         ? Number(((correctCount / totalQuestions) * 100).toFixed(2))
         : 0;
 
-      const duration = p.finished_at && sess.started_at
-        ? Math.floor((new Date(p.finished_at).getTime() - new Date(sess.started_at).getTime()) / 1000)
-        : 0;
+      // const duration = p.finished_at && sess.started_at
+      //   ? Math.floor((new Date(p.finished_at).getTime() - new Date(sess.started_at).getTime()) / 1000)
+      //   : 0;
 
       return {
         id: p.id,
@@ -126,10 +126,11 @@ const syncResultsToMainSupabase = async (sessionId: string) => {
         score: p.score || 0,
         correct: correctCount,
         completion: p.finished_at !== null,
-        duration: duration,
         total_question: totalQuestions,
         current_question: p.answers?.length || 0,
         accuracy: accuracy.toFixed(2),
+        started: sess.started_at,
+        ended: p.finished_at
       };
     });
 
@@ -184,7 +185,8 @@ export default function HostGamePage() {
   const router = useRouter();
   const gamePin = params.roomCode as string;
 
-  const [animationTime, setAnimationTime] = useState(0);
+  const animationTimeRef = useRef(0);
+  const [, forceRender] = useState(0);
   const [gameMode, setGameMode] = useState<"normal" | "panic">("normal");
   const [isClient, setIsClient] = useState(false);
   const [screenWidth, setScreenWidth] = useState(1200);
@@ -284,10 +286,12 @@ export default function HostGamePage() {
 
     setParticipants(parts || []);
 
-    // Set initial lastAnswerTimes based on joined_at
+    // Set initial lastAnswerTimes based on session.started_at (game start time)
+    // This ensures players get full 15 seconds from game start, not from join time
+    const gameStartTime = sess.started_at ? new Date(sess.started_at).getTime() : Date.now();
     const initialTimes: { [id: string]: number } = {};
     (parts || []).forEach((p) => {
-      initialTimes[p.id] = new Date(p.joined_at).getTime();
+      initialTimes[p.id] = gameStartTime;
     });
     lastAnswerTimesRef.current = initialTimes;
   }, [gamePin, router]);
@@ -306,8 +310,8 @@ export default function HostGamePage() {
     participants.forEach((curr) => {
       const prevPart = prevParticipants.find((p) => p.id === curr.id);
       if (!prevPart) {
-        // New participant
-        newTimes[curr.id] = new Date(curr.joined_at).getTime();
+        // New participant - give them full 15 seconds from now
+        newTimes[curr.id] = Date.now();
       } else {
         const prevLen = (prevPart.answers || []).length;
         const currLen = (curr.answers || []).length;
@@ -451,7 +455,7 @@ export default function HostGamePage() {
         // Update local lastAnswerTimes after successful drain
         lastAnswerTimesRef.current = { ...lastAnswerTimesRef.current, ...updatedTimes };
       }
-    }, 1000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [participants, session]);
@@ -590,9 +594,23 @@ export default function HostGamePage() {
     };
   }, []);
 
+  // Optimized animation using requestAnimationFrame
   useEffect(() => {
-    const i = setInterval(() => setAnimationTime((p) => p + 1), gameMode === "panic" ? 30 : 100);
-    return () => clearInterval(i);
+    let rafId: number;
+    let lastTime = 0;
+    const interval = gameMode === "panic" ? 30 : 100;
+
+    const animate = (time: number) => {
+      if (time - lastTime >= interval) {
+        animationTimeRef.current += 1;
+        lastTime = time;
+        forceRender((p) => p + 1); // Only re-render when needed
+      }
+      rafId = requestAnimationFrame(animate);
+    };
+
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, [gameMode]);
 
   // Optimized: Memoize activePlayers to prevent recalculation on every animation tick
@@ -602,7 +620,7 @@ export default function HostGamePage() {
   const centerX = screenWidth / 2;
   const chaserType = session?.difficulty?.split(":")[0] as any || "zombie";
 
-  if (!isClient || !session || isFinishing) {
+  if (!isClient || !session || !session.started_at || isFinishing) {
     return (
       <LoadingScreen children={undefined} />
     );
@@ -661,7 +679,7 @@ export default function HostGamePage() {
         players={activePlayers}
         playerStates={playerStates}
         zombieState={zombieState}
-        animationTime={animationTime}
+        animationTime={animationTimeRef.current}
         gameMode={gameMode}
         screenHeight={screenHeight}
         centerX={centerX}
@@ -676,7 +694,7 @@ export default function HostGamePage() {
         centerX={centerX}
         chaserType={chaserType}
         players={activePlayers}
-        animationTime={animationTime}
+        animationTime={animationTimeRef.current}
         screenHeight={screenHeight}
         isPortraitMobile={isPortraitMobile}
         mobileHorizontalShift={ZOMBIE_MOBILE_HORIZONTAL_OFFSET}

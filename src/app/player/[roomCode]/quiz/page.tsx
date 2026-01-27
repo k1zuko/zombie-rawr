@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { CircleQuestionMark, Clock, Heart, XCircle, Zap, CheckCircle } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { mysupa } from "@/lib/supabase"
@@ -52,24 +52,42 @@ export default function QuizPage() {
   const params = useParams()
   const gamePin = params.roomCode as string
 
+  const isMountedRef = useRef(true)
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   const [session, setSession] = useState<Session | null>(null)
   const [currentPlayer, setCurrentPlayer] = useState<Participant | null>(null)
   const [timeLeft, setTimeLeft] = useState(0)
   const [timeLoaded, setTimeLoaded] = useState(false)
   const [isClient, setIsClient] = useState(false)
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
-  const [isAnswered, setIsAnswered] = useState(false)
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [playerHealth, setPlayerHealth] = useState(100)
   const [playerSpeed, setPlayerSpeed] = useState(1)
   const [correctAnswers, setCorrectAnswers] = useState(0)
   const [showFeedback, setShowFeedback] = useState(false)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [isProcessingAnswer, setIsProcessingAnswer] = useState(false)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [isAnswered, setIsAnswered] = useState(false)
+  // Derived state for question index - STRICTLY derived from data
+  const realIndex = currentPlayer?.answers?.length || 0
+
+  // VISUAL state determines what user sees (delayed until feedback is gone)
+  const [visualIndex, setVisualIndex] = useState(realIndex)
+
+  // Sync visual index with real index, BUT hold it while feedback is showing
+  useEffect(() => {
+    if (!showFeedback && visualIndex !== realIndex) {
+      setVisualIndex(realIndex)
+    }
+  }, [realIndex, showFeedback, visualIndex])
 
   const questions = session?.current_questions ?? []
   const totalQuestions = session?.question_limit ?? questions.length ?? 0
-  const currentQuestion = questions[currentQuestionIndex] ?? null
+  const currentQuestion = questions[visualIndex] ?? null
 
   const pulseIntensity = timeLeft <= 30 ? (31 - timeLeft) / 30 : 0
   const FEEDBACK_DURATION = 1400
@@ -103,7 +121,10 @@ export default function QuizPage() {
           setPlayerHealth(p.health.current)
           setPlayerSpeed(p.health.speed || 1)
           setCorrectAnswers(p.correct_answers || 0)
-          setCurrentQuestionIndex(p.answers?.length || 0)
+
+          // Initial sync
+          setVisualIndex(p.answers?.length || 0)
+
           localStorage.setItem("playerId", p.id)
           localStorage.removeItem("quizPrefetchData")
           setIsClient(true)
@@ -136,7 +157,10 @@ export default function QuizPage() {
         setPlayerHealth(player.health.current)
         setPlayerSpeed(player.health.speed || 1)
         setCorrectAnswers(player.correct_answers || 0)
-        setCurrentQuestionIndex(player.answers?.length || 0)
+
+        // Initial sync
+        setVisualIndex(player.answers?.length || 0)
+
         setIsClient(true)
       } catch (err) {
         console.error(err)
@@ -155,7 +179,7 @@ export default function QuizPage() {
     let poll: NodeJS.Timeout | null = null
 
     const updateFromServer = async () => {
-      if (isAnswered || showFeedback || isProcessingAnswer) return
+      if (showFeedback || isProcessingAnswer) return
 
       try {
         const { data } = await mysupa
@@ -165,17 +189,16 @@ export default function QuizPage() {
           .single()
         if (!data) return
 
-        const serverIndex = data.answers?.length || 0
-        if (serverIndex > currentQuestionIndex) {
-          setCurrentQuestionIndex(serverIndex)
-          setPlayerHealth(data.health.current)
-          setPlayerSpeed(data.health.speed || 1)
-          setCorrectAnswers(data.correct_answers || 0)
-          setCurrentPlayer(data)
+        // 1. ALWAYS Sync Stats (Health, Speed, Score) - Source of Truth is Server
+        setPlayerHealth(data.health.current)
+        setPlayerSpeed(data.health.speed || 1)
+        setCorrectAnswers(data.correct_answers || 0)
+        setCurrentPlayer(data)
+        // Real index updates automatically via currentPlayer
 
-          if (data.health.current <= 0 || !data.is_alive) {
-            redirectToResults(0, data.correct_answers || 0, totalQuestions, true)
-          }
+        // 3. Check Elimination
+        if (data.health.current <= 0 || !data.is_alive) {
+          redirectToResults(0, data.correct_answers || 0, totalQuestions, true)
         }
       } catch { }
     }
@@ -190,25 +213,24 @@ export default function QuizPage() {
           if (payload.eventType !== "UPDATE") return
           const upd = payload.new as Participant
 
-          if (isAnswered || showFeedback || isProcessingAnswer) return
+          if (showFeedback || isProcessingAnswer) return
 
-          const srvIdx = upd.answers?.length || 0
-          // Only sync FORWARD, never backwards (prevents race with local feedback navigation)
-          if (srvIdx > currentQuestionIndex) {
-            setCurrentQuestionIndex(srvIdx)
-            setPlayerHealth(upd.health.current)
-            setPlayerSpeed(upd.health.speed || 1)
-            setCorrectAnswers(upd.correct_answers || 0)
-            setCurrentPlayer(upd)
+          // 1. ALWAYS Sync Stats (Health, Speed, Score)
+          setPlayerHealth(upd.health.current)
+          setPlayerSpeed(upd.health.speed || 1)
+          setCorrectAnswers(upd.correct_answers || 0)
+          setCurrentPlayer(upd)
 
-            if (upd.health.current <= 0 || !upd.is_alive) {
-              redirectToResults(0, upd.correct_answers || 0, totalQuestions, true)
-            }
+          // 3. Check Elimination
+          if (upd.health.current <= 0 || !upd.is_alive) {
+            redirectToResults(0, upd.correct_answers || 0, totalQuestions, true)
           }
         }
       )
-      .subscribe(() => {
-        poll = setInterval(updateFromServer, 5000)
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED" && isMountedRef.current) {
+          poll = setInterval(updateFromServer, 5000)
+        }
       })
 
     // Listen for session status changes (when host ends game)
@@ -219,6 +241,8 @@ export default function QuizPage() {
         { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
         (payload) => {
           const updSession = payload.new as Session
+          setSession(updSession) // Fix: Always update session state (for timer/status)
+
           if (updSession.status === "finished") {
             // Host ended the game, redirect to results
             redirectToResults(playerHealth, correctAnswers, totalQuestions, playerHealth <= 0)
@@ -228,11 +252,13 @@ export default function QuizPage() {
       .subscribe()
 
     return () => {
+      console.log("Cleaning up quiz page effect")
+      // Do NOT set isMountedRef.current = false here, as it breaks re-runs!
       if (poll) clearInterval(poll)
       mysupa.removeChannel(playerChannel)
       mysupa.removeChannel(sessionChannel)
     }
-  }, [session?.id, currentPlayer?.id, currentQuestionIndex, isAnswered, showFeedback, isProcessingAnswer, totalQuestions, playerHealth, correctAnswers])
+  }, [session?.id, currentPlayer?.id, isAnswered, showFeedback, isProcessingAnswer, totalQuestions, playerHealth, correctAnswers])
 
   // ── TIMER ────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -268,21 +294,27 @@ export default function QuizPage() {
       setSelectedAnswer(null)
       setIsCorrect(null)
 
+      // Use robust index logic (sync with server/optimistic data)
+      const nextIdx = currentPlayer?.answers?.length || 0
+
+      // Check for completion
       if (playerHealth <= 0) {
         redirectToResults(0, correctAnswers, totalQuestions, true)
         return
       }
 
-      if (currentQuestionIndex + 1 >= totalQuestions) {
+      if (nextIdx >= totalQuestions) {
         redirectToResults(playerHealth, correctAnswers, totalQuestions, false)
         return
       }
 
-      setCurrentQuestionIndex(prev => prev + 1)
+      // No need to set index manually anymore! It's derived.
+      // BUT we do need to update Visual Index now that feedback is done
+      setVisualIndex(nextIdx)
     }, FEEDBACK_DURATION)
 
     return () => clearTimeout(t)
-  }, [showFeedback])
+  }, [showFeedback, currentPlayer, playerHealth, correctAnswers, totalQuestions])
 
   const submitAnswer = useCallback(async (answer: string, correct: boolean) => {
     if (!currentPlayer || !currentQuestion || isProcessingAnswer) return
@@ -374,7 +406,8 @@ export default function QuizPage() {
     return `${m}:${ss < 10 ? "0" : ""}${ss}`
   }
 
-  if (!session || !currentPlayer || !isClient) return <LoadingScreen children={undefined} />
+  // If session/player not loaded OR visualIndex says we are done (but redirect pending), show Loading
+  if (!session || !currentPlayer || !isClient || visualIndex >= totalQuestions) return <LoadingScreen children={undefined} />
 
   const danger = playerHealth <= 25 ? 3 : playerHealth <= 50 ? 2 : 1
 
@@ -436,7 +469,7 @@ export default function QuizPage() {
             <div className="flex items-center gap-x-1">
               <CircleQuestionMark className="w-4 h-4 text-purple-400" />
               <span className="text-white">
-                {currentQuestionIndex + 1}/{totalQuestions}
+                {visualIndex + 1}/{totalQuestions}
               </span>
             </div>
             <div className="flex items-center gap-x-1">
