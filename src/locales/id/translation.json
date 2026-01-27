@@ -276,7 +276,8 @@
   "appInstalled": "Terinstal",
   "loadingMore": "Memuat lebih banyak...",
   "endGame": "Akhiri Game",
-  "confirmEndGame": "Akhiri Game?",
-  "confirmEndGameDesc": "Apakah Anda yakin ingin mengakhiri game sekarang? Semua pemain akan ditandai selesai.",
-  "endGameNow": "Akhiri Sekarang"
+  "confirmEndGame": "Akhiri Game",
+  "confirmEndGameDesc": "Ini akan mengakhiri game untuk semua pemain.",
+  "yes": "Ya",
+  "no": "Tidak"
 }

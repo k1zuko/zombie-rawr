@@ -270,7 +270,8 @@
   "appInstalled": "Installed",
   "loadingMore": "Loading more...",
   "endGame": "End Game",
-  "confirmEndGame": "End Game?",
-  "confirmEndGameDesc": "Are you sure you want to end the game now? All players will be marked as finished.",
-  "endGameNow": "End Game Now"
+  "confirmEndGame": "End Game",
+  "confirmEndGameDesc": "This will end the game for all players.",
+  "yes": "Yes",
+  "no": "No"
 }

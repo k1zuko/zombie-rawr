@@ -705,7 +705,7 @@ export default function HostGamePage() {
               {t("confirmEndGame") || "End Game?"}
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              {t("confirmEndGameDesc") || "Are you sure you want to end the game now? All players will be marked as finished."}
+              {t("confirmEndGameDesc") || "This will end the game for all players."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 sm:justify-end">
@@ -714,14 +714,14 @@ export default function HostGamePage() {
               onClick={() => setShowEndGameDialog(false)}
               className="border-gray-600 text-gray-300 hover:bg-gray-800"
             >
-              {t("cancel") || "Cancel"}
+              {t("no") || "No"}
             </Button>
             <Button
               variant="destructive"
               onClick={handleEndGame}
               className="bg-red-700 hover:bg-red-600"
             >
-              {t("endGameNow") || "End Game Now"}
+              {t("yes") || "Yes"}
             </Button>
           </DialogFooter>
         </DialogContent>
