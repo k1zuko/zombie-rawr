@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 interface Background1Props {
   isFlashing: boolean;
@@ -10,152 +11,170 @@ export default function Background1({ isFlashing }: Background1Props) {
       <div
         className={`absolute inset-0 blood-background ${isFlashing ? "flash-effect" : ""}`}
       >
-
-        {/* Container untuk 2.png (awan) */}
+        {/* Container untuk 2.png (awan) - Layer 1 */}
         <div className="background-container-groundtiga">
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/1.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 25px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/1.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 25px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/1.webp"
+              alt="Cloud 1"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-25px' }}
+              priority
+            />
+          </div>
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/1.webp"
+              alt="Cloud 2"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-25px' }}
+              priority
+            />
+          </div>
         </div>
-        {/* Container untuk 3.png (tanah) */}
+
+        {/* Container untuk 3.png (tanah) - Layer 2 */}
         <div className="background-container-grounddua">
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/3.webp')",
-              backgroundSize: "106%",
-              backgroundPosition: "center calc(100% + 103px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/3.webp')",
-              backgroundSize: "106%",
-              backgroundPosition: "center calc(100% + 103px)",
-              backgroundRepeat: "scaleX(-1)"
-            }}
-          />
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/3.webp"
+              alt="Ground 1"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-103px' }}
+              priority
+            />
+          </div>
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/3.webp"
+              alt="Ground 2"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto scale-x-[-1]"
+              style={{ bottom: '-103px' }}
+              priority
+            />
+          </div>
         </div>
-        {/* Container untuk 4.png (tanah tambahan) */}
+
+        {/* Container untuk 4.png - Layer 3 */}
         <div className="background-container-ground">
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/4.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/4.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/4.webp"
+              alt="Layer 4-1"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-10px' }}
+            />
+          </div>
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/4.webp"
+              alt="Layer 4-2"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-10px' }}
+            />
+          </div>
         </div>
 
+        {/* Container untuk 5.png - Layer 4 */}
         <div className="background-container-ground">
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/5.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/5.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/5.webp"
+              alt="Layer 5-1"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-10px' }}
+            />
+          </div>
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/5.webp"
+              alt="Layer 5-2"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-10px' }}
+            />
+          </div>
         </div>
 
-
-
-
-
+        {/* Container untuk 7.png - Layer 5 */}
         <div className="background-container-ground">
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/7.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/7.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/7.webp"
+              alt="Layer 7-1"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-10px' }}
+            />
+          </div>
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/7.webp"
+              alt="Layer 7-2"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-10px' }}
+            />
+          </div>
         </div>
 
-
+        {/* Container untuk 8.png - Layer 6 */}
         <div className="background-container-ground">
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/8.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
-          <div
-            className="background-image"
-            style={{
-              backgroundImage: "url('/map6/8.webp')",
-              backgroundSize: "100%",
-              backgroundPosition: "center calc(100% + 10px)",
-              backgroundRepeat: "no-repeat",
-            }}
-          />
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/8.webp"
+              alt="Layer 8-1"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-10px' }}
+            />
+          </div>
+          <div className="relative w-1/2 h-full flex-shrink-0">
+            <Image
+              src="/map6/8.webp"
+              alt="Layer 8-2"
+              width={0}
+              height={0}
+              sizes="50vw"
+              className="absolute left-0 w-full h-auto"
+              style={{ bottom: '-10px' }}
+            />
+          </div>
         </div>
-
 
         <div className="mist-effect" />
       </div>
+
       <style jsx>{`
-        .background-container {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 200%;
-          height: 100%;
-          display: flex;
-          animation: slide 20s linear infinite;
-        }
         .background-container-ground {
           position: absolute;
           top: 0;
@@ -186,15 +205,6 @@ export default function Background1({ isFlashing }: Background1Props) {
           animation: slide-ground 45s linear infinite;
         }
 
-        .background-image {
-          width: 50%;
-          height: 100%;
-          flex-shrink: 0;
-        }
-        @keyframes slide {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
         @keyframes slide-ground {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
@@ -206,6 +216,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
           animation: mist-move 20s linear infinite;
           opacity: 0.3;
+          pointer-events: none;
         }
         @keyframes mist-move {
           0% { transform: translateX(-50%); }
@@ -220,6 +231,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           height: 30px;
           background: radial-gradient(circle, rgba(255, 0, 0, 0.7) 0%, rgba(255, 0, 0, 0) 70%);
           animation: blood-drip 2s infinite;
+          pointer-events: none;
         }
         .blood-background::after {
           content: '';
@@ -230,6 +242,7 @@ export default function Background1({ isFlashing }: Background1Props) {
           height: 30px;
           background: radial-gradient(circle, rgba(255, 0, 0, 0.7) 0%, rgba(255, 0, 0, 0) 70%);
           animation: blood-drip 2.5s infinite 0.5s;
+          pointer-events: none;
         }
         @keyframes blood-drip {
           0% { transform: translateY(-10px); opacity: 0; }
@@ -243,15 +256,6 @@ export default function Background1({ isFlashing }: Background1Props) {
           0%, 100% { background-color: rgba(255, 0, 0, 0); }
           50% { background-color: rgba(255, 0, 0, 0.3); }
         }
-        .moon-image {
-          position: absolute;
-          top: 30px;
-          right: 50px;
-          width: 100px;
-          height: 100px;
-          object-fit: cover;
-          z-index: 10;
-        }
         @media (max-width: 640px) {
           .mist-effect {
             width: 300%;
@@ -261,12 +265,6 @@ export default function Background1({ isFlashing }: Background1Props) {
           .blood-background::after {
             width: 8px;
             height: 20px;
-          }
-          .moon-image {
-            width: 60px;
-            height: 60px;
-            top: 20px;
-            right: 20px;
           }
         }
       `}</style>
