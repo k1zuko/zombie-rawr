@@ -6,8 +6,9 @@ import { mysupa, supabase } from "@/lib/supabase"; // GANTI DARI supabase KE mys
 import Background3 from "@/components/game/host/Background3";
 import GameUI from "@/components/game/host/GameUI";
 import { motion } from "framer-motion";
-import ZombieCharacter from "@/components/game/host/ZombieCharacter";
-import RunningCharacters from "@/components/game/host/RunningCharacters";
+// import ZombieCharacter from "@/components/game/host/ZombieCharacter";
+// import RunningCharacters from "@/components/game/host/RunningCharacters";
+import OptimizedGameCanvas from "@/components/game/host/OptimizedGameCanvas";
 import { useHostGuard } from "@/lib/host-guard";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
@@ -36,8 +37,6 @@ function usePrevious<T>(value: T): T | undefined {
 
 const MemoizedBackground3 = React.memo(Background3);
 const MemoizedGameUI = React.memo(GameUI);
-const MemoizedRunningCharacters = React.memo(RunningCharacters);
-const MemoizedZombieCharacter = React.memo(ZombieCharacter);
 
 export interface Participant {
   id: string;
@@ -362,7 +361,7 @@ export default function HostGamePage() {
         id: p.id,
         health: p.health.current,
         maxHealth: p.health.max,
-        speed: p.health.speed,
+        speed: p.health.speed || 20,
         position: i,
         attackIntensity: 0,
       };
@@ -620,11 +619,10 @@ export default function HostGamePage() {
   const centerX = screenWidth / 2;
   const chaserType = session?.difficulty?.split(":")[0] as any || "zombie";
 
-  if (!isClient || !session || !session.started_at || isFinishing) {
-    return (
-      <LoadingScreen children={undefined} />
-    );
-  }
+  // REMOVED early return to allow background render
+  // if (!isClient || !session || !session.started_at || isFinishing) return <LoadingScreen ... />;
+
+  const isLoading = !isClient || !session || !session.started_at || isFinishing;
 
   const mainContentClass = `relative w-full h-screen bg-black overflow-hidden ${isPortraitMobile ? 'rotate-to-landscape-wrapper' : ''}`;
   const wrapperStyle = isPortraitMobile ? {
@@ -675,34 +673,31 @@ export default function HostGamePage() {
 
       </motion.header>
 
-      <MemoizedRunningCharacters
-        players={activePlayers}
-        playerStates={playerStates}
-        zombieState={zombieState}
-        animationTime={animationTimeRef.current}
-        gameMode={gameMode}
-        screenHeight={screenHeight}
-        centerX={centerX}
-        completedPlayers={[]}
-        isPortraitMobile={isPortraitMobile} // ← sekarang dinamis
-        mobileHorizontalShift={150}
-      />
+      {isLoading ? (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <LoadingScreen children={undefined} />
+        </div>
+      ) : (
+        <>
+          <OptimizedGameCanvas
+            players={activePlayers}
+            playerStates={playerStates}
+            zombieState={zombieState}
+            gameMode={gameMode}
+            centerX={centerX}
+            completedPlayers={[]}
+            screenHeight={screenHeight}
+            screenWidth={screenWidth}
+            isPortraitMobile={isPortraitMobile || false}
+            mobileHorizontalShift={isPortraitMobile ? 20 : 0}
+            chaserType={chaserType}
+          />
 
-      <MemoizedZombieCharacter
-        zombieState={zombieState}
-        gameMode={gameMode}
-        centerX={centerX}
-        chaserType={chaserType}
-        players={activePlayers}
-        animationTime={animationTimeRef.current}
-        screenHeight={screenHeight}
-        isPortraitMobile={isPortraitMobile}
-        mobileHorizontalShift={ZOMBIE_MOBILE_HORIZONTAL_OFFSET}
-      />
-
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
-        <MemoizedGameUI roomCode={gamePin} />
-      </div>
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
+            <MemoizedGameUI roomCode={gamePin} />
+          </div>
+        </>
+      )}
 
       {/* End Game Button */}
       <Button

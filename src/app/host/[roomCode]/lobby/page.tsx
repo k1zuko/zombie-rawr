@@ -183,50 +183,8 @@ export default function HostPage() {
   const [lastCursor, setLastCursor] = useState<string | null>(null);
   const playersContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const assetsToPreload = [
-      '/map6/1.webp',
-      '/map6/3.webp',
-      '/map6/4.webp',
-      '/map6/5.webp',
-      '/map6/7.webp',
-      '/map6/8.webp',
-      '/character/chaser/darknight.webp',
-      '/character/chaser/monster1.webp',
-      '/character/chaser/monster2.webp',
-      '/character/chaser/monster3.webp',
-      '/character/chaser/zombie.webp',
-      '/character/player/character1-crop.webp',
-      '/character/player/character2-crop.webp',
-      '/character/player/character3-crop.webp',
-      '/character/player/character4-crop.webp',
-      '/character/player/character5-resize.webp',
-      '/character/player/character6.webp',
-      '/character/player/character8-crop.webp',
-      '/character/player/character9-crop.webp',
-    ];
-    let loadedCount = 0;
-    const totalAssets = assetsToPreload.length;
-
-    if (totalAssets === 0) {
-      setIsAssetsLoaded(true);
-      return;
-    }
-
-    const onAssetLoad = () => {
-      loadedCount++;
-      if (loadedCount === totalAssets) {
-        setIsAssetsLoaded(true);
-      }
-    };
-
-    assetsToPreload.forEach(src => {
-      const img = new window.Image();
-      img.src = src;
-      img.onload = onAssetLoad;
-      img.onerror = onAssetLoad;
-    });
-  }, []);
+  // Preload moved to countdown effect
+  // useEffect(() => { ... }, []);
 
   const setSessionStatus = async (status: Session["status"]) => {
     if (!session?.id) return;
@@ -552,7 +510,39 @@ export default function HostPage() {
     },
   ];
 
-  const isPageReady = !isLoading && !!session && isAssetsLoaded;
+  // Preload assets when countdown starts
+  useEffect(() => {
+    if (!session?.countdown_started_at) return;
+
+    const assetsToPreload = [
+      '/map6/1.webp',
+      '/map6/3.webp',
+      '/map6/4.webp',
+      '/map6/5.webp',
+      '/map6/7.webp',
+      '/map6/8.webp',
+      '/character/chaser/darknight.webp',
+      '/character/chaser/monster1.webp',
+      '/character/chaser/monster2.webp',
+      '/character/chaser/monster3.webp',
+      '/character/chaser/zombie.webp',
+      '/character/player/character1-crop.webp',
+      '/character/player/character2-crop.webp',
+      '/character/player/character3-crop.webp',
+      '/character/player/character4-crop.webp',
+      '/character/player/character5-resize.webp',
+      '/character/player/character6.webp',
+      '/character/player/character8-crop.webp',
+      '/character/player/character9-crop.webp',
+    ];
+
+    assetsToPreload.forEach(src => {
+      const img = new window.Image();
+      img.src = src;
+    });
+  }, [session?.countdown_started_at]);
+
+  const isPageReady = !isLoading && !!session;
 
   return (
     <LoadingScreen isReady={isPageReady}>
@@ -577,14 +567,14 @@ export default function HostPage() {
           </div>
           <audio src="/musics/background-music-room.mp3" autoPlay loop muted />
           <div
-            className="absolute inset-0 z-0"
+            className="fixed inset-0 z-0"
             style={{
               backgroundImage: "url('/background/21.gif')",
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
           ></div>
-          <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 via-black to-purple-900/5">
+          <div className="fixed inset-0 bg-gradient-to-br from-red-900/5 via-black to-purple-900/5">
             <div className="absolute inset-0 opacity-20">
               {[...Array(10)].map((_, i) => (
                 <div
@@ -619,7 +609,7 @@ export default function HostPage() {
             />
           ))}
 
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="fixed inset-0 pointer-events-none">
             {[...Array(8)].map((_, i) => (
               <div
                 key={i}
@@ -637,18 +627,18 @@ export default function HostPage() {
             ))}
           </div>
 
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwLDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBLNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
+          <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJzY3JhdGNoZXMiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48cGF0aCBkPSJNMCAwLDUwMCA1MDAiIHN0cm9rZT0icmdiYSgyNTUsMCwwLDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMCAxMDBLNTAwIDYwMCIgc3Ryb2tlPSJyZ2JhKDI1NSwwLDAsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0wIDIwMEw1MDAgNzAwIiBzdHJva2U9InJnYmEoMjU1LDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3NjcmF0Y2hlcykiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==')] opacity-20" />
 
-          <div className="absolute top-0 left-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
+          <div className="fixed top-0 left-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
             <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
           </div>
-          <div className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
+          <div className="fixed top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
             <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
           </div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
+          <div className="fixed bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
             <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
           </div>
-          <div className="absolute bottom-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
+          <div className="fixed bottom-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 opacity-20">
             <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
           </div>
 

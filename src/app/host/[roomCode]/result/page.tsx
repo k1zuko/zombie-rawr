@@ -8,6 +8,12 @@ import Image from "next/image";
 import Confetti from "react-confetti";
 import { Home, RotateCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useHostGuard } from "@/lib/host-guard";
 import { generateGamePin } from "@/utils/gameHelpers";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -359,7 +365,16 @@ export default function ResultsHostPage() {
                   >
                     <div className="text-red-400 font-bold text-base shrink-0">#{rank}</div>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium text-sm truncate ${player.isLolos ? "text-green-500" : "text-red-500"}`} title={player.nickname}>{player.nickname}</p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className={`font-medium text-sm truncate ${player.isLolos ? "text-green-500" : "text-red-500"}`}>{player.nickname}</p>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{player.nickname}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                     <div className={`font-bold ${style.text} text-lg`}>{player.finalScore}</div>
                   </div>
@@ -400,7 +415,16 @@ export default function ResultsHostPage() {
                               <div className="w-8 h-8 rounded-full overflow-hidden">
                                 <img src={char.src} alt="" className="w-full h-full object-contain" />
                               </div>
-                              <span className={`font-medium ${player.isLolos ? "text-green-500" : "text-red-500"}`} title={player.nickname}>{player.nickname}</span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className={`font-medium ${player.isLolos ? "text-green-500" : "text-red-500"} cursor-help`}>{player.nickname}</span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{player.nickname}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           </td>
                           <td className="py-2.5 px-4 font-bold text-red-400">{player.finalScore}</td>
@@ -501,9 +525,18 @@ function PodiumPosition({
           </div>
         </div>
 
-        <h3 className={`font-bold text-sm lg:text-base break-words line-clamp-1 ${isFirst ? 'text-base lg:text-lg mb-1' : 'mb-0.5'} ${player.isLolos ? "text-green-500" : "text-red-500"}`} title={player.nickname}>
-          {player.nickname}
-        </h3>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h3 className={`font-bold text-sm lg:text-base break-words line-clamp-1 ${isFirst ? 'text-base lg:text-lg mb-1' : 'mb-0.5'} ${player.isLolos ? "text-green-500" : "text-red-500"} cursor-help`}>
+                {player.nickname}
+              </h3>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{player.nickname}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         <div className={`font-bold text-red-400 ${isFirst ? 'text-xl lg:text-2xl' : 'text-lg lg:text-xl'}`}>
           {player.finalScore}

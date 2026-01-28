@@ -535,7 +535,7 @@ export default function LobbyPage() {
         </div>
 
 
-        {/* Dialog Keluar – Dengan Karakter Pemain */}
+        {/* Dialog Keluar */}
         <Dialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>
           <DialogContent className="bg-black/95 border-2 border-red-600/80 text-white max-w-sm rounded-2xl overflow-hidden">
             {/* Header dengan karakter di tengah */}
@@ -580,14 +580,14 @@ export default function LobbyPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Pilih Karakter Desktop */}
-        {!isMobile && isCharacterSelectorOpen && (
+        {/* Dialog Pilih Karakter (Responsive for Mobile & Desktop) */}
+        {isCharacterSelectorOpen && (
           <Dialog open={isCharacterSelectorOpen} onOpenChange={setIsCharacterSelectorOpen}>
-            <DialogContent className="bg-black/95 border-red-800/60 text-white p-6 max-w-lg rounded-2xl">
+            <DialogContent className="bg-black/95 border-red-800/60 text-white p-4 max-w-sm rounded-xl w-[85vw]">
               <DialogHeader>
-                <DialogTitle className="text-2xl  text-red-500 mb-3"></DialogTitle>
+                <DialogTitle className="text-xl text-red-500 mb-2 text-center">{t("selectCharacter")}</DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-5 gap-4 mt-6">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mt-2 max-h-[50vh] overflow-y-auto">
                 {characterOptions.map((character) => (
                   <motion.button
                     key={character.value}
@@ -596,14 +596,14 @@ export default function LobbyPage() {
                       handleCharacterSelect(character.value);
                       setIsCharacterSelectorOpen(false);
                     }}
-                    className={`relative aspect-square rounded-xl overflow-hidden border-4 ${selectedCharacter === character.value
-                      ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.9)]"
+                    className={`relative aspect-square rounded-lg overflow-hidden border-2 ${selectedCharacter === character.value
+                      ? "border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.9)]"
                       : "border-white/20 hover:border-red-600"
                       }`}
                   >
                     {selectedCharacter === character.value && (
-                      <div className="absolute inset-0 bg-red-600/50 z-10 flex items-center justify-center">
-
+                      <div className="absolute inset-0 bg-red-600/40 z-10 flex items-center justify-center">
+                        <CheckCircle2 className="w-8 h-8 text-white drop-shadow-md" />
                       </div>
                     )}
                     <Image src={character.gif} alt={character.name} fill unoptimized className="object-cover" />

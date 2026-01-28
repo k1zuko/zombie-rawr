@@ -258,6 +258,16 @@ export function BotInstance({
         answeringRef.current = true;
 
         const answerQuestions = async () => {
+            // Initial "Reading" delay for the first question (5 seconds)
+            if (currentQuestion === 0) {
+                await delay(5000);
+            }
+
+            if (!mountedRef.current || stopSignal) {
+                answeringRef.current = false;
+                return;
+            }
+
             for (let qIndex = currentQuestion; qIndex < totalQuestions; qIndex++) {
                 if (!mountedRef.current || stopSignal || isCompleted || health <= 0) break;
 
@@ -314,9 +324,12 @@ export function BotInstance({
                 const scorePerQ = totalQuestions > 0 ? Math.floor(100 / totalQuestions) : 100;
                 const newScore = newCorrectCount * scorePerQ;
 
-                // Use stored speed from database
-                const storedSpeed = currentParticipant.health?.speed || 20;
-                const newSpeed = Math.max(20, storedSpeed + (isCorrect ? 5 : -5));
+                // Use stored speed from database, force number type
+                const storedSpeed = typeof currentParticipant.health?.speed === 'number'
+                    ? currentParticipant.health.speed
+                    : parseInt(currentParticipant.health?.speed || '20', 10);
+
+                const newSpeed = Math.max(20, storedSpeed + (isCorrect ? 10 : -2));
 
                 const newAnswer = answersNew[answersNew.length - 1];
                 const isLastQuestion = qIndex === totalQuestions - 1;
