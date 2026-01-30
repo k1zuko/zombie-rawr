@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Skull, Bone, HeartPulse, Ghost, Zap, Clock, ArrowRight, Settings, List, ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
+import { Skull, Bone, HeartPulse, Ghost, Zap, Clock, ArrowRight, Settings, List, ChevronLeft, ChevronRight, Minus, Plus, Volume2, VolumeX } from "lucide-react";
 import { supabase, mysupa } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -56,6 +56,14 @@ export default function CharacterSelectPage() {
   const [questionCount, setQuestionCount] = useState<number>(10);
   const [chaserType, setChaserType] = useState<ChaserType>("zombie");
   const [difficultyLevel, setDifficultyLevel] = useState<DifficultyLevel>("medium");
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("host_audio_enabled");
+    if (stored !== null) {
+      setSoundEnabled(stored === "true");
+    }
+  }, []);
 
   const [flickerText, setFlickerText] = useState(true);
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([]);
@@ -144,11 +152,13 @@ export default function CharacterSelectPage() {
 
   const saveSettings = async () => {
     if (!sessionData || !quiz || !isFormValid) return;
-    
+
     // Langsung tampilkan loading screen tanpa jeda
     setIsSaving(true);
 
     try {
+      localStorage.setItem("host_audio_enabled", String(soundEnabled));
+
       // 1. Prepare settings object
       const newDifficultyString = `${chaserType}:${difficultyLevel}`;
       const settings = {
@@ -281,7 +291,7 @@ export default function CharacterSelectPage() {
 
         {/* Game Settings */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="max-w-4xl mx-auto space-y-6 mt-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Duration */}
             <div className="p-3 bg-red-900/20 rounded border border-red-900/30">
               <Label className="text-red-300 mb-2 block font-medium text-xs text-center">{t("gameDurationLabel")}</Label>
@@ -312,6 +322,27 @@ export default function CharacterSelectPage() {
                     <span>{t(`difficulty.${option.value}`)}</span>
                   </motion.button>
                 ))}
+              </div>
+            </div>
+
+            {/* Sound Setting */}
+            <div className="p-3 bg-red-900/20 rounded border border-red-900/30">
+              <Label className="text-red-300 mb-3 block font-medium text-xs text-center">{t("soundSettingLabel")}</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSoundEnabled(false)}
+                  className={`p-2 rounded-lg border flex items-center justify-center ${!soundEnabled ? "bg-red-900/60 border-red-500 text-red-200" : "bg-black/40 border-red-900/50 text-red-400"}`}
+                >
+                  <VolumeX className="w-5 h-5" />
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSoundEnabled(true)}
+                  className={`p-2 rounded-lg border flex items-center justify-center ${soundEnabled ? "bg-red-900/60 border-red-500 text-red-200" : "bg-black/40 border-red-900/50 text-red-400"}`}
+                >
+                  <Volume2 className="w-5 h-5" />
+                </motion.button>
               </div>
             </div>
           </div>

@@ -16,6 +16,8 @@ import {
   Bone,
   Trash2,
   Maximize2,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 import { mysupa } from "@/lib/supabase"; // SESUAI QUIZRUSH
@@ -183,8 +185,29 @@ export default function HostPage() {
   const [lastCursor, setLastCursor] = useState<string | null>(null);
   const playersContainerRef = useRef<HTMLDivElement>(null);
 
+  // BGM State
+  const [isMuted, setIsMuted] = useState(true); // Default muted if no setting
+
+  useEffect(() => {
+    const stored = localStorage.getItem("host_audio_enabled");
+    if (stored !== null) {
+      setIsMuted(stored !== "true"); // If enabled (true), then muted is false.
+    }
+  }, []);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
   // Preload moved to countdown effect
   // useEffect(() => { ... }, []);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isMuted) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+      }
+    }
+  }, [isMuted]);
 
   const setSessionStatus = async (status: Session["status"]) => {
     if (!session?.id) return;
@@ -372,6 +395,7 @@ export default function HostPage() {
         10_000
       );
       setCountdown(remaining);
+
       if (remaining <= 0) {
         setCountdown(null);
         setSessionStatus("active");
@@ -381,6 +405,20 @@ export default function HostPage() {
     const iv = setInterval(update, 100);
     return () => clearInterval(iv);
   }, [session?.countdown_started_at]);
+
+  // Play countdown sound ONCE when countdown starts
+  useEffect(() => {
+    if (session?.countdown_started_at && !isMuted) {
+      const remaining = calculateCountdown(session.countdown_started_at, 10_000);
+      // Only play if just started (e.g. within first 2 seconds) or simply check > 0
+      // Since this effect only runs when `countdown_started_at` changes, it runs once per start.
+      if (remaining > 0) {
+        const sfx = new Audio("/musics/countdown.mp3");
+        sfx.volume = 0.5;
+        sfx.play().catch(() => { });
+      }
+    }
+  }, [session?.countdown_started_at, isMuted]);
 
   // ========================================
   // 4. KICK PLAYER
@@ -565,7 +603,26 @@ export default function HostPage() {
               className="w-40 md:w-48 lg:w-56 h-auto"
             />
           </div>
-          <audio src="/musics/background-music-room.mp3" autoPlay loop muted />
+          <audio
+            ref={audioRef}
+            src="/musics/lobby.mp3"
+            loop
+            autoPlay
+            muted={isMuted} // State kontrol
+          />
+
+          {/* Mute/Unmute Toggle Button */}
+          <div className="fixed bottom-4 right-4 z-50">
+            <Button
+              variant="default"
+              size="icon"
+              onClick={() => setIsMuted(!isMuted)}
+              className="bg-red-600 hover:bg-red-700 text-white border-2 border-white/20 rounded-full w-12 h-12 shadow-[0_0_20px_rgba(220,38,38,0.6)] hover:shadow-[0_0_30px_rgba(220,38,38,0.8)] hover:scale-110 transition-all duration-300"
+            >
+              {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+            </Button>
+          </div>
+
           <div
             className="fixed inset-0 z-0"
             style={{

@@ -143,7 +143,12 @@ export default function LoginPage() {
       }
 
       toast.success(t("loginSuccess"));
-      router.push("/");
+      const pendingCode = localStorage.getItem("pendingRoomCode");
+      if (pendingCode) {
+        router.push(`/join/${pendingCode}`);
+      } else {
+        router.push("/");
+      }
     } catch (err: any) {
       console.error("Error login:", err);
       setIsLoading(false)

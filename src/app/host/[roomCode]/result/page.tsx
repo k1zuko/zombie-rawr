@@ -355,7 +355,7 @@ export default function ResultsHostPage() {
             ) : (
               playerResults.map((player, index) => {
                 const rank = index + 1;
-                const style = getRankStyle(rank);
+                const statusColor = player.isLolos ? "text-green-500" : "text-red-500";
 
                 return (
                   <div
@@ -363,12 +363,12 @@ export default function ResultsHostPage() {
                     className={`flex items-center gap-2.5 p-2.5 rounded-lg border ${rank <= 3 ? 'bg-red-950/25 border-red-600/40' : 'bg-black/35 border-gray-700'
                       }`}
                   >
-                    <div className="text-red-400 font-bold text-base shrink-0">#{rank}</div>
+                    <div className={`${statusColor} font-bold text-base shrink-0`}>#{rank}</div>
                     <div className="flex-1 min-w-0">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <p className={`font-medium text-sm truncate ${player.isLolos ? "text-green-500" : "text-red-500"}`}>{player.nickname}</p>
+                            <p className={`font-medium text-sm truncate ${statusColor}`}>{player.nickname}</p>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{player.nickname}</p>
@@ -376,15 +376,15 @@ export default function ResultsHostPage() {
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-                    <div className={`font-bold ${style.text} text-lg`}>{player.finalScore}</div>
+                    <div className={`font-bold ${statusColor} text-lg`}>{player.finalScore}</div>
                   </div>
                 );
               })
             )}
           </div>
 
-          {/* Tabel lainnya (desktop) */}
-          {others.length > 0 && (
+          {/* Tabel (desktop) - Menampilkan SEMUA pemain */}
+          {playerResults.length > 0 && (
             <motion.div
               className="hidden md:block mt-8 max-w-3xl mx-auto"
               initial={{ opacity: 0 }}
@@ -402,14 +402,14 @@ export default function ResultsHostPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {others.map((player, idx) => {
-                      const rank = idx + 4;
+                    {playerResults.map((player, idx) => {
+                      const rank = idx + 1;
                       const char = getCharacterByType(player.character_type);
-                      const style = getRankStyle(rank);
+                      const statusColor = player.isLolos ? "text-green-500" : "text-red-500";
 
                       return (
                         <tr key={player.id} className="border-t border-red-900/20 hover:bg-red-950/20 transition-colors">
-                          <td className={`py-2.5 px-4 font-black ${style.text}`}>#{rank}</td>
+                          <td className={`py-2.5 px-4 font-black ${statusColor}`}>#{rank}</td>
                           <td className="py-2.5 px-4">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full overflow-hidden">
@@ -418,7 +418,7 @@ export default function ResultsHostPage() {
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className={`font-medium ${player.isLolos ? "text-green-500" : "text-red-500"} cursor-help`}>{player.nickname}</span>
+                                    <span className={`font-medium ${statusColor} cursor-help line-clamp-1`}>{player.nickname}</span>
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     <p>{player.nickname}</p>
@@ -427,8 +427,8 @@ export default function ResultsHostPage() {
                               </TooltipProvider>
                             </div>
                           </td>
-                          <td className="py-2.5 px-4 font-bold text-red-400">{player.finalScore}</td>
-                          <td className="py-2.5 px-4 text-gray-400">{player.duration}</td>
+                          <td className={`py-2.5 px-4 font-bold ${statusColor}`}>{player.finalScore}</td>
+                          <td className={`py-2.5 px-4 font-medium ${statusColor}`}>{player.duration}</td>
                         </tr>
                       );
                     })}
@@ -528,7 +528,7 @@ function PodiumPosition({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <h3 className={`font-bold text-sm lg:text-base break-words line-clamp-1 ${isFirst ? 'text-base lg:text-lg mb-1' : 'mb-0.5'} ${player.isLolos ? "text-green-500" : "text-red-500"} cursor-help`}>
+              <h3 className={`font-bold text-sm lg:text-base break-words line-clamp-2 ${isFirst ? 'text-base lg:text-lg mb-1' : 'mb-0.5'} ${player.isLolos ? "text-green-500" : "text-red-500"} cursor-help`}>
                 {player.nickname}
               </h3>
             </TooltipTrigger>
@@ -538,7 +538,7 @@ function PodiumPosition({
           </Tooltip>
         </TooltipProvider>
 
-        <div className={`font-bold text-red-400 ${isFirst ? 'text-xl lg:text-2xl' : 'text-lg lg:text-xl'}`}>
+        <div className={`font-bold ${player.isLolos ? "text-green-500" : "text-red-500"} ${isFirst ? 'text-xl lg:text-2xl' : 'text-lg lg:text-xl'}`}>
           {player.finalScore}
         </div>
       </Card>

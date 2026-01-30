@@ -84,6 +84,16 @@ export default function HomePage() {
     preloadGlobalAssets();
   }, []);
 
+  // Auto-redirect if pending join exists
+  useEffect(() => {
+    if (!authLoading && user) {
+      const pendingCode = localStorage.getItem("pendingRoomCode");
+      if (pendingCode) {
+        router.push(`/join/${pendingCode}`);
+      }
+    }
+  }, [user, authLoading, router]);
+
   useEffect(() => {
     const dismissed = localStorage.getItem("pwaBannerDismissed") === "true";
     if (installPrompt && !dismissed) {

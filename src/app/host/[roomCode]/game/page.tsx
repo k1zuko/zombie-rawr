@@ -24,7 +24,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { StopCircle } from "lucide-react";
+import {
+  StopCircle,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 
 const ZOMBIE_MOBILE_VERTICAL_OFFSET = 90;
 const ZOMBIE_MOBILE_HORIZONTAL_OFFSET = 20;
@@ -369,6 +373,75 @@ export default function HostGamePage() {
     return states;
   }, [participants]);
 
+  // Audio Refs
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const eatingSfxRef = useRef<HTMLAudioElement | null>(null);
+  const screamSfxRef = useRef<HTMLAudioElement | null>(null);
+  const [isMuted, setIsMuted] = useState(false); // Default unmuted for game usually
+
+  // Init mute state from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("host_audio_enabled");
+    if (stored !== null) {
+      setIsMuted(stored !== 'true');
+    }
+  }, []);
+
+  // BGM Effect
+  useEffect(() => {
+    // Create Audio instance only once
+    const bgm = new Audio("/musics/game.mp3");
+    bgm.loop = true;
+    bgm.volume = 0.3;
+    bgm.autoplay = true;
+    bgmRef.current = bgm;
+
+    const eating = new Audio("/musics/eating.mp3");
+    eatingSfxRef.current = eating;
+
+    // Screams will be handled dynamically or preloaded? Let's just create ref
+
+    // Play BGM if not muted
+    if (!isMuted) {
+      bgm.play().catch(e => console.log("BGM play failed:", e));
+    }
+
+    return () => {
+      bgm.pause();
+      bgm.currentTime = 0;
+    };
+  }, []);
+
+  // Handle Mute Toggle
+  useEffect(() => {
+    if (bgmRef.current) {
+      if (isMuted) {
+        bgmRef.current.pause();
+      } else {
+        bgmRef.current.play().catch(e => console.log("BGM play failed:", e));
+      }
+    }
+  }, [isMuted]);
+
+  // Audio Helper
+  const playSfx = useCallback((type: "attack" | "scream") => {
+    if (isMuted) return;
+
+    if (type === "attack") {
+      if (eatingSfxRef.current) {
+        eatingSfxRef.current.currentTime = 0;
+        eatingSfxRef.current.play().catch(() => { });
+      }
+    } else if (type === "scream") {
+      // Random scream 1-6
+      const rand = Math.floor(Math.random() * 6) + 1;
+      const scream = new Audio(`/musics/screaming-${rand}.mp3`);
+      scream.volume = 0.6; // Slightly louder than BGM
+      scream.play().catch(() => { });
+    }
+  }, [isMuted]);
+
+
   // Zombie attack ketika health turun
   useEffect(() => {
     if (!prevParticipants) return;
@@ -383,6 +456,10 @@ export default function HostGamePage() {
       ) {
         setZombieState({ isAttacking: true, targetPlayerId: curr.id, attackProgress: 0, basePosition: 500, currentPosition: 500 });
         setGameMode("panic");
+
+        // PLAY SFX
+        playSfx("attack");
+        playSfx("scream");
 
         let progress = 0;
         if (attackIntervalRef.current) clearInterval(attackIntervalRef.current);
@@ -401,7 +478,7 @@ export default function HostGamePage() {
         }, 30);
       }
     });
-  }, [participants, prevParticipants, zombieState.isAttacking]);
+  }, [participants, prevParticipants, zombieState.isAttacking, playSfx]);
 
   // Inactivity health drain
   useEffect(() => {
@@ -698,6 +775,18 @@ export default function HostGamePage() {
           </div>
         </>
       )}
+
+      {/* Mute Button - Bottom Left */}
+      <div className="absolute bottom-4 left-4 z-50">
+        <Button
+          variant="default"
+          size="icon"
+          onClick={() => setIsMuted(!isMuted)}
+          className="bg-red-600 hover:bg-red-700 text-white border-2 border-white/20 rounded-full w-12 h-12 shadow-[0_0_20px_rgba(220,38,38,0.6)] hover:shadow-[0_0_30px_rgba(220,38,38,0.8)] hover:scale-110 transition-all duration-300"
+        >
+          {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+        </Button>
+      </div>
 
       {/* End Game Button */}
       <Button

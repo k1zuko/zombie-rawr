@@ -64,7 +64,7 @@ const useLoopRef = <T,>(val: T) => {
 
 const OptimizedGameCanvas = memo(function OptimizedGameCanvas(props: OptimizedGameCanvasProps) {
     const propsRef = useLoopRef(props);
-    const requestRef = useRef<number>();
+    const requestRef = useRef<number | null>(null);
 
     // DOM Refs
     const playerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -101,8 +101,12 @@ const OptimizedGameCanvas = memo(function OptimizedGameCanvas(props: OptimizedGa
             const isTarget = zombieState.targetPlayerId === p.id;
 
             // --- SCALE LOGIC (Updated - Bigger) ---
-            const baseScale = gameMode === "panic" ? 1.25 : 1.15;
+            // Fix: Only target player zooms during attack (panic), others stay normal
+            const baseScale = 1.15;
             const targetScale = isTarget ? 1.35 : baseScale;
+            // Bump z-index if target so it appears in front of zombie/others
+            if (div) div.style.zIndex = isTarget ? '100' : '50';
+
             const finalScale = targetScale * effectiveScaleFactor;
 
             // --- POSITION LOGIC ---
@@ -162,10 +166,11 @@ const OptimizedGameCanvas = memo(function OptimizedGameCanvas(props: OptimizedGa
             const ATTACK_DISTANCE_SCALED = 50 * scaleFactor;
             const movementX = attackProgress * ATTACK_DISTANCE_SCALED;
 
-            // --- ZOMBIE SCALE (Updated - 1.25 requested) ---
+            // --- ZOMBIE SCALE (Updated - Larger) ---
+            // Increased scale as requested (was 1.7/1.6 -> now 2.0/1.8 approx)
             const zombieBaseScale = isAttacking
-                ? (gameMode === "panic" ? 1.3 : 1.25)
-                : (gameMode === "panic" ? 1.25 : 1.25);
+                ? (gameMode === "panic" ? 2.0 : 1.9)
+                : (gameMode === "panic" ? 1.9 : 1.8);
             const zombieFinalScale = zombieBaseScale * scaleFactor;
 
             const zombieHOffset = -150 * scaleFactor;
