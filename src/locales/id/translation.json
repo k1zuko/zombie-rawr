@@ -32,7 +32,7 @@
   "settingsDescription": "Pilih karakter pengejar dan atur permainanmu!",
   "gameSettingsTitle": "Pengaturan Permainan",
   "gameDurationLabel": "Durasi Permainan",
-  "soundSettingLabel": "Suara Game",
+  "soundSettingLabel": "Suara",
   "gameDurationPlaceholder": "Masukkan durasi",
   "gameDurationValue": "{{minutes}} Menit",
   "questionCountLabel": "Jumlah Soal",

@@ -11,6 +11,8 @@ import toast from "react-hot-toast"
 import LoadingScreen from "@/components/LoadingScreen"
 import { generateXID } from "@/lib/id-generator"
 import Image from "next/image"
+import { calculateCountdown } from "@/lib/server-time"
+import { AnimatePresence, motion } from "framer-motion"
 
 export interface Session {
   id: string
@@ -24,6 +26,7 @@ export interface Session {
   host_id: string | null
   created_at: string
   started_at: string | null
+  countdown_started_at?: string | null
 }
 
 interface Participant {
@@ -72,6 +75,8 @@ export default function QuizPage() {
   const [isProcessingAnswer, setIsProcessingAnswer] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [isAnswered, setIsAnswered] = useState(false)
+  const [countdown, setCountdown] = useState<number | null>(null)
+
   // Derived state for question index - STRICTLY derived from data
   const realIndex = currentPlayer?.answers?.length || 0
 
@@ -108,11 +113,11 @@ export default function QuizPage() {
           if (!s.started_at) {
             const { data: freshSess } = await mysupa
               .from("sessions")
-              .select("started_at, total_time_minutes")
+              .select("started_at, total_time_minutes, countdown_started_at, status")
               .eq("game_pin", gamePin)
               .single()
-            if (freshSess?.started_at) {
-              sessionToUse = { ...s, started_at: freshSess.started_at, total_time_minutes: freshSess.total_time_minutes }
+            if (freshSess) {
+              sessionToUse = { ...s, ...freshSess }
             }
           }
 
@@ -171,6 +176,28 @@ export default function QuizPage() {
 
     loadData()
   }, [gamePin, router])
+
+  // ── COUNTDOWN LOGIC ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!session?.countdown_started_at || session?.status === "active") {
+      setCountdown(null)
+      return
+    }
+
+    const update = () => {
+      const remaining = calculateCountdown(session.countdown_started_at!, 10000)
+      setCountdown(remaining)
+      if (remaining <= 0) {
+        setCountdown(null)
+        // Optimistic update
+        setSession(prev => prev ? ({ ...prev, status: "active", started_at: new Date().toISOString() }) : null)
+      }
+    }
+
+    update()
+    const timer = setInterval(update, 100)
+    return () => clearInterval(timer)
+  }, [session?.countdown_started_at, session?.status])
 
   // ── REALTIME + POLLING ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -407,12 +434,37 @@ export default function QuizPage() {
   }
 
   // If session/player not loaded OR visualIndex says we are done (but redirect pending), show Loading
-  if (!session || !currentPlayer || !isClient || visualIndex >= totalQuestions) return <LoadingScreen children={undefined} />
+  // NOTE: If countdown is active, we render specific countdown UI, so we bypass strict loading check
+  const isLoading = !session || !currentPlayer || !isClient || (visualIndex >= totalQuestions && !countdown)
+
+  if (isLoading && !countdown) return <LoadingScreen children={undefined} />
 
   const danger = playerHealth <= 25 ? 3 : playerHealth <= 50 ? 2 : 1
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden overscroll-none">
+      {/* Countdown Overlay */}
+      <AnimatePresence>
+        {countdown !== null && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black flex items-center justify-center z-[100]"
+          >
+            <motion.div
+              key={countdown}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.5, opacity: 0 }}
+              transition={{ duration: 0.1 }}
+              className="text-[12rem] font-bold text-red-600 drop-shadow-[0_0_20px_rgba(220,38,38,0.8)]"
+            >
+              {countdown}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background effect */}
       <div
         className={`absolute inset-0 transition-all duration-1000 ${danger === 3 ? "bg-gradient-to-br from-red-950/60 to-black" :

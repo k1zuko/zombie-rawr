@@ -33,7 +33,7 @@
   "settingsDescription": "Choose your chaser and set up your game!",
   "gameSettingsTitle": "Game Settings",
   "gameDurationLabel": "Duration",
-  "soundSettingLabel": "Game Sound",
+  "soundSettingLabel": "Sound",
   "gameDurationPlaceholder": "Enter duration",
   "gameDurationValue": "{{minutes}} Minutes",
   "questionCountLabel": "Questions",

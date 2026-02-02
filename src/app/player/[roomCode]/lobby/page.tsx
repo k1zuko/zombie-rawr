@@ -359,20 +359,18 @@ export default function LobbyPage() {
     }
   }, [session?.countdown_started_at]);
 
-  // AUTO REDIRECT — UBAH: Pastikan data sudah di-prefetch sebelum redirect
+  // AUTO REDIRECT
   useEffect(() => {
-    if ((session?.status === "active" || (countdown !== null && countdown <= 0)) && !isPrefetchingQuiz) {
-      // TAMBAHAN: Cek apakah data sudah tersimpan; jika belum, prefetch dulu
+    // If game is active OR countdown has started, redirect to quiz
+    if ((session?.status === "active" || session?.countdown_started_at) && !isPrefetchingQuiz) {
       if (!localStorage.getItem("quizPrefetchData")) {
         prefetchQuizData();
-        return; // Tunda redirect sampai prefetch selesai
+        return;
       }
-
-      // TAMBAHAN: Hapus data lama jika ada, tapi simpan yang baru
-      localStorage.removeItem("quizQuestions"); // Legacy clear
+      localStorage.removeItem("quizQuestions");
       router.replace(`/player/${roomCode}/quiz`);
     }
-  }, [session?.status, countdown, roomCode, router, isPrefetchingQuiz]);  // Tambah isPrefetchingQuiz di deps
+  }, [session?.status, session?.countdown_started_at, roomCode, router, isPrefetchingQuiz]);
 
   // GANTI KARAKTER — HANYA UBAH INI
   const handleCharacterSelect = async (characterValue: string) => {
@@ -459,19 +457,6 @@ export default function LobbyPage() {
           className="absolute inset-0 z-0 opacity-30" // Adjust opacity as needed
           unoptimized
         />
-
-        {/* Countdown Overlay */}
-        {countdown !== null && countdown > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black flex items-center justify-center z-50">
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              className="text-[20rem] md:text-[30rem]  text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
-            >
-              {countdown}
-            </motion.div>
-          </motion.div>
-        )}
 
         <div className="relative z-10 mx-auto p-4 pt-6 pb-28 max-w-7xl mt-10">
           <motion.header initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">

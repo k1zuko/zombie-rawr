@@ -30,6 +30,9 @@ import {
   VolumeX,
 } from "lucide-react";
 
+import { calculateCountdown } from "@/lib/server-time";
+import { AnimatePresence } from "framer-motion";
+
 const ZOMBIE_MOBILE_VERTICAL_OFFSET = 90;
 const ZOMBIE_MOBILE_HORIZONTAL_OFFSET = 20;
 
@@ -63,6 +66,7 @@ interface Session {
   question_limit: number;
   total_time_minutes: number;
   started_at: string | null;
+  countdown_started_at?: string | null;
 }
 
 interface PlayerState {
@@ -214,6 +218,8 @@ export default function HostGamePage() {
   });
 
   const attackIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+
 
   useHostGuard(gamePin);
 
@@ -387,6 +393,55 @@ export default function HostGamePage() {
     }
   }, []);
 
+  // COUNTDOWN STATE
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  // COUNTDOWN EFFECT
+  useEffect(() => {
+    if (!session?.countdown_started_at || session?.status === "active") {
+      setCountdown(null);
+      return;
+    }
+
+    const update = async () => {
+      const remaining = calculateCountdown(session.countdown_started_at!, 10000);
+      setCountdown(remaining);
+
+      if (remaining <= 0) {
+        // COUNTDOWN FINISHED -> Set Active
+        setCountdown(null);
+
+        // Optimistic update to prevent "blur" (LoadingScreen) flicker
+        setSession((prev) => prev ? ({ ...prev, status: "active", started_at: new Date().toISOString() }) : null);
+
+        await mysupa
+          .from("sessions")
+          .update({
+            status: "active",
+            countdown_started_at: null,
+            started_at: new Date().toISOString()
+          })
+          .eq("id", session.id);
+      }
+    };
+
+    update();
+    const interval = setInterval(update, 100);
+    return () => clearInterval(interval);
+  }, [session?.countdown_started_at, session?.status, session?.id]);
+
+  // Play countdown sound
+  useEffect(() => {
+    if (session?.countdown_started_at && !isMuted && session.status !== 'active') {
+      const remaining = calculateCountdown(session.countdown_started_at, 10000);
+      if (remaining > 0) {
+        const sfx = new Audio("/musics/countdown.mp3");
+        sfx.volume = 0.5;
+        sfx.play().catch(() => { });
+      }
+    }
+  }, [session?.countdown_started_at, isMuted, session?.status]);
+
   // BGM Effect
   useEffect(() => {
     // Create Audio instance only once
@@ -489,10 +544,38 @@ export default function HostGamePage() {
       const toUpdate: Participant[] = [];
       const updatedTimes: { [id: string]: number } = {};
 
+      // HITUNG DYNAMIC TIMER ----------------------------------------
+      // 1. Base default fallback
+      let limitSeconds = 15;
+
+      const totalMinutes = session.total_time_minutes || 0;
+      // Gunakan question_limit. Jika 0, fallback ke current_questions array length
+      const qLimit = session.question_limit || (session as any).current_questions?.length || 0;
+
+      // 2. Hitung base time per question
+      if (totalMinutes > 0 && qLimit > 0) {
+        const totalSeconds = totalMinutes * 60;
+        limitSeconds = totalSeconds / qLimit;
+      }
+
+      // 3. Apply modifiers difficulty
+      const diff = (session.difficulty || "").toLowerCase();
+      if (diff.includes("easy")) {
+        limitSeconds += 5;
+      } else if (diff.includes("hard")) {
+        limitSeconds -= 5;
+      }
+
+      // 4. Safety check (min 5 detik)
+      if (limitSeconds < 5) limitSeconds = 5;
+
+      const timeLimitMs = limitSeconds * 1000;
+      // -------------------------------------------------------------
+
       participants.forEach((p) => {
         if (p.is_alive && p.health.current > 0 && !p.finished_at) {
           const lastTime = lastAnswerTimesRef.current[p.id];
-          if (lastTime && now - lastTime > 15000) {
+          if (lastTime && now - lastTime > timeLimitMs) {
             toUpdate.push(p);
             // Reset timer after drain
             updatedTimes[p.id] = now;
@@ -747,8 +830,29 @@ export default function HostGamePage() {
         transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
         className="flex flex-col gap-3 mb-10 px-4"
       >
-
       </motion.header>
+
+      {/* Countdown Overlay */}
+      <AnimatePresence>
+        {countdown !== null && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black flex items-center justify-center z-[100]"
+          >
+            <motion.div
+              key={countdown}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.5, opacity: 0 }}
+              transition={{ duration: 0.1 }}
+              className="text-[12rem] font-bold text-red-600 drop-shadow-[0_0_20px_rgba(220,38,38,0.8)]"
+            >
+              {countdown}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isLoading ? (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">

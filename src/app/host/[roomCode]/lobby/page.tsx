@@ -321,7 +321,7 @@ export default function HostPage() {
   }, [loadMore]);
 
   // ========================================
-  // 2. REALTIME – 2 CHANNELS
+  // 3. REALTIME – 2 CHANNELS
   // ========================================
   useEffect(() => {
     if (!session?.id) return;
@@ -330,18 +330,13 @@ export default function HostPage() {
       .channel(`session:${session.id}`)
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "sessions",
-          filter: `id=eq.${session.id}`,
-        },
+        { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
         (payload) => {
           const newSess = payload.new as Session;
           setSession(newSess);
 
-          // SAMAKAN DENGAN STATUS YANG KAMU TULIS
-          if (newSess.status === "active") {
+          // REDIRECT IMMEDIATELY if countdown starts OR status is active
+          if (newSess.countdown_started_at || newSess.status === "active") {
             router.replace(`/host/${roomCode}/game`);
           }
         }
@@ -352,73 +347,20 @@ export default function HostPage() {
       .channel(`participants:${session.id}`)
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "participants",
-          filter: `session_id=eq.${session.id}`,
-        },
+        { event: "*", schema: "public", table: "participants", filter: `session_id=eq.${session.id}` },
         (payload) => {
-          if (payload.eventType === "INSERT")
-            setPlayers((p) => [...p, payload.new as Participant]);
-          if (payload.eventType === "UPDATE")
-            setPlayers((p) =>
-              p.map((x) =>
-                x.id === payload.new.id ? (payload.new as Participant) : x
-              )
-            );
-          if (payload.eventType === "DELETE")
-            setPlayers((p) => p.filter((x) => x.id !== payload.old.id));
+          if (payload.eventType === "INSERT") setPlayers((p) => [...p, payload.new as Participant]);
+          if (payload.eventType === "UPDATE") setPlayers((p) => p.map((x) => x.id === payload.new.id ? (payload.new as Participant) : x));
+          if (payload.eventType === "DELETE") setPlayers((p) => p.filter((x) => x.id !== payload.old.id));
         }
       )
       .subscribe();
 
-    // === CLEANUP ===
     return () => {
       mysupa.removeChannel(sessionChannel);
       mysupa.removeChannel(participantsChannel);
     };
   }, [session?.id, roomCode, router]);
-
-  // ========================================
-  // 3. COUNTDOWN
-  // ========================================
-  useEffect(() => {
-    if (!session?.countdown_started_at) {
-      setCountdown(null);
-      setIsStarting(false);
-      return;
-    }
-    const update = () => {
-      const remaining = calculateCountdown(
-        session.countdown_started_at!,
-        10_000
-      );
-      setCountdown(remaining);
-
-      if (remaining <= 0) {
-        setCountdown(null);
-        setSessionStatus("active");
-      }
-    };
-    update();
-    const iv = setInterval(update, 100);
-    return () => clearInterval(iv);
-  }, [session?.countdown_started_at]);
-
-  // Play countdown sound ONCE when countdown starts
-  useEffect(() => {
-    if (session?.countdown_started_at && !isMuted) {
-      const remaining = calculateCountdown(session.countdown_started_at, 10_000);
-      // Only play if just started (e.g. within first 2 seconds) or simply check > 0
-      // Since this effect only runs when `countdown_started_at` changes, it runs once per start.
-      if (remaining > 0) {
-        const sfx = new Audio("/musics/countdown.mp3");
-        sfx.volume = 0.5;
-        sfx.play().catch(() => { });
-      }
-    }
-  }, [session?.countdown_started_at, isMuted]);
 
   // ========================================
   // 4. KICK PLAYER
@@ -437,10 +379,7 @@ export default function HostPage() {
       .eq("session_id", session.id);
     if (error) toast.error(t("kickPlayerError") || "Gagal mengeluarkan pemain");
     else
-      toast.success(
-        t("kickPlayerSuccess", { nickname: selectedPlayer.nickname }) ||
-        `${selectedPlayer.nickname} dikeluarkan!`
-      );
+      toast.success(t("kickPlayerSuccess", { nickname: selectedPlayer.nickname }) || `${selectedPlayer.nickname} dikeluarkan!`);
     setKickDialogOpen(false);
     setSelectedPlayer(null);
   };
@@ -451,12 +390,16 @@ export default function HostPage() {
   const startGame = async () => {
     if (!session || players.length === 0)
       return toast.error("Tidak ada pemain!");
+
     setIsStarting(true);
     await syncServerTime();
+
+    // Just trigger countdown, redirection happens via Realtime
     const { error } = await mysupa
       .from("sessions")
       .update({ countdown_started_at: new Date().toISOString() })
       .eq("id", session.id);
+
     if (error) {
       toast.error("Gagal memulai countdown");
       setIsStarting(false);
@@ -699,33 +642,9 @@ export default function HostPage() {
             <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/70 to-transparent" />
           </div>
 
-          <AnimatePresence>
-            {countdown !== null && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
-              >
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{
-                    duration: 1,
-                    repeat: Number.POSITIVE_INFINITY,
-                    ease: "easeInOut",
-                  }}
-                  className="text-[8rem] sm:text-[12rem] md:text-[16rem] lg:text-[20rem] xl:text-[30rem] text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)] flex-shrink-0"
-                >
-                  {countdown}
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
-          <div
-            className={`relative z-10 mx-auto p-4 sm:p-6 lg:p-7 ${countdown !== null ? "hidden" : ""
-              }`}
-          >
+
+          <div className="relative z-10 mx-auto p-4 sm:p-6 lg:p-7">
             <motion.header
               initial={{ opacity: 0, y: -50 }}
               animate={{ opacity: 1, y: 0 }}

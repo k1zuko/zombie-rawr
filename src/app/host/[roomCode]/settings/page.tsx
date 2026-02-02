@@ -58,12 +58,7 @@ export default function CharacterSelectPage() {
   const [difficultyLevel, setDifficultyLevel] = useState<DifficultyLevel>("medium");
   const [soundEnabled, setSoundEnabled] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("host_audio_enabled");
-    if (stored !== null) {
-      setSoundEnabled(stored === "true");
-    }
-  }, []);
+
 
   const [flickerText, setFlickerText] = useState(true);
   const [bloodDrips, setBloodDrips] = useState<Array<{ id: number; left: number; speed: number; delay: number }>>([]);
@@ -326,23 +321,23 @@ export default function CharacterSelectPage() {
             </div>
 
             {/* Sound Setting */}
-            <div className="p-3 bg-red-900/20 rounded border border-red-900/30">
+            <div className="p-3 bg-red-900/20 rounded border border-red-900/30 flex flex-col items-center justify-center">
               <Label className="text-red-300 mb-3 block font-medium text-xs text-center">{t("soundSettingLabel")}</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSoundEnabled(false)}
-                  className={`p-2 rounded-lg border flex items-center justify-center ${!soundEnabled ? "bg-red-900/60 border-red-500 text-red-200" : "bg-black/40 border-red-900/50 text-red-400"}`}
+              <div className="flex items-center gap-3">
+                <VolumeX className={`w-4 h-4 ${!soundEnabled ? "text-red-400" : "text-gray-600"}`} />
+                <button
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className={`relative w-12 h-6 rounded-full transition-all duration-300 border ${soundEnabled
+                    ? "bg-red-600/80 border-red-400 shadow-[0_0_10px_rgba(220,38,38,0.5)]"
+                    : "bg-black/60 border-gray-700"
+                    }`}
                 >
-                  <VolumeX className="w-5 h-5" />
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSoundEnabled(true)}
-                  className={`p-2 rounded-lg border flex items-center justify-center ${soundEnabled ? "bg-red-900/60 border-red-500 text-red-200" : "bg-black/40 border-red-900/50 text-red-400"}`}
-                >
-                  <Volume2 className="w-5 h-5" />
-                </motion.button>
+                  <div
+                    className={`absolute top-0.5 left-0.5 w-4.5 h-4.5 rounded-full bg-white shadow-md transition-all duration-300 ${soundEnabled ? "translate-x-6" : "translate-x-0"
+                      }`}
+                  />
+                </button>
+                <Volume2 className={`w-4 h-4 ${soundEnabled ? "text-red-400" : "text-gray-600"}`} />
               </div>
             </div>
           </div>
