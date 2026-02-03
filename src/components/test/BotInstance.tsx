@@ -111,9 +111,10 @@ function getDelayRangeFromSpeed(speed: number): { min: number; max: number } {
  * Get health by difficulty
  */
 function getHealthByDifficulty(difficulty: string): number {
-    const diffLevel = difficulty?.split(":")?.[1]?.trim().toLowerCase() || "medium";
-    const healthMap: Record<string, number> = { easy: 5, medium: 3, hard: 1 };
-    return healthMap[diffLevel] ?? 3;
+    // const diffLevel = difficulty?.split(":")?.[1]?.trim().toLowerCase() || "medium";
+    // const healthMap: Record<string, number> = { easy: 5, medium: 3, hard: 1 };
+    // return healthMap[diffLevel] ?? 3;
+    return 3;
 }
 
 /**

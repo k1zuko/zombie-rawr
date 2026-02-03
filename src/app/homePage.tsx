@@ -217,90 +217,15 @@ export default function HomePage() {
     setErrorMessage(null);
 
     try {
-      // 1. Cari session berdasarkan game_pin
-      const { data: session, error: sessionError } = await mysupa
-        .from("sessions")
-        .select("id, status, game_pin, host_id, question_limit, total_time_minutes, difficulty")
-        .eq("game_pin", gameCode.toUpperCase())
-        .single();
+      // Call RPC join_game (same as auto-join)
+      const { data, error } = await mysupa.rpc("join_game", {
+        p_room_code: gameCode.toUpperCase(),
+        p_user_id: profile?.id || null,
+        p_nickname: nickname.trim()
+      });
 
-      if (sessionError || !session) {
-        setErrorDialogTitle(t("errorMessages.roomNotFoundTitle") || "Room Tidak Ditemukan");
-        setErrorDialogMessage(t("roomNotFound") || "Kode game tidak ditemukan atau sudah expired!");
-        setIsErrorDialogOpen(true);
-        setIsJoining(false);
-        return;
-      }
-
-      if (session.status !== "waiting") {
-        setErrorDialogTitle(t("errorMessages.gameStartedTitle") || "Game Telah Dimulai");
-        setErrorDialogMessage(t("gameAlreadyStarted") || "Game sudah dimulai atau selesai!");
-        setIsErrorDialogOpen(true);
-        setIsJoining(false);
-        return;
-      }
-
-      // 2. Cek apakah user sudah join sebelumnya (opsional, cegah duplikat)
-      const { data: existingParticipant } = await mysupa
-        .from("participants")
-        .select("id")
-        .eq("session_id", session.id)
-        .eq("nickname", nickname.trim())
-        .maybeSingle();
-
-      if (existingParticipant) {
-        setErrorDialogTitle(t("errorMessages.nicknameTakenTitle") || "Nickname Telah Digunakan");
-        setErrorDialogMessage(t("nicknameTaken") || "Nickname sudah digunakan di room ini!");
-        setIsErrorDialogOpen(true);
-        setIsJoining(false);
-        return;
-      }
-
-      // 3. Pilih karakter random kalau belum ada di localStorage
-      const savedChar = localStorage.getItem("selectedCharacter");
-      const characterOptions = [
-        "robot1", "robot2", "robot3", "robot4", "robot5",
-        "robot6", "robot7", "robot8", "robot9", "robot10"
-      ];
-      const character_type = savedChar && characterOptions.includes(savedChar)
-        ? savedChar
-        : characterOptions[Math.floor(Math.random() * characterOptions.length)];
-
-      // Tentukan health berdasarkan difficulty session (format: "zombie:medium")
-      const diffLevel = (session.difficulty || "").split(":")[1]?.trim().toLowerCase() || "medium";
-      const healthMap: Record<string, number> = { easy: 5, medium: 3, hard: 1 };
-      const healthMax = healthMap[diffLevel] ?? 3;
-
-      // 4. Insert participant baru
-      const { data: newParticipant, error: insertError } = await mysupa
-        .from("participants")
-        .insert({
-          session_id: session.id,
-          nickname: nickname.trim(),
-          character_type,
-          is_host: false,
-          user_id: profile?.id || null,
-          score: 0,
-          correct_answers: 0,
-          is_alive: true,
-          position_x: 0,
-          position_y: 0,
-          power_ups: 0,
-          health: {
-            max: healthMax,
-            current: healthMax,
-            speed: 20,
-            last_answer_time: null,
-            last_attack_time: null,
-            is_being_attacked: false
-          },
-          answers: []
-        })
-        .select()
-        .single();
-
-      if (insertError || !newParticipant) {
-        console.error("Insert participant error:", insertError);
+      if (error || !data) {
+        console.error("Join RPC error:", error);
         setErrorDialogTitle(t("errorMessages.joinFailedTitle") || "Gagal Bergabung");
         setErrorDialogMessage(t("joinFailed") || "Gagal masuk ke room. Coba lagi!");
         setIsErrorDialogOpen(true);
@@ -308,18 +233,34 @@ export default function HomePage() {
         return;
       }
 
-      // 5. Simpan data penting ke localStorage supaya player page bisa baca
-      localStorage.setItem("playerId", newParticipant.id);
-      localStorage.setItem("sessionId", session.id);
-      localStorage.setItem("gamePin", session.game_pin);
-      localStorage.setItem("nickname", nickname.trim());
-      localStorage.setItem("selectedCharacter", character_type);
+      // Handle RPC error responses
+      if (data.error) {
+        if (data.error === 'room_not_found') {
+          setErrorDialogTitle(t("errorMessages.roomNotFoundTitle") || "Room Tidak Ditemukan");
+          setErrorDialogMessage(t("roomNotFound") || "Kode game tidak ditemukan atau sudah expired!");
+        } else if (data.error === 'session_locked') {
+          setErrorDialogTitle(t("errorMessages.gameStartedTitle") || "Game Telah Dimulai");
+          setErrorDialogMessage(t("gameAlreadyStarted") || "Game sudah dimulai atau selesai!");
+        } else {
+          setErrorDialogTitle(t("errorMessages.joinFailedTitle") || "Gagal Bergabung");
+          setErrorDialogMessage(data.error);
+        }
+        setIsErrorDialogOpen(true);
+        setIsJoining(false);
+        return;
+      }
 
+      // Success - save to localStorage
+      localStorage.setItem("playerId", data.participant_id);
+      localStorage.setItem("sessionId", data.session_id);
+      localStorage.setItem("gamePin", data.game_pin);
+      localStorage.setItem("nickname", data.nickname);
+      localStorage.setItem("selectedCharacter", data.character_type);
 
-      localStorage.removeItem("roomCode")
+      localStorage.removeItem("roomCode");
 
-      // 6. Pindah ke waiting room player
-      router.push(`/player/${gameCode}/lobby`);
+      // Navigate to lobby
+      router.push(`/player/${data.game_pin}/lobby`);
 
     } catch (err) {
       console.error("Unexpected error:", err);
