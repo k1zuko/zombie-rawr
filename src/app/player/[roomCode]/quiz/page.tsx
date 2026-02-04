@@ -565,8 +565,8 @@ export default function QuizPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {currentQuestion?.answers?.map((item: any, idx: number) => {
                 const selected = selectedAnswer === item.answer
-                const showCorrect = isAnswered && selected && isCorrect
-                const showWrong = isAnswered && selected && !isCorrect
+                const showCorrect = isAnswered && selected && isCorrect === true
+                const showWrong = isAnswered && selected && isCorrect === false
 
                 return (
                   <Button
@@ -575,8 +575,8 @@ export default function QuizPage() {
                     disabled={isAnswered || isProcessingAnswer}
                     onClick={() => handleAnswer(item.answer, idx)}
                     className={`
-                      h-auto min-h-[5rem] sm:min-h-[6rem] md:min-h-[7rem] 
-                      p-4 sm:p-5 md:p-6 text-left items-start 
+                      h-auto 
+                      p-4 sm:p-5 md:p-6 text-left items-center 
                       border-2 transition-all duration-300 relative overflow-hidden group
                       ${isProcessingAnswer ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.02]"}
                       ${!isAnswered
@@ -589,15 +589,15 @@ export default function QuizPage() {
                       }
                     `}
                   >
-                    <div className="flex items-start gap-3 sm:gap-4 w-full">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-current flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0 mt-1">
+                    <div className="flex items-center gap-3 sm:gap-4 w-full">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-current flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0">
                         {String.fromCharCode(65 + idx)}
                       </div>
                       <span className="flex-1 text-sm sm:text-base md:text-lg leading-relaxed break-words hyphens-auto whitespace-pre-wrap">
                         {item.answer}
                       </span>
-                      {showCorrect && <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-300 flex-shrink-0 mt-1" />}
-                      {showWrong && <XCircle className="w-6 h-6 sm:w-7 sm:h-7 text-red-300 flex-shrink-0 mt-1" />}
+                      {showCorrect && <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-300 flex-shrink-0" />}
+                      {showWrong && <XCircle className="w-6 h-6 sm:w-7 sm:h-7 text-red-300 flex-shrink-0" />}
                     </div>
                   </Button>
                 )

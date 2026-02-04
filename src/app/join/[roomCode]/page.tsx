@@ -83,5 +83,5 @@ export default function JoinPage() {
 
     }, [roomCode, user, profile, authLoading, router, t]);
 
-    return <LoadingScreen>{t("joining") || "Joining Room..."}</LoadingScreen>;
+    return <LoadingScreen children={undefined}/>;
 }
