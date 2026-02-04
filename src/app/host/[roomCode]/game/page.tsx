@@ -782,7 +782,7 @@ export default function HostGamePage() {
   // REMOVED early return to allow background render
   // if (!isClient || !session || !session.started_at || isFinishing) return <LoadingScreen ... />;
 
-  const isLoading = !isClient || !session || !session.started_at || isFinishing;
+
 
   const mainContentClass = `relative w-full h-screen bg-black overflow-hidden ${isPortraitMobile ? 'rotate-to-landscape-wrapper' : ''}`;
   const wrapperStyle = isPortraitMobile ? {
@@ -854,31 +854,33 @@ export default function HostGamePage() {
         )}
       </AnimatePresence>
 
-      {isLoading ? (
+      {/* Only show loading if we truly don't have session AND no countdown is active */}
+      {(!isClient || !session || isFinishing) && countdown === null && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <LoadingScreen children={undefined} />
         </div>
-      ) : (
-        <>
-          <OptimizedGameCanvas
-            players={activePlayers}
-            playerStates={playerStates}
-            zombieState={zombieState}
-            gameMode={gameMode}
-            centerX={centerX}
-            completedPlayers={[]}
-            screenHeight={screenHeight}
-            screenWidth={screenWidth}
-            isPortraitMobile={isPortraitMobile || false}
-            mobileHorizontalShift={isPortraitMobile ? 20 : 0}
-            chaserType={chaserType}
-          />
-
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
-            <MemoizedGameUI roomCode={gamePin} />
-          </div>
-        </>
       )}
+
+      {/* Always render game canvas (hidden behind loading/countdown when needed) */}
+      <div className={(!isClient || !session) && countdown === null ? "opacity-0 pointer-events-none" : ""}>
+        <OptimizedGameCanvas
+          players={activePlayers}
+          playerStates={playerStates}
+          zombieState={zombieState}
+          gameMode={gameMode}
+          centerX={centerX}
+          completedPlayers={[]}
+          screenHeight={screenHeight}
+          screenWidth={screenWidth}
+          isPortraitMobile={isPortraitMobile || false}
+          mobileHorizontalShift={isPortraitMobile ? 20 : 0}
+          chaserType={chaserType}
+        />
+
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
+          <MemoizedGameUI roomCode={gamePin} />
+        </div>
+      </div>
 
       {/* Mute Button - Bottom Left */}
       <div className="absolute bottom-4 left-4 z-50">

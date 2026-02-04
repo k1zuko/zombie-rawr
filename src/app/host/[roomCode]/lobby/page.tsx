@@ -11,7 +11,7 @@ import {
   Copy,
   Check,
   Clock,
-  List,
+  HelpCircle,
   Skull,
   Bone,
   Trash2,
@@ -677,328 +677,247 @@ export default function HostPage() {
               </motion.div>
             </motion.header>
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 mb-4 sm:mb-6 lg:mb-8">
+            {/* Main Two-Column Layout */}
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 items-start">
+              {/* LEFT COLUMN - QR Code, Room Code, Link, Start Button */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="grid grid-cols-3 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-4 lg:col-span-1"
+                className="lg:col-span-2 bg-black/40 border border-red-900/50 rounded-lg p-4 lg:p-6 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] flex flex-col gap-3"
               >
-                <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                  <CardContent>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
+                {/* Room Code */}
+                <div className="relative w-full bg-black/50 p-2 rounded-xl border border-red-500/30">
+                  <div className="absolute top-1 right-1 z-20">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={copyRoomCode}
+                      className="text-red-400 hover:bg-red-500/20 rounded-full p-2"
+                    >
                       <motion.div
-                        key={players.length}
-                        initial={{ scale: 1.2 }}
+                        key={copied ? "check" : "copy"}
+                        initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl  text-red-500 "
                       >
-                        {players.length}
+                        {copied ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
                       </motion.div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                  <CardContent>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <Clock className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
-                      <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl  text-red-500 ">
-                        {session.total_time_minutes}:00
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                  <CardContent>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <List className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-red-500 flex-shrink-0" />
-                      <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl lg:text-4xl  text-red-500 ">
-                        {session.question_limit}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                    </Button>
+                  </div>
+                  <div className="text-3xl sm:text-4xl lg:text-5xl text-red-500 tracking-widest text-center font-bold">
+                    {roomCode}
+                  </div>
+                </div>
 
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.3 }}
-                className="relative flex flex-col lg:flex-row items-stretch lg:items-center bg-black/40 border border-red-900/50 rounded-lg p-4 lg:p-6 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] lg:col-span-4 gap-4 lg:gap-6"
-              >
+
+
+                {/* QR Code */}
                 <motion.div
-                  className="w-full lg:w-[25%] h-auto max-h-[40vh] aspect-square bg-white border border-red-900/50 rounded overflow-hidden cursor-pointer hover:scale-105 transition-transform flex items-center justify-center mx-auto order-last lg:order-first md:cursor-pointer lg:cursor-pointer max-md:pointer-events-none"
-                  onClick={() =>
-                    window.innerWidth >= 768 && setIsFullscreenQrOpen(true)
-                  }
+                  className="w-full aspect-square max-w-[300px] mx-auto bg-white border-2 border-red-900/50 rounded-lg overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform flex items-center justify-center"
+                  onClick={() => window.innerWidth >= 768 && setIsFullscreenQrOpen(true)}
                 >
-                  {/* QR FULL AREA - Tanpa padding, full container */}
                   <QRCode
                     value={joinUrl}
-                    style={{ width: "100%", height: "100%" }}
+                    style={{ width: "100%", height: "100%", padding: "12px" }}
                     viewBox="0 0 256 256"
                   />
                 </motion.div>
 
-                <div className="grid gap-3 w-full flex-1 lg:pl-4">
-                  <div className="relative w-full bg-black/50 p-3 rounded-2xl border border-red-500/30 overflow-hidden">
-                    <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={copyRoomCode}
-                        className="text-red-400 hover:bg-red-500/20 rounded-full p-1 sm:p-2 pointer-events-auto"
-                      >
-                        <motion.div
-                          key={copied ? "check" : "copy"}
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                        >
-                          {copied ? (
-                            <Check className="w-4 h-4 sm:w-5 sm:h-5" />
-                          ) : (
-                            <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
-                          )}
-                        </motion.div>
-                      </Button>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl  text-red-500 tracking-widest break-all select-text w-full text-center px-2">
-                        {roomCode}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative w-full bg-black/50 p-3 rounded-2xl border border-red-500/30 overflow-hidden">
-                    <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={copyLinkRoomCode}
-                        className="text-red-400 hover:bg-red-500/20 rounded-full p-1 sm:p-2 pointer-events-auto"
-                      >
-                        <motion.div
-                          key={copied1 ? "check" : "copy"}
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                        >
-                          {copied1 ? (
-                            <Check className="w-4 h-4 sm:w-5 sm:h-5" />
-                          ) : (
-                            <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
-                          )}
-                        </motion.div>
-                      </Button>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="text-red-400  mb-1 text-xs sm:text-sm md:text-base">
-                        {t("joinLink")}
-                      </div>
-                      <div className="text-sm sm:text-base md:text-lg  text-red-500 text-center break-all px-2 w-full">
-                        {joinUrl}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* <Card className="bg-black/20 border border-red-900/50">
-                    <CardContent className="px-4">
+                {/* Join Link - Below Room Code */}
+                <div className="relative w-full bg-black/50 p-2 rounded-xl border border-red-500/30">
+                  <div className="absolute top-1 right-1 z-20">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={copyLinkRoomCode}
+                      className="text-red-400 hover:bg-red-500/20 rounded-full p-2"
+                    >
                       <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 }}
-                        className="flex justify-center"
-                      > */}
-                  <Button
-                    onClick={startGame}
-                    disabled={
-                      players.length === 0 ||
-                      isStarting ||
-                      countdown !== null
-                    }
-                    className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white mt-2 text-sm sm:text-base md:text-lg lg:text-xl px-4 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 md:py-4 lg:py-5 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
-                  >
-                    <span className="relative z-10 flex items-center justify-center">
-                      {isStarting || countdown !== null ? (
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{
-                            duration: 1,
-                            repeat: Number.POSITIVE_INFINITY,
-                            ease: "linear",
-                          }}
-                          className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2"
-                        >
-                          <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-                        </motion.div>
-                      ) : (
-                        <Play className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-2" />
-                      )}
-                      <span>
-                        {isStarting
-                          ? t("startGame.starting")
-                          : t("startGame.start")}
-                      </span>
-                    </span>
-                    <span className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-                    <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 animate-pulse" />
-                  </Button>
-                  {/* </motion.div>
-                    </CardContent>
-                  </Card> */}
-                </div>
-              </motion.div>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="max-w-7xl mx-auto"
-            >
-              <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-red-500 text-base sm:text-lg md:text-xl lg:text-2xl flex items-center gap-2 sm:gap-3">
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-                    {t("players")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <AnimatePresence mode="popLayout">
-                    {players.length === 0 ? (
-                      <motion.div
-                        key="empty"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="text-center py-8 sm:py-10"
+                        key={copied1 ? "check" : "copy"}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
                       >
-                        <motion.div
-                          animate={{ opacity: [0.5, 1, 0.5] }}
-                          transition={{
-                            duration: 1,
-                            repeat: Number.POSITIVE_INFINITY,
-                            ease: "easeInOut",
-                          }}
-                        >
-                          <p className="text-red-400 text-sm sm:text-base md:text-lg ">
-                            {t("waitingHost")}
-                          </p>
-                          <p className="text-red-400/80 text-xs sm:text-sm  mt-2">
-                            {t("shareCode")}
-                          </p>
-                        </motion.div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="players"
-                        className="overflow-y-auto max-h-[70vh] pr-2"
-                        ref={playersContainerRef}
-                        onScroll={handleScroll}
-                      >
-                        <motion.div
-                          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3 md:gap-4 lg:gap-6"
-                          transition={{
-                            layout: {
-                              type: "spring",
-                              stiffness: 200,
-                              damping: 20,
-                            },
-                          }}
-                        >
-                          <AnimatePresence>
-                            {players.map((player, index) => {
-                              const selectedCharacter = characterOptions.find(
-                                (c) => c.value === player.character_type
-                              );
-                              return (
-                                <motion.div
-                                  key={player.id}
-                                  initial={{ scale: 0.9, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  exit={{
-                                    opacity: 0,
-                                    scale: 0.5,
-                                    x: Math.random() > 0.5 ? 100 : -100,
-                                    rotate: Math.random() * 180,
-                                    transition: { duration: 0.3, ease: "easeIn" },
-                                  }}
-                                  className="bg-black/40 border border-red-900/50 rounded-lg p-2 sm:p-3 md:p-4 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative group"
-                                >
-                                  {!player.is_host && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => kickPlayer(player)}
-                                      className="absolute z-10 top-1 left-1 sm:top-2 sm:left-2 bg-black/60 text-red-500 hover:bg-red-700/60 p-1 sm:p-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    </Button>
-                                  )}
-                                  <motion.div
-                                    className="mb-1 sm:mb-2"
-                                    animate={{ rotate: [0, 5, -5, 0] }}
-                                    transition={{
-                                      duration: 3,
-                                      repeat: Number.POSITIVE_INFINITY,
-                                      delay: index * 0.1,
-                                    }}
-                                  >
-                                    {selectedCharacter ? (
-                                      <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mt-1 sm:mt-2">
-                                        <img
-                                          src={selectedCharacter.gif}
-                                          alt={selectedCharacter.alt}
-                                          className="max-h-full max-w-full object-contain"
-                                        />
-                                      </div>
-                                    ) : (
-                                      <div className="h-12 sm:h-16 md:h-20 lg:h-24 w-full flex items-center justify-center mb-1 sm:mb-2 text-red-400 text-xs sm:text-sm">
-                                        {player.character_type}
-                                      </div>
-                                    )}
-                                  </motion.div>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="text-red-500 font-medium text-xs sm:text-sm mb-1 line-clamp-2 cursor-pointer">
-                                          {player.nickname}
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent className="bg-black/95 text-red-300 border-2 border-red-600 shadow-2xl">
-                                        <p>{player.nickname}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  {player.is_host && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-xs bg-red-900 text-red-400 "
-                                    >
-                                      {t("host")}
-                                    </Badge>
-                                  )}
-                                </motion.div>
-                              );
-                            })}
-                          </AnimatePresence>
-                        </motion.div>
-                        {isLoadingMore && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex items-center gap-2 text-red-500 justify-center py-3"
-                          >
-                            <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-                            <p className="text-sm">{t("loadingMore") || "Loading more..."}</p>
-                          </motion.div>
+                        {copied1 ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
                         )}
                       </motion.div>
+                    </Button>
+                  </div>
+                  <div className="text-base text-red-500 text-center break-all">
+                    {joinUrl}
+                  </div>
+                </div>
+
+                {/* Start Button */}
+                <Button
+                  onClick={startGame}
+                  disabled={players.length === 0 || isStarting || countdown !== null}
+                  className="relative overflow-hidden bg-gradient-to-r from-red-900 to-red-700 hover:from-red-800 hover:to-red-600 text-white text-lg lg:text-xl py-4 lg:py-5 rounded-lg border-2 border-red-700 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:shadow-[0_0_30px_rgba(239,68,68,0.7)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group w-full"
+                >
+                  <span className="relative z-10 flex items-center justify-center">
+                    {isStarting || countdown !== null ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-5 h-5 mr-2"
+                      >
+                        <Play className="w-5 h-5" />
+                      </motion.div>
+                    ) : (
+                      <Play className="w-5 h-5 mr-2" />
                     )}
-                  </AnimatePresence>
-                </CardContent>
-              </Card>
-            </motion.div>
+                    <span>{isStarting ? t("startGame.starting") : t("startGame.start")}</span>
+                  </span>
+                  <span className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                  <span className="absolute bottom-0 left-0 right-0 h-1 bg-red-500 animate-pulse" />
+                </Button>
+              </motion.div>
+
+              {/* RIGHT COLUMN - Player List */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="lg:col-span-3"
+              >
+                <Card className="bg-black/40 border border-red-900/50 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] gap-0">
+                  <CardHeader>
+                    <CardTitle className="text-red-500 text-xl lg:text-2xl flex items-center gap-2">
+                      <Users className="w-5 h-5 lg:w-6 lg:h-6" />
+                      <motion.span
+                        key={players.length}
+                        initial={{ scale: 1.2 }}
+                        animate={{ scale: 1 }}
+                      >
+                        {players.length}
+                      </motion.span>
+                      <span>{t("players")}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-2">
+                    <AnimatePresence mode="popLayout">
+                      {players.length === 0 ? (
+                        <motion.div
+                          key="empty"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="text-center py-12 lg:py-20"
+                        >
+                          <motion.div
+                            animate={{ opacity: [0.5, 1, 0.5] }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                          >
+                            <Users className="w-12 h-12 mx-auto mb-4 text-red-500/50" />
+                            <p className="text-red-400 text-base lg:text-lg">
+                              {t("waitingHost")}
+                            </p>
+                          </motion.div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="players"
+                          className="overflow-y-auto max-h-[445px] pr-2"
+                          ref={playersContainerRef}
+                          onScroll={handleScroll}
+                        >
+                          <motion.div
+                            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4"
+                            transition={{ layout: { type: "spring", stiffness: 200, damping: 20 } }}
+                          >
+                            <AnimatePresence>
+                              {players.map((player, index) => {
+                                const selectedCharacter = characterOptions.find(
+                                  (c) => c.value === player.character_type
+                                );
+                                return (
+                                  <motion.div
+                                    key={player.id}
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{
+                                      opacity: 0,
+                                      scale: 0.5,
+                                      x: Math.random() > 0.5 ? 100 : -100,
+                                      rotate: Math.random() * 180,
+                                      transition: { duration: 0.3, ease: "easeIn" },
+                                    }}
+                                    className="bg-black/40 border border-red-900/50 rounded-lg p-3 text-center hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] relative group"
+                                  >
+                                    {!player.is_host && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => kickPlayer(player)}
+                                        className="absolute z-10 top-1 left-1 bg-black/60 text-red-500 hover:bg-red-700/60 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    )}
+                                    <motion.div
+                                      className="mb-1"
+                                      animate={{ rotate: [0, 5, -5, 0] }}
+                                      transition={{ duration: 3, repeat: Infinity, delay: index * 0.1 }}
+                                    >
+                                      {selectedCharacter ? (
+                                        <div className="h-16 lg:h-20 w-full flex items-center justify-center">
+                                          <img
+                                            src={selectedCharacter.gif}
+                                            alt={selectedCharacter.alt}
+                                            className="max-h-full max-w-full object-contain"
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div className="h-16 lg:h-20 w-full flex items-center justify-center text-red-400 text-sm">
+                                          {player.character_type}
+                                        </div>
+                                      )}
+                                    </motion.div>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="text-red-500 font-medium text-xs sm:text-sm line-clamp-1 cursor-pointer">
+                                            {player.nickname}
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-black/95 text-red-300 border-2 border-red-600 shadow-2xl">
+                                          <p>{player.nickname}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    {player.is_host && (
+                                      <Badge variant="secondary" className="text-xs bg-red-900 text-red-400 mt-1">
+                                        {t("host")}
+                                      </Badge>
+                                    )}
+                                  </motion.div>
+                                );
+                              })}
+                            </AnimatePresence>
+                          </motion.div>
+                          {isLoadingMore && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="flex items-center gap-2 text-red-500 justify-center py-3"
+                            >
+                              <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                              <p className="text-sm">{t("loadingMore") || "Loading more..."}</p>
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
           </div>
 
           <Dialog open={kickDialogOpen} onOpenChange={setKickDialogOpen}>
