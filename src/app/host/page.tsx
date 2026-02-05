@@ -71,7 +71,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function QuizSelectPage() {
   const { t, i18n } = useTranslation();
-  const { user } = useAuth();
+  const { user, profile: authProfile, loading: authLoading } = useAuth();
   const [allQuizzesForCategories, setAllQuizzesForCategories] = useState<any[]>(
     []
   );
@@ -92,7 +92,6 @@ export default function QuizSelectPage() {
   );
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [profile, setProfile] = useState<any>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [favoritesMode, setFavoritesMode] = useState(false);
   const [myQuizzesMode, setMyQuizzesMode] = useState(false);
@@ -144,106 +143,96 @@ export default function QuizSelectPage() {
     };
   }, [atmosphereTexts, t]);
 
+  // Sync favorites from authProfile
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user?.id) return;
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("id, favorite_quiz")
-        .eq("auth_user_id", user.id)
-        .single();
-
-      if (error) {
-        console.error("Error fetching profile:", error);
-      } else {
-        setProfile(profileData);
-        if (profileData?.favorite_quiz) {
-          try {
-            let parsed = profileData.favorite_quiz;
-            if (typeof profileData.favorite_quiz === "string") {
-              parsed = JSON.parse(profileData.favorite_quiz);
-            }
-            setFavorites(parsed.favorites || []);
-          } catch (e) {
-            console.error("Error parsing favorites:", e);
-            setFavorites([]);
+    if (authProfile) {
+      try {
+        const anyProfile = authProfile as any;
+        if (anyProfile.favorite_quiz) {
+          let parsed = anyProfile.favorite_quiz;
+          if (typeof anyProfile.favorite_quiz === "string") {
+            parsed = JSON.parse(anyProfile.favorite_quiz);
           }
+          setFavorites(parsed.favorites || []);
         } else {
           setFavorites([]);
         }
+      } catch (e) {
+        console.error("Error parsing favorites:", e);
+        setFavorites([]);
       }
-    };
-
-    if (user) {
-      fetchProfile();
     } else {
       setFavorites([]);
-      setProfile(null);
     }
-  }, [user]);
+  }, [authProfile]);
 
   // Keep favoritesRef in sync with favorites state
   useEffect(() => {
     favoritesRef.current = favorites;
   }, [favorites]);
 
-  // Fetch all quizzes for categories (no filters, high limit)
+  // Main effect to fetch quizzes - consolidated to prevent redundant requests
   useEffect(() => {
-    const fetchAllQuizzesForCategories = async () => {
-      if (!profile?.id) return;
-      const { data, error } = await supabase.rpc("get_quizzes_paginated", {
-        p_user_id: profile.id,
-        p_search_query: null,
-        p_category_filter: null,
-        p_favorites_filter: null,
-        p_creator_filter: null,
-        p_limit: 1000, // High limit to get all for categories
-        p_offset: 0,
-      });
+    const fetchQuizzes = async () => {
+      // Don't fetch while auth is loading
+      if (authLoading) return;
 
-      if (error) {
-        console.error("Error fetching quizzes for categories:", error);
-      } else {
-        setAllQuizzesForCategories(data || []);
-        console.log("Fetched all quizzes for categories:", data?.length);
-      }
-    };
+      // Determine if we need to fetch "All" for categories
+      // We do this if categories are empty OR if user just logged in/out
+      const needsFullFetch = allQuizzesForCategories.length === 0;
 
-    fetchAllQuizzesForCategories();
-  }, [profile?.id]);
+      // We only fetch a large batch if it's the initial load with no filters
+      // Otherwise, we fetch a specific page/filter.
+      const isDefaultView = !debouncedSearchQuery && selectedCategory === "All" && !favoritesMode && !myQuizzesMode && currentPage === 1;
+      const shouldUseFullFetch = needsFullFetch && isDefaultView;
 
-  // Fetch paginated quizzes based on filters and page
-  useEffect(() => {
-    const fetchPaginatedQuizzes = async () => {
-      // Set loading sesuai konteks
-      if (!profile?.id && !favoritesMode && !myQuizzesMode) {
+      // Set loading states
+      if (needsFullFetch) {
         setIsLoadingInitial(true);
       } else {
         setIsFetching(true);
       }
 
+      const limit = shouldUseFullFetch ? 1000 : quizzesPerPage;
+
+      console.log("Fetching quizzes:", {
+        type: shouldUseFullFetch ? "Full (Categories + Paginated)" : "Specific (Paginated)",
+        userId: authProfile?.id || "guest",
+        limit
+      });
+
       const { data, error } = await supabase.rpc("get_quizzes_paginated", {
-        p_user_id: profile?.id || null,
+        p_user_id: authProfile?.id || null,
         p_search_query: debouncedSearchQuery || null,
         p_category_filter: selectedCategory === "All" ? null : selectedCategory,
         p_favorites_filter: favoritesMode ? favoritesRef.current : null,
-        p_creator_filter: myQuizzesMode ? profile?.id : null,
-        p_limit: quizzesPerPage,
+        p_creator_filter: myQuizzesMode ? authProfile?.id : null,
+        p_limit: limit,
         p_offset: (currentPage - 1) * quizzesPerPage,
       });
 
       if (error) {
-        console.error("Error fetching paginated quizzes:", error);
+        console.error("Error fetching quizzes:", error);
         toast.error("Failed to fetch quizzes. Please try again.");
       } else {
-        setPaginatedQuizzes(data || []);
-        setTotalCount(data.length > 0 ? data[0].total_count : 0);
-        console.log(
-          "Fetched paginated quizzes:",
-          data?.length,
-          "Total:",
-          data[0]?.total_count
-        );
+        const results = data || [];
+
+        // If we did a full fetch, update categories
+        if (shouldUseFullFetch) {
+          setAllQuizzesForCategories(results);
+        }
+
+        // Update display list (limit to quizzesPerPage if we fetched more)
+        setPaginatedQuizzes(results.slice(0, quizzesPerPage));
+
+        // Update total count
+        if (results.length > 0) {
+          // If we fetched a large batch, we already have the total count in the first item or the array length
+          // The RPC returns total_count column in every row
+          setTotalCount(results[0].total_count || 0);
+        } else {
+          setTotalCount(0);
+        }
       }
 
       // Reset loading states
@@ -251,22 +240,22 @@ export default function QuizSelectPage() {
       setIsLoadingInitial(false);
     };
 
-    if (profile?.id || (!favoritesMode && !myQuizzesMode)) {
-      fetchPaginatedQuizzes();
-    } else {
-      setPaginatedQuizzes([]);
-      setTotalCount(0);
-      setIsFetching(false);
-      setIsLoadingInitial(false);
-    }
+    fetchQuizzes();
   }, [
-    profile?.id,
+    authProfile?.id,
+    authLoading,
     debouncedSearchQuery,
     selectedCategory,
     favoritesMode,
     myQuizzesMode,
     currentPage,
   ]);
+
+  useEffect(() => {
+    setAllQuizzesForCategories([]);
+    setCurrentPage(1);
+    setIsLoadingInitial(true);
+  }, [authProfile?.id]);
 
   const categories = useMemo(() => {
     return [
@@ -314,14 +303,14 @@ export default function QuizSelectPage() {
   }, [favoritesMode]);
 
   const toggleMyQuizzes = useCallback(() => {
-    if (!profile) {
+    if (!authProfile) {
       toast.error("Please log in to view your quizzes");
       return;
     }
     setMyQuizzesMode(!myQuizzesMode);
     setFavoritesMode(false);
     setSelectedCategory("All");
-  }, [myQuizzesMode, profile]);
+  }, [myQuizzesMode, authProfile]);
 
   const handleQuizSelect = useCallback(
     async (quizId: string) => {
@@ -330,7 +319,7 @@ export default function QuizSelectPage() {
       try {
         const gamePin = generateGamePin();
         const sessId = generateXID();
-        const hostId = profile?.id || user?.id;
+        const hostId = authProfile?.id || user?.id;
 
         const primarySession = {
           id: sessId,
@@ -391,7 +380,7 @@ export default function QuizSelectPage() {
         setIsCreating(false);
       }
     },
-    [router, profile?.id, t, isCreating, user?.id]
+    [router, authProfile?.id, t, isCreating, user?.id]
   );
 
   const handlePageChange = useCallback((page: number) => {
@@ -401,7 +390,7 @@ export default function QuizSelectPage() {
   // Toggle Favorite Quiz
   const handleToggleFavorite = async (e: React.MouseEvent, quizId: string) => {
     e.stopPropagation();
-    if (!profile?.id) {
+    if (!authProfile?.id) {
       toast.error(
         t("errorMessages.loginRequired") || "Please log in to favorite quizzes"
       );
@@ -426,7 +415,7 @@ export default function QuizSelectPage() {
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ favorite_quiz: favoriteData })
-        .eq("id", profile.id);
+        .eq("id", authProfile.id);
 
       if (profileError) throw profileError;
 
@@ -456,11 +445,11 @@ export default function QuizSelectPage() {
 
       // Update the array
       if (isFavoriting) {
-        if (!quizFavorites.includes(profile.id)) {
-          quizFavorites.push(profile.id);
+        if (!quizFavorites.includes(authProfile.id)) {
+          quizFavorites.push(authProfile.id);
         }
       } else {
-        quizFavorites = quizFavorites.filter((id) => id !== profile.id);
+        quizFavorites = quizFavorites.filter((id) => id !== authProfile.id);
       }
 
       // Save back to quizzes table
@@ -658,7 +647,7 @@ export default function QuizSelectPage() {
                     : "border-red-500 text-red-400 hover:bg-red-900/20"
                     }`}
                   onClick={toggleMyQuizzes}
-                  disabled={!profile}
+                  disabled={!authProfile}
                 >
                   <User className="h-5 w-5" />
                 </Button>
@@ -755,9 +744,9 @@ export default function QuizSelectPage() {
           bg-black/95 
           text-red-300 
           border-2 border-red-600 
-          text-lg 
-          p-4 
-          max-w-lg 
+          text-base 
+          p-3 
+          max-w-[250px] 
           whitespace-normal 
           break-words 
           shadow-2xl

@@ -76,6 +76,7 @@ export default function QuizPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [isAnswered, setIsAnswered] = useState(false)
   const [countdown, setCountdown] = useState<number | null>(null)
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null)
 
   // Derived state for question index - STRICTLY derived from data
   const realIndex = currentPlayer?.answers?.length || 0
@@ -442,7 +443,7 @@ export default function QuizPage() {
   const danger = playerHealth <= 25 ? 3 : playerHealth <= 50 ? 2 : 1
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden overscroll-none">
+    <div className="min-h-screen bg-black text-white relative overflow-y-auto">
       {/* Countdown Overlay */}
       <AnimatePresence>
         {countdown !== null && (
@@ -465,6 +466,36 @@ export default function QuizPage() {
         )}
       </AnimatePresence>
 
+      {/* Image Zoom Modal */}
+      <AnimatePresence>
+        {zoomedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 flex items-center justify-center z-[110] p-4"
+            onClick={() => setZoomedImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="relative max-w-full max-h-full"
+            >
+              <Image
+                src={zoomedImage}
+                alt="Gambar diperbesar"
+                width={1200}
+                height={900}
+                className="rounded-lg max-h-[70vh] max-w-[70vw] object-contain"
+                unoptimized
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background effect */}
       <div
         className={`absolute inset-0 transition-all duration-1000 ${danger === 3 ? "bg-gradient-to-br from-red-950/60 to-black" :
@@ -475,13 +506,13 @@ export default function QuizPage() {
       />
 
       {/* Logo Mobile - hanya QuizRush di tengah */}
-      <div className="md:hidden flex justify-center pt-5 pb-4">
+      <div className="md:hidden flex justify-center pt-2 pb-2">
         <Image
           src="/logo/quizrush.png"
           alt="QuizRush Logo"
           width={200}
           height={50}
-          className="h-auto w-48 sm:w-56"
+          className="h-auto w-36 sm:w-48"
           priority
           unoptimized
         />
@@ -513,10 +544,10 @@ export default function QuizPage() {
         </div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 pt-4 md:pt-24 pb-10">
+      <div className="relative z-10 container mx-auto px-3 pt-2 md:pt-24 pb-6">
         {/* Info Bar - dipaksa 1 baris */}
         {/* Info Bar - Tengah horizontal di semua ukuran, terutama desktop */}
-        <div className="flex justify-center mb-5">
+        <div className="flex justify-center mb-3 sm:mb-5">
           <div className="inline-flex items-center gap-x-5 md:gap-x-6 px-4 py-2 border border-red-500/30 rounded-full bg-black/40 text-xs md:text-sm backdrop-blur-sm">
             <div className="flex items-center gap-x-1">
               <CircleQuestionMark className="w-4 h-4 text-purple-400" />
@@ -552,17 +583,31 @@ export default function QuizPage() {
           </div>
         </div>
 
-        <Card className="max-w-3xl mx-auto bg-gray-900/85 border-red-900/50 backdrop-blur-md shadow-xl shadow-black/50">
-          <div className="p-5 sm:p-6 md:p-8">
+        <Card className="max-w-3xl mx-auto bg-gray-900/85 border-red-900/50 backdrop-blur-md shadow-xl shadow-black/50 p-6">
+          <div>
             {/* Pertanyaan */}
-            <div className="mb-6 sm:mb-8 min-h-[5rem] sm:min-h-[6rem] flex items-center justify-center px-2 sm:px-4">
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-center leading-tight sm:leading-relaxed break-words hyphens-auto whitespace-pre-wrap max-w-full md:max-w-[92%] mx-auto drop-shadow-lg">
+            <div className="mb-3 sm:mb-6 flex flex-col items-center justify-center px-1">
+              {/* Gambar pertanyaan (jika ada) */}
+              {currentQuestion?.image && (
+                <div className="mb-2 sm:mb-4 w-full flex justify-center">
+                  <Image
+                    src={currentQuestion.image}
+                    alt="Gambar pertanyaan"
+                    width={400}
+                    height={300}
+                    className="rounded-lg max-h-[120px] sm:max-h-[200px] md:max-h-[300px] w-auto object-contain border border-gray-700/50 shadow-lg cursor-pointer hover:opacity-90 hover:scale-[1.02] transition-all"
+                    unoptimized
+                    onClick={() => setZoomedImage(currentQuestion.image)}
+                  />
+                </div>
+              )}
+              <p className="text-base sm:text-xl md:text-2xl lg:text-3xl text-left leading-tight break-words whitespace-pre-wrap mx-auto drop-shadow-lg max-h-[200px] md:max-h-[300px] overflow-y-auto">
                 {currentQuestion?.question ?? "Menunggu soal berikutnya..."}
-              </h2>
+              </p>
             </div>
 
             {/* Jawaban */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
               {currentQuestion?.answers?.map((item: any, idx: number) => {
                 const selected = selectedAnswer === item.answer
                 const showCorrect = isAnswered && selected && isCorrect === true
@@ -576,7 +621,7 @@ export default function QuizPage() {
                     onClick={() => handleAnswer(item.answer, idx)}
                     className={`
                       h-auto 
-                      p-4 sm:p-5 md:p-6 text-left items-center 
+                      p-3 sm:p-4 md:p-5 text-left items-center 
                       border-2 transition-all duration-300 relative overflow-hidden group
                       ${isProcessingAnswer ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.02]"}
                       ${!isAnswered
@@ -589,15 +634,40 @@ export default function QuizPage() {
                       }
                     `}
                   >
-                    <div className="flex items-center gap-3 sm:gap-4 w-full">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-current flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0">
+                    <div className={`flex w-full ${item.image ? 'flex-col items-center gap-2' : 'flex-row items-center gap-2 sm:gap-3'}`}>
+                      {/* Label huruf (A, B, C, D) */}
+                      <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full border-2 border-current flex items-center justify-center text-sm sm:text-base font-bold flex-shrink-0 ${item.image ? 'absolute top-2 left-2 bg-gray-900/80 z-10' : ''}`}>
                         {String.fromCharCode(65 + idx)}
                       </div>
-                      <span className="flex-1 text-sm sm:text-base md:text-lg leading-relaxed break-words hyphens-auto whitespace-pre-wrap">
-                        {item.answer}
-                      </span>
-                      {showCorrect && <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-300 flex-shrink-0" />}
-                      {showWrong && <XCircle className="w-6 h-6 sm:w-7 sm:h-7 text-red-300 flex-shrink-0" />}
+
+                      {/* Gambar jawaban (jika ada) */}
+                      {item.image ? (
+                        <div className="w-full flex justify-center py-2">
+                          <Image
+                            src={item.image}
+                            alt={`Jawaban ${String.fromCharCode(65 + idx)}`}
+                            width={200}
+                            height={150}
+                            className="rounded-lg max-h-[100px] sm:max-h-[120px] md:max-h-[150px] w-auto object-contain hover:opacity-80 transition-opacity cursor-pointer"
+                            unoptimized
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setZoomedImage(item.image)
+                            }}
+                          />
+                        </div>
+                      ) : null}
+
+                      {/* Teks jawaban - hanya tampilkan jika bukan placeholder */}
+                      {(!item.image || (item.answer && item.answer !== ".")) && (
+                        <span className="flex-1 text-sm sm:text-base md:text-lg leading-relaxed break-words whitespace-pre-wrap">
+                          {item.answer}
+                        </span>
+                      )}
+
+                      {/* Ikon feedback */}
+                      {showCorrect && <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-300 absolute top-2 right-2" />}
+                      {showWrong && <XCircle className="w-6 h-6 sm:w-7 sm:h-7 text-red-300 absolute top-2 right-2" />}
                     </div>
                   </Button>
                 )

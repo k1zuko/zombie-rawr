@@ -73,6 +73,14 @@ async function ensureProfileWithRetry(
     } catch (error: any) {
       retryCount++
 
+      // Check if JWT expired - force logout
+      if (error?.code === 'PGRST303' || error?.message?.includes('JWT expired')) {
+        console.error('🔒 JWT expired, logging out...')
+        await supabase.auth.signOut()
+        window.location.href = '/login'
+        return
+      }
+
       // Jika masih ada retry tersisa, tunggu dan coba lagi
       if (retryCount < maxRetries) {
         const delay = baseDelay * Math.pow(2, retryCount - 1) // 500ms, 1s, 2s

@@ -24,11 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  StopCircle,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
+import { StopCircle, Volume2, VolumeX } from "lucide-react";
 
 import { calculateCountdown } from "@/lib/server-time";
 import { AnimatePresence } from "framer-motion";
@@ -38,7 +34,9 @@ const ZOMBIE_MOBILE_HORIZONTAL_OFFSET = 20;
 
 function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T | undefined>(undefined);
-  useEffect(() => { ref.current = value; });
+  useEffect(() => {
+    ref.current = value;
+  });
   return ref.current;
 }
 
@@ -105,7 +103,9 @@ const syncResultsToMainSupabase = async (sessionId: string) => {
     // 2. Ambil semua participant
     const { data: participants, error: partError } = await mysupa
       .from("participants")
-      .select("id, user_id, nickname, character_type, score, correct_answers, answers, finished_at, health")
+      .select(
+        "id, user_id, nickname, character_type, score, correct_answers, answers, finished_at, health"
+      )
       .eq("session_id", sessionId);
 
     if (partError) {
@@ -115,11 +115,12 @@ const syncResultsToMainSupabase = async (sessionId: string) => {
     if (!participants || participants.length === 0) return;
 
     // 3. Format participants (PERSIS SAMA KAYAK CRAZYRACE)
-    const formattedParticipants = participants.map(p => {
+    const formattedParticipants = participants.map((p) => {
       const correctCount = p.correct_answers || 0;
-      const accuracy = totalQuestions > 0
-        ? Number(((correctCount / totalQuestions) * 100).toFixed(2))
-        : 0;
+      const accuracy =
+        totalQuestions > 0
+          ? Number(((correctCount / totalQuestions) * 100).toFixed(2))
+          : 0;
 
       // const duration = p.finished_at && sess.started_at
       //   ? Math.floor((new Date(p.finished_at).getTime() - new Date(sess.started_at).getTime()) / 1000)
@@ -137,17 +138,17 @@ const syncResultsToMainSupabase = async (sessionId: string) => {
         current_question: p.answers?.length || 0,
         accuracy: accuracy.toFixed(2),
         started: sess.started_at,
-        ended: p.finished_at
+        ended: p.finished_at,
       };
     });
 
     // 4. Format responses (PERSIS SAMA KAYAK CRAZYRACE)
     const formattedResponses = participants
-      .filter(p => (p.answers || []).length > 0)
-      .map(p => ({
+      .filter((p) => (p.answers || []).length > 0)
+      .map((p) => ({
         id: generateXID(),
         participant: p.id,
-        answers: p.answers || []
+        answers: p.answers || [],
       }));
 
     console.log("Sync data:", {
@@ -155,13 +156,12 @@ const syncResultsToMainSupabase = async (sessionId: string) => {
       started_at: sess.started_at,
       ended_at: sess.ended_at,
       totalQuestions,
-      participantsCount: formattedParticipants.length
+      participantsCount: formattedParticipants.length,
     });
 
     // 5. Kirim ke gameforsmart pake client supabase (bukan mysupa)
-    const { error } = await supabase
-      .from("game_sessions")
-      .upsert({
+    const { error } = await supabase.from("game_sessions").upsert(
+      {
         game_pin: sess.game_pin,
         quiz_id: sess.quiz_id,
         host_id: sess.host_id,
@@ -175,8 +175,10 @@ const syncResultsToMainSupabase = async (sessionId: string) => {
         responses: formattedResponses,
         current_questions: sess.current_questions,
         quiz_detail: sess.quiz_detail,
-        difficulty: sess.difficulty
-      }, { onConflict: "game_pin" });
+        difficulty: sess.difficulty,
+      },
+      { onConflict: "game_pin" }
+    );
 
     if (error) throw error;
 
@@ -201,6 +203,7 @@ export default function HostGamePage() {
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [showEndGameDialog, setShowEndGameDialog] = useState(false);
+  const [isGameReady, setIsGameReady] = useState(false);
 
   const [session, setSession] = useState<Session | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -218,8 +221,6 @@ export default function HostGamePage() {
   });
 
   const attackIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-
 
   useHostGuard(gamePin);
 
@@ -241,18 +242,20 @@ export default function HostGamePage() {
         .is("finished_at", null);
 
       if (Array.isArray(pending) && pending.length > 0) {
-        await Promise.all(pending.map((p: any) => {
-          const newHealth = { ...(p.health || {}), current: 0 };
-          return mysupa
-            .from("participants")
-            .update({
-              finished_at: finishAt,
-              completion: true,
-              is_alive: false,
-              health: newHealth
-            })
-            .eq("id", p.id);
-        }));
+        await Promise.all(
+          pending.map((p: any) => {
+            const newHealth = { ...(p.health || {}), current: 0 };
+            return mysupa
+              .from("participants")
+              .update({
+                finished_at: finishAt,
+                completion: true,
+                is_alive: false,
+                health: newHealth,
+              })
+              .eq("id", p.id);
+          })
+        );
       }
 
       // 2) Update session status
@@ -285,6 +288,10 @@ export default function HostGamePage() {
       return;
     }
 
+    if (sess.status === "active" || sess.status === "finished") {
+      setIsGameReady(true);
+    }
+
     setSession(sess);
 
     const { data: parts } = await mysupa
@@ -297,7 +304,9 @@ export default function HostGamePage() {
 
     // Set initial lastAnswerTimes based on session.started_at (game start time)
     // This ensures players get full 15 seconds from game start, not from join time
-    const gameStartTime = sess.started_at ? new Date(sess.started_at).getTime() : Date.now();
+    const gameStartTime = sess.started_at
+      ? new Date(sess.started_at).getTime()
+      : Date.now();
     const initialTimes: { [id: string]: number } = {};
     (parts || []).forEach((p) => {
       initialTimes[p.id] = gameStartTime;
@@ -305,7 +314,9 @@ export default function HostGamePage() {
     lastAnswerTimesRef.current = initialTimes;
   }, [gamePin, router]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Update lastAnswerTimes when participants change
   useEffect(() => {
@@ -314,7 +325,9 @@ export default function HostGamePage() {
       return;
     }
 
-    const newTimes: { [id: string]: number } = { ...lastAnswerTimesRef.current };
+    const newTimes: { [id: string]: number } = {
+      ...lastAnswerTimesRef.current,
+    };
 
     participants.forEach((curr) => {
       const prevPart = prevParticipants.find((p) => p.id === curr.id);
@@ -343,12 +356,22 @@ export default function HostGamePage() {
       .channel(`host-${session.id}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "sessions",
+          filter: `id=eq.${session.id}`,
+        },
         (p) => setSession(p.new as Session)
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "participants", filter: `session_id=eq.${session.id}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "participants",
+          filter: `session_id=eq.${session.id}`,
+        },
         (p) => {
           const updated = p.new as Participant;
           setParticipants((prev) =>
@@ -360,7 +383,9 @@ export default function HostGamePage() {
       )
       .subscribe();
 
-    return () => { mysupa.removeChannel(channel); };
+    return () => {
+      mysupa.removeChannel(channel);
+    };
   }, [session?.id]);
 
   // Optimized: Derive playerStates directly using useMemo (avoids double render)
@@ -389,7 +414,7 @@ export default function HostGamePage() {
   useEffect(() => {
     const stored = localStorage.getItem("host_audio_enabled");
     if (stored !== null) {
-      setIsMuted(stored !== 'true');
+      setIsMuted(stored !== "true");
     }
   }, []);
 
@@ -400,26 +425,42 @@ export default function HostGamePage() {
   useEffect(() => {
     if (!session?.countdown_started_at || session?.status === "active") {
       setCountdown(null);
+      // If session is active and no countdown, game is ready!
+      if (session?.status === "active") {
+        setIsGameReady(true);
+      }
       return;
     }
 
     const update = async () => {
-      const remaining = calculateCountdown(session.countdown_started_at!, 10000);
+      const remaining = calculateCountdown(
+        session.countdown_started_at!,
+        10000
+      );
       setCountdown(remaining);
 
       if (remaining <= 0) {
         // COUNTDOWN FINISHED -> Set Active
         setCountdown(null);
+        setIsGameReady(true);
 
         // Optimistic update to prevent "blur" (LoadingScreen) flicker
-        setSession((prev) => prev ? ({ ...prev, status: "active", started_at: new Date().toISOString() }) : null);
+        setSession((prev) =>
+          prev
+            ? {
+              ...prev,
+              status: "active",
+              started_at: new Date().toISOString(),
+            }
+            : null
+        );
 
         await mysupa
           .from("sessions")
           .update({
             status: "active",
             countdown_started_at: null,
-            started_at: new Date().toISOString()
+            started_at: new Date().toISOString(),
           })
           .eq("id", session.id);
       }
@@ -432,7 +473,11 @@ export default function HostGamePage() {
 
   // Play countdown sound
   useEffect(() => {
-    if (session?.countdown_started_at && !isMuted && session.status !== 'active') {
+    if (
+      session?.countdown_started_at &&
+      !isMuted &&
+      session.status !== "active"
+    ) {
       const remaining = calculateCountdown(session.countdown_started_at, 10000);
       if (remaining > 0) {
         const sfx = new Audio("/musics/countdown.mp3");
@@ -458,7 +503,7 @@ export default function HostGamePage() {
 
     // Play BGM if not muted
     if (!isMuted) {
-      bgm.play().catch(e => console.log("BGM play failed:", e));
+      bgm.play().catch((e) => console.log("BGM play failed:", e));
     }
 
     return () => {
@@ -473,29 +518,31 @@ export default function HostGamePage() {
       if (isMuted) {
         bgmRef.current.pause();
       } else {
-        bgmRef.current.play().catch(e => console.log("BGM play failed:", e));
+        bgmRef.current.play().catch((e) => console.log("BGM play failed:", e));
       }
     }
   }, [isMuted]);
 
   // Audio Helper
-  const playSfx = useCallback((type: "attack" | "scream") => {
-    if (isMuted) return;
+  const playSfx = useCallback(
+    (type: "attack" | "scream") => {
+      if (isMuted) return;
 
-    if (type === "attack") {
-      if (eatingSfxRef.current) {
-        eatingSfxRef.current.currentTime = 0;
-        eatingSfxRef.current.play().catch(() => { });
+      if (type === "attack") {
+        if (eatingSfxRef.current) {
+          eatingSfxRef.current.currentTime = 0;
+          eatingSfxRef.current.play().catch(() => { });
+        }
+      } else if (type === "scream") {
+        // Random scream 1-6
+        const rand = Math.floor(Math.random() * 6) + 1;
+        const scream = new Audio(`/musics/screaming-${rand}.mp3`);
+        scream.volume = 0.6; // Slightly louder than BGM
+        scream.play().catch(() => { });
       }
-    } else if (type === "scream") {
-      // Random scream 1-6
-      const rand = Math.floor(Math.random() * 6) + 1;
-      const scream = new Audio(`/musics/screaming-${rand}.mp3`);
-      scream.volume = 0.6; // Slightly louder than BGM
-      scream.play().catch(() => { });
-    }
-  }, [isMuted]);
-
+    },
+    [isMuted]
+  );
 
   // Zombie attack ketika health turun
   useEffect(() => {
@@ -509,7 +556,13 @@ export default function HostGamePage() {
         curr.is_alive &&
         !zombieState.isAttacking
       ) {
-        setZombieState({ isAttacking: true, targetPlayerId: curr.id, attackProgress: 0, basePosition: 500, currentPosition: 500 });
+        setZombieState({
+          isAttacking: true,
+          targetPlayerId: curr.id,
+          attackProgress: 0,
+          basePosition: 500,
+          currentPosition: 500,
+        });
         setGameMode("panic");
 
         // PLAY SFX
@@ -527,7 +580,13 @@ export default function HostGamePage() {
           }));
           if (progress >= 1) {
             clearInterval(attackIntervalRef.current!);
-            setZombieState({ isAttacking: false, targetPlayerId: null, attackProgress: 0, basePosition: 500, currentPosition: 500 });
+            setZombieState({
+              isAttacking: false,
+              targetPlayerId: null,
+              attackProgress: 0,
+              basePosition: 500,
+              currentPosition: 500,
+            });
             setGameMode("normal");
           }
         }, 30);
@@ -550,7 +609,10 @@ export default function HostGamePage() {
 
       const totalMinutes = session.total_time_minutes || 0;
       // Gunakan question_limit. Jika 0, fallback ke current_questions array length
-      const qLimit = session.question_limit || (session as any).current_questions?.length || 0;
+      const qLimit =
+        session.question_limit ||
+        (session as any).current_questions?.length ||
+        0;
 
       // 2. Hitung base time per question
       if (totalMinutes > 0 && qLimit > 0) {
@@ -612,7 +674,10 @@ export default function HostGamePage() {
         );
 
         // Update local lastAnswerTimes after successful drain
-        lastAnswerTimesRef.current = { ...lastAnswerTimesRef.current, ...updatedTimes };
+        lastAnswerTimesRef.current = {
+          ...lastAnswerTimesRef.current,
+          ...updatedTimes,
+        };
       }
     }, 2000);
 
@@ -624,10 +689,12 @@ export default function HostGamePage() {
     if (!session || session.status === "finished") return;
 
     // Cek: semua player sudah tidak hidup ATAU sudah selesai (finished_at ada)
-    const allFinishedOrDead = participants.length > 0 && participants.every((p) => {
-      // Player dianggap "selesai" jika: health habis (is_alive false) ATAU sudah submit jawaban akhir (finished_at ada)
-      return !p.is_alive || p.finished_at !== null;
-    });
+    const allFinishedOrDead =
+      participants.length > 0 &&
+      participants.every((p) => {
+        // Player dianggap "selesai" jika: health habis (is_alive false) ATAU sudah submit jawaban akhir (finished_at ada)
+        return !p.is_alive || p.finished_at !== null;
+      });
 
     if (allFinishedOrDead) {
       // LANGSUNG UPDATE STATUS + REDIRECT HOST
@@ -639,7 +706,7 @@ export default function HostGamePage() {
             .from("sessions")
             .update({
               status: "finished",
-              ended_at: new Date().toISOString()
+              ended_at: new Date().toISOString(),
             })
             .eq("id", session.id);
 
@@ -653,19 +720,21 @@ export default function HostGamePage() {
           // Tetap redirect biar host gak stuck
           router.push(`/host/${gamePin}/result`);
         }
-      }
+      };
       finishAndSync();
     }
   }, [participants, session, router, gamePin]);
 
   // Finish session when timer expires (based on session.started_at + total_time_minutes)
   useEffect(() => {
-    if (!session || session.status === "finished" || !session.started_at) return;
+    if (!session || session.status === "finished" || !session.started_at)
+      return;
 
     const totalMinutes = session.total_time_minutes || 0;
     if (totalMinutes <= 0) return;
 
-    const endTime = new Date(session.started_at).getTime() + totalMinutes * 60 * 1000;
+    const endTime =
+      new Date(session.started_at).getTime() + totalMinutes * 60 * 1000;
     const now = Date.now();
     const msLeft = endTime - now;
 
@@ -682,25 +751,28 @@ export default function HostGamePage() {
           .eq("session_id", session.id)
           .is("finished_at", null);
 
-        if (pendingErr) console.error("Error fetching pending participants:", pendingErr);
+        if (pendingErr)
+          console.error("Error fetching pending participants:", pendingErr);
 
         // 2) mark each pending participant as finished (is_alive false, finished_at, completion true, health.current = 0)
         if (Array.isArray(pending) && pending.length > 0) {
-          await Promise.all(pending.map((p: any) => {
-            const newHealth = {
-              ...(p.health || {}),
-              current: 0
-            };
-            return mysupa
-              .from("participants")
-              .update({
-                finished_at: finishAt,
-                completion: true,
-                is_alive: false,
-                health: newHealth
-              })
-              .eq("id", p.id);
-          }));
+          await Promise.all(
+            pending.map((p: any) => {
+              const newHealth = {
+                ...(p.health || {}),
+                current: 0,
+              };
+              return mysupa
+                .from("participants")
+                .update({
+                  finished_at: finishAt,
+                  completion: true,
+                  is_alive: false,
+                  health: newHealth,
+                })
+                .eq("id", p.id);
+            })
+          );
         }
 
         // 3) update session status to finished
@@ -726,7 +798,9 @@ export default function HostGamePage() {
       timer = setTimeout(() => doFinish(), msLeft);
     }
 
-    return () => { if (timer) clearTimeout(timer); };
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [session, router, gamePin]);
 
   // Redirect jika game selesai
@@ -742,7 +816,10 @@ export default function HostGamePage() {
     const handle = () => {
       setScreenWidth(window.innerWidth);
       setScreenHeight(window.innerHeight);
-      setIsPortraitMobile(window.innerWidth <= 768 && window.matchMedia("(orientation: portrait)").matches);
+      setIsPortraitMobile(
+        window.innerWidth <= 768 &&
+        window.matchMedia("(orientation: portrait)").matches
+      );
     };
     handle();
     window.addEventListener("resize", handle);
@@ -773,22 +850,27 @@ export default function HostGamePage() {
   }, [gameMode]);
 
   // Optimized: Memoize activePlayers to prevent recalculation on every animation tick
-  const activePlayers = useMemo(() =>
-    participants.filter((p) => p.is_alive && p.health.current > 0 && !p.finished_at)
-    , [participants]);
+  const activePlayers = useMemo(
+    () =>
+      participants.filter(
+        (p) => p.is_alive && p.health.current > 0 && !p.finished_at
+      ),
+    [participants]
+  );
   const centerX = screenWidth / 2;
-  const chaserType = session?.difficulty?.split(":")[0] as any || "zombie";
+  const chaserType = (session?.difficulty?.split(":")[0] as any) || "zombie";
 
   // REMOVED early return to allow background render
   // if (!isClient || !session || !session.started_at || isFinishing) return <LoadingScreen ... />;
 
-
-
-  const mainContentClass = `relative w-full h-screen bg-black overflow-hidden ${isPortraitMobile ? 'rotate-to-landscape-wrapper' : ''}`;
-  const wrapperStyle = isPortraitMobile ? {
-    width: `${screenHeight}px`,
-    height: `${screenWidth}px`,
-  } : {};
+  const mainContentClass = `relative w-full h-screen bg-black overflow-hidden ${isPortraitMobile ? "rotate-to-landscape-wrapper" : ""
+    }`;
+  const wrapperStyle = isPortraitMobile
+    ? {
+      width: `${screenHeight}px`,
+      height: `${screenWidth}px`,
+    }
+    : {};
 
   return (
     <div className={mainContentClass} style={wrapperStyle}>
@@ -806,7 +888,6 @@ export default function HostGamePage() {
         />
       </div>
 
-
       <div
         className="
     absolute right-4 top-3 z-50 hidden lg:block
@@ -822,15 +903,12 @@ export default function HostGamePage() {
         />
       </div>
 
-
-
       <motion.header
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 0.3, type: "spring", stiffness: 120 }}
         className="flex flex-col gap-3 mb-10 px-4"
-      >
-      </motion.header>
+      ></motion.header>
 
       {/* Countdown Overlay */}
       <AnimatePresence>
@@ -854,15 +932,23 @@ export default function HostGamePage() {
         )}
       </AnimatePresence>
 
-      {/* Only show loading if we truly don't have session AND no countdown is active */}
-      {(!isClient || !session || isFinishing) && countdown === null && (
+      {/* Only show loading if game is finishing */}
+      {isFinishing && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <LoadingScreen children={undefined} />
         </div>
       )}
 
       {/* Always render game canvas (hidden behind loading/countdown when needed) */}
-      <div className={(!isClient || !session) && countdown === null ? "opacity-0 pointer-events-none" : ""}>
+      <div
+        className={
+          !isClient
+            ? "opacity-0 pointer-events-none"
+            : !isGameReady
+              ? "pointer-events-none"
+              : ""
+        }
+      >
         <OptimizedGameCanvas
           players={activePlayers}
           playerStates={playerStates}
@@ -878,7 +964,11 @@ export default function HostGamePage() {
         />
 
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
-          <MemoizedGameUI roomCode={gamePin} />
+          <MemoizedGameUI
+            roomCode={gamePin}
+            startedAt={session?.started_at ?? null}
+            totalTimeMinutes={session?.total_time_minutes ?? 5}
+          />
         </div>
       </div>
 
@@ -890,7 +980,11 @@ export default function HostGamePage() {
           onClick={() => setIsMuted(!isMuted)}
           className="bg-red-600 hover:bg-red-700 text-white border-2 border-white/20 rounded-full w-12 h-12 shadow-[0_0_20px_rgba(220,38,38,0.6)] hover:shadow-[0_0_30px_rgba(220,38,38,0.8)] hover:scale-110 transition-all duration-300"
         >
-          {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+          {isMuted ? (
+            <VolumeX className="w-6 h-6" />
+          ) : (
+            <Volume2 className="w-6 h-6" />
+          )}
         </Button>
       </div>
 
@@ -913,7 +1007,8 @@ export default function HostGamePage() {
               {t("confirmEndGame") || "End Game?"}
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              {t("confirmEndGameDesc") || "This will end the game for all players."}
+              {t("confirmEndGameDesc") ||
+                "This will end the game for all players."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 sm:justify-end">
