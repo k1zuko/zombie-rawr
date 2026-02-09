@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { AuthProvider } from '@/contexts/AuthContext'; 
+import { AuthProvider } from '@/contexts/AuthContext';
 import { useEffect, useState } from "react";
 import AuthGate from '@/components/authGate';
 import ClientProviders from './ClientProvider';
@@ -18,6 +18,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   const [isClient, setIsClient] = useState(false);
   const [currentLang, setCurrentLang] = useState("en");
 
+  // Initial setup - run once on mount
   useEffect(() => {
     setIsClient(true);
     const savedLang = localStorage.getItem("language");
@@ -27,12 +28,27 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     setCurrentLang(i18n.language);
   }, [i18n]);
 
+  // Listen for language changes to trigger re-render
   useEffect(() => {
-    if (isClient && i18n.language) {
-      document.documentElement.lang = i18n.language;
-      setCurrentLang(i18n.language);
+    const handleLanguageChange = (lng: string) => {
+      setCurrentLang(lng);
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
+
+  // Update document direction when language changes
+  useEffect(() => {
+    if (isClient && currentLang) {
+      document.documentElement.lang = currentLang;
+      // Set RTL direction for Arabic
+      const isRtl = currentLang === "ar";
+      document.documentElement.dir = isRtl ? "rtl" : "ltr";
     }
-  }, [i18n.language, isClient]);
+  }, [currentLang, isClient]);
 
   if (!isClient) {
     return <div className="bg-black min-h-screen" />;
@@ -44,34 +60,34 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
         <AuthGate>
           {children}
           <Toaster
-              position="top-center"
-              reverseOrder={false}
-              gutter={8}
-              toastOptions={{
-                duration: 2000,
+            position="top-center"
+            reverseOrder={false}
+            gutter={8}
+            toastOptions={{
+              duration: 2000,
+              style: {
+                background: '#1a0000',
+                color: '#ff4444',
+                border: '1px solid #ff0000',
+                borderRadius: '8px',
+                fontFamily: 'monospace',
+              },
+              success: {
                 style: {
                   background: '#1a0000',
-                  color: '#ff4444',
+                  color: '#44ff44',
+                  border: '1px solid #44ff44',
+                },
+              },
+              error: {
+                style: {
+                  background: '#1a0000',
+                  color: '#ff0000',
                   border: '1px solid #ff0000',
-                  borderRadius: '8px',
-                  fontFamily: 'monospace',
                 },
-                success: {
-                  style: {
-                    background: '#1a0000',
-                    color: '#44ff44',
-                    border: '1px solid #44ff44',
-                  },
-                },
-                error: {
-                  style: {
-                    background: '#1a0000',
-                    color: '#ff0000',
-                    border: '1px solid #ff0000',
-                  },
-                },
-              }}
-            />
+              },
+            }}
+          />
         </AuthGate>
       </AuthProvider>
     </ClientProviders>

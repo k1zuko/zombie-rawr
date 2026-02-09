@@ -261,7 +261,7 @@ export default function ResultsHostPage() {
             onClick={() => router.push("/")}
           />
           <img
-            src="/logo/gameforsmartlogo-horror.png"
+            src="/logo/gameforsmartlogo-horror-v2.png"
             alt="GameForSmart Logo"
             width={80}
             height={80}

@@ -33,7 +33,7 @@ const GLOBAL_ASSETS = [
   "/character/player/character7-crop.webp",
   "/character/player/character8-crop.webp",
   "/character/player/character9-crop.webp",
-  "/logo/gameforsmartlogo-horror.png"
+  "/logo/gameforsmartlogo-horror-v2.png"
 ];
 
 const HOST_ASSETS = [

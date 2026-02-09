@@ -1,6 +1,10 @@
 
 {
   "title": "QuizRush",
+  "loadingScreen": {
+    "loading": "LOADING",
+    "subtitle": "he's right behind you..."
+  },
 
   "atmosphereText": "Answer - Run - Survive",
   "atmosphereTextInitial": "Select Quiz to start",
@@ -18,6 +22,7 @@
   "joining": "Joining...",
   "creatingRoom": "Creating Room...",
   "selectQuizTitle": "Select Quiz",
+  "allCategories": "All Categories",
   "searchButton": "Search Quiz",
   "searchPlaceholder": "Search",
   "closeSearch": "Close search",
@@ -94,6 +99,16 @@
   "tryOutDescription": "Solo tryout to test your skills.",
   "loading": "Loading...",
   "selectQuizDescription": "Choose a quiz to start your adventure!",
+  "categoryNames": {
+    "language": "Language",
+    "science": "Science",
+    "technology": "Technology",
+    "math": "Math",
+    "general": "General",
+    "business": "Business",
+    "sports": "Sports",
+    "history": "History"
+  },
   "characterSelectDescription": "Select your chaser and configure your game settings!",
   "roomCode": "Room Code",
   "scanOrCopy": "Scan or Copy Code",
@@ -242,7 +257,7 @@
 
   "loginTitle": "Login",
   "loginDescription": "Sign in to start your adventure",
-  "loginSubDescription": "Enter your credentials or use Google to continue",
+  "loginSubDescription": "Press the button below to log in quickly",
   "loginButton": "Sign In",
   "loggingIn": "Logging In...",
   "googleLoginButton": "Sign In with Google",
@@ -274,5 +289,10 @@
   "confirmEndGame": "End Game",
   "confirmEndGameDesc": "This will end the game for all players.",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+  "pwa": {
+    "installTitle": "Install QuizRush for a better experience!",
+    "install": "Install",
+    "later": "Later"
+  }
 }

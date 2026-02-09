@@ -482,6 +482,7 @@ export default function HomePage() {
                       {[
                         { value: "en", label: "English", code: "EN" },
                         { value: "id", label: "Indonesia", code: "ID" },
+                        { value: "ar", label: "العربية", code: "AR" },
                       ].map((lang) => (
                         <Button
                           key={lang.value}

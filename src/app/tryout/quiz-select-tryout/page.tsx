@@ -350,7 +350,7 @@ export default function QuizSelectTryoutPage() {
               </h1>
             </Link>
             <img
-              src={`/logo/gameforsmartlogo-horror.png`}
+              src={`/logo/gameforsmartlogo-horror-v2.png`}
               alt="Game for Smart Logo"
               className="w-40 md:w-52 lg:w-64 h-auto"
             />

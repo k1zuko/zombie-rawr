@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -57,6 +57,18 @@ export default function CharacterSelectPage() {
   const [chaserType, setChaserType] = useState<ChaserType>("zombie");
   const [difficultyLevel, setDifficultyLevel] = useState<DifficultyLevel>("medium");
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Audio preview effect - play/pause based on soundEnabled toggle
+  useEffect(() => {
+    if (audioRef.current) {
+      if (soundEnabled) {
+        audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [soundEnabled]);
 
 
 
@@ -237,6 +249,13 @@ export default function CharacterSelectPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden select-none bg-black">
+      {/* Audio preview element */}
+      <audio
+        ref={audioRef}
+        src="/musics/lobby.mp3"
+        loop
+        preload="auto"
+      />
       <div className="absolute inset-0 z-0" style={{ backgroundImage: "url('/background/10.gif')", backgroundSize: "cover", backgroundPosition: "center", transform: "rotate(180deg) scaleX(-1)" }}></div>
       <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 via-black to-purple-900/5" />
 
@@ -256,7 +275,7 @@ export default function CharacterSelectPage() {
             unoptimized
             onClick={() => router.push("/")}
           />
-          <img src={`/logo/gameforsmartlogo-horror.png`} alt="Logo" className="w-40 md:w-52 lg:w-64 h-auto" />
+          <img src={`/logo/gameforsmartlogo-horror-v2.png`} alt="Logo" className="w-40 md:w-52 lg:w-64 h-auto" />
         </div>
         <header className="flex flex-col gap-1 mb-6 text-center">
           <h1 className={`text-4xl md:text-6xl tracking-wider transition-all duration-150 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.7)] animate-pulse ${flickerText ? "opacity-70" : "opacity-100"}`}

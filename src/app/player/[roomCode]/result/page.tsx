@@ -343,7 +343,7 @@ export default function ResultsPage() {
 
             <div className="flex w-fit gap-2 items-center">
               <img
-                src={`/logo/gameforsmartlogo-horror.png`}
+                src={`/logo/gameforsmartlogo-horror-v2.png`}
                 alt="Game for Smart Logo"
                 className="w-36 md:w-52 lg:w-64 h-auto mr-3 hidden sm:block"
               />

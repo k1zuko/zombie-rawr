@@ -533,7 +533,7 @@ export default function QuizPage() {
         </div>
         <div className="absolute top-5 right-6 lg:right-10 z-50">
           <Image
-            src="/logo/gameforsmartlogo-horror.png"
+            src="/logo/gameforsmartlogo-horror-v2.png"
             alt="GameForSmart Logo"
             width={260}
             height={65}

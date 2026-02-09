@@ -3,6 +3,7 @@
 import { useEffect, useState, ReactNode } from "react"
 import { motion } from "framer-motion"
 import Image from "next/image"
+import { useTranslation } from "react-i18next"
 
 interface Props {
   children: ReactNode
@@ -12,11 +13,12 @@ interface Props {
   isReady?: boolean
 }
 
-export default function LoadingScreen({ 
-  children, 
+export default function LoadingScreen({
+  children,
   minDuration = 1000,
-  isReady = true 
+  isReady = true
 }: Props) {
+  const { t } = useTranslation()
   const [dots, setDots] = useState("")
   const [minTimeElapsed, setMinTimeElapsed] = useState(false)
 
@@ -46,7 +48,7 @@ export default function LoadingScreen({
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center overflow-hidden z-50">
         {/* Red flicker */}
-        <motion.div 
+        <motion.div
           className="absolute inset-0 bg-red-900 pointer-events-none"
           animate={{ opacity: [0, 0.45, 0] }}
           transition={{ duration: 0.25, repeat: Infinity, repeatDelay: 2 }}
@@ -71,7 +73,7 @@ export default function LoadingScreen({
           <div className="text-center mt-1">
             <h1 className="sm:hidden text-6xl  text-red-600 tracking-widest "
               style={{ textShadow: "0 0 20px #ff0000, 4px 4px 0 #000" }}>
-              LOADING
+              {t("loadingScreen.loading", "LOADING")}
             </h1>
 
             <motion.h1
@@ -80,11 +82,11 @@ export default function LoadingScreen({
               animate={{ x: [-4, 4, -4, 4, 0] }}
               transition={{ duration: 0.1, repeat: Infinity }}
             >
-              LOADING{dots}
+              {t("loadingScreen.loading", "LOADING")}{dots}
             </motion.h1>
 
             <p className="text-sm text-red-500 mt-4 opacity-80 animate-pulse ">
-              he's right behind you...
+              {t("loadingScreen.subtitle", "he's right behind you...")}
             </p>
           </div>
         </div>

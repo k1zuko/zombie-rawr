@@ -329,7 +329,7 @@ export default function TestPage() {
                         className="w-32 md:w-40 lg:w-48 h-auto"
                         unoptimized
                     />
-                    <img src={`/logo/gameforsmartlogo-horror.png`} alt="Logo" className="w-40 md:w-52 lg:w-64 h-auto" />
+                    <img src={`/logo/gameforsmartlogo-horror-v2.png`} alt="Logo" className="w-40 md:w-52 lg:w-64 h-auto" />
                 </div>
 
                 {/* Content */}

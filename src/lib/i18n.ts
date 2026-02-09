@@ -9,6 +9,7 @@ import deTranslation from "../locales/de/translation.json";
 import frTranslation from "../locales/fr/translation.json";
 import jaTranslation from "../locales/ja/translation.json";
 import esTranslation from '../locales/es/translation.json';
+import arTranslation from '../locales/ar/translation.json';
 
 const resources = {
   en: { translation: enTranslation },
@@ -17,6 +18,7 @@ const resources = {
   fr: { translation: frTranslation },
   ja: { translation: jaTranslation },
   es: { translation: esTranslation },
+  ar: { translation: arTranslation },
 };
 
 let initialized = false;
@@ -29,11 +31,12 @@ export const getI18nInstance = () => {
       .init({
         resources,
         fallbackLng: "en",
-        supportedLngs: ["en", "id","de","fr","ja","es"],
+        supportedLngs: ["en", "id", "de", "fr", "ja", "es", "ar"],
         interpolation: { escapeValue: false },
         detection: {
-          order: ["localStorage", "navigator", "cookie"],
-          caches: ["localStorage", "cookie"],
+          order: ["cookie", "localStorage", "navigator"],
+          caches: ["cookie"],
+          cookieMinutes: 525600, // 1 year
         },
       });
     initialized = true;

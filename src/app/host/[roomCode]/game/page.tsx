@@ -894,7 +894,7 @@ export default function HostGamePage() {
   "
       >
         <Image
-          src="/logo/gameforsmartlogo-horror.png"
+          src="/logo/gameforsmartlogo-horror-v2.png"
           alt="GameForSmart Logo"
           width={200}
           height={50}

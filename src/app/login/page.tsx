@@ -56,7 +56,7 @@ export default function LoginPage() {
     typeof window !== "undefined" &&
       window.location.hostname.includes("gameforsmart.com")
       ? "https://gameforsmart.com/auth/register"
-      : "https://gameforsmart2025.vercel.app/auth/register";
+      : "https://gameforsmart2026.vercel.app/auth/register";
 
   useEffect(() => {
     if ((user || profile) && !loading) {
@@ -261,6 +261,7 @@ export default function LoginPage() {
               height={35}
               className="mx-auto w-48 md:w-64 lg:w-80 h-auto"
               unoptimized
+              priority
               onClick={() => router.push("/")}
             />
           </motion.div>
@@ -284,7 +285,7 @@ export default function LoginPage() {
                   transition={{ delay: 0.2 }}
                   className="mb-3 text-sm text-center text-[#8B0000]/80"
                 >
-                  Tekan tombol di bawah untuk masuk dengan cepat
+                  {t("loginSubDescription", "Press the button below to log in quickly")}
                 </motion.p>
                 {errorMessage && (
                   <motion.p

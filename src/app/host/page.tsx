@@ -557,7 +557,7 @@ export default function QuizSelectPage() {
                 onClick={() => router.push("/")}
               />
               <img
-                src={`/logo/gameforsmartlogo-horror.png`}
+                src={`/logo/gameforsmartlogo-horror-v2.png`}
                 alt="Logo"
                 className="w-40 md:w-52 lg:w-64 h-auto"
               />
@@ -613,14 +613,14 @@ export default function QuizSelectPage() {
                 <SelectTrigger className="w-[180px] bg-black/70 border-red-500/50 text-red-400 focus:border-red-500 capitalize">
                   <span>
                     {selectedCategory === "All"
-                      ? "All Categories"
-                      : selectedCategory}
+                      ? String(t("allCategories", "All Categories"))
+                      : String(t(`categoryNames.${selectedCategory}`, selectedCategory))}
                   </span>
                 </SelectTrigger>
                 <SelectContent className="bg-black/80 text-red-400 border-red-500/50 capitalize">
                   {categories.map((cat) => (
                     <SelectItem key={cat} value={cat} className="text-red-400">
-                      {cat === "All" ? "All Categories" : cat}
+                      {cat === "All" ? String(t("allCategories", "All Categories")) : String(t(`categoryNames.${cat}`, cat))}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -697,12 +697,12 @@ export default function QuizSelectPage() {
                               theme: quiz.title,
                             })}
                           >
-                            {/* Favorite button - top right corner */}
+                            {/* Favorite button - RTL aware positioning */}
                             <button
                               onClick={(e) =>
                                 handleToggleFavorite(e, quiz.id)
                               }
-                              className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-red-900/30 transition-colors cursor-pointer z-10"
+                              className={`absolute top-2 p-1.5 rounded-full hover:bg-red-900/30 transition-colors cursor-pointer z-10 ${i18n.language === 'ar' ? 'left-2' : 'right-2'}`}
                               aria-label={
                                 favorites.includes(quiz.id)
                                   ? "Remove from favorites"
@@ -761,7 +761,7 @@ export default function QuizSelectPage() {
                               <div className="flex items-center gap-2">
                                 {quiz.category && (
                                   <span className="text-red-300 text-sm capitalize">
-                                    {quiz.category}
+                                    {String(t(`categoryNames.${quiz.category}`, quiz.category))}
                                   </span>
                                 )}
                               </div>
@@ -851,7 +851,7 @@ export default function QuizSelectPage() {
             overflow: hidden;
           }
         `}</style>
-      </div>
-    </LoadingScreen>
+      </div >
+    </LoadingScreen >
   );
 }

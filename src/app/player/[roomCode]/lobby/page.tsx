@@ -442,7 +442,7 @@ export default function LobbyPage() {
         </div>
         <div className="absolute top-4 right-4 z-20 hidden md:block">
           <img
-            src={`/logo/gameforsmartlogo-horror.png`}
+            src={`/logo/gameforsmartlogo-horror-v2.png`}
             alt="Game for Smart Logo"
             className="w-40 md:w-48 lg:w-56 h-auto"
           />

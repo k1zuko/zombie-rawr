@@ -1,5 +1,9 @@
 {
   "title": "QuizRush",
+  "loadingScreen": {
+    "loading": "MEMUAT",
+    "subtitle": "dia tepat di belakangmu..."
+  },
   "description": "Berpikir cepat atau dikejar!",
   "atmosphereText": "Answer - Run - Survive",
   "atmosphereTextInitial": "Pilih kuis untuk memulai",
@@ -17,6 +21,7 @@
   "joining": "Sedang bergabung...",
   "creatingRoom": "Sedang membuat ruangan...",
   "selectQuizTitle": "Pilih Kuis",
+  "allCategories": "Semua Kategori",
   "searchButton": "Cari kuis",
   "searchPlaceholder": "Cari",
   "closeSearch": "Tutup pencarian",
@@ -103,6 +108,16 @@
   "tryOutDescription": "Coba solo untuk uji kemampuanmu.",
   "loading": "Memuat...",
   "selectQuizDescription": "Pilih kuis untuk memulai petualanganmu!",
+  "categoryNames": {
+    "language": "Bahasa",
+    "science": "Sains",
+    "technology": "Teknologi",
+    "math": "Matematika",
+    "general": "Umum",
+    "business": "Bisnis",
+    "sports": "Olahraga",
+    "history": "Sejarah"
+  },
   "characterSelectDescription": "Pilih pengejar dan atur pengaturan permainanmu!",
   "roomCode": "Kode Ruangan",
   "scanOrCopy": "Pindai atau salin kode",
@@ -248,7 +263,7 @@
 
   "loginTitle": "Masuk",
   "loginDescription": "Masuk untuk memulai petualanganmu",
-  "loginSubDescription": "Masukkan kredensialmu atau gunakan Google untuk melanjutkan",
+  "loginSubDescription": "Tekan tombol di bawah untuk masuk dengan cepat",
   "loginButton": "Masuk",
   "loggingIn": "Sedang Masuk...",
   "googleLoginButton": "Masuk dengan Google",
@@ -280,5 +295,10 @@
   "confirmEndGame": "Akhiri Game",
   "confirmEndGameDesc": "Ini akan mengakhiri game untuk semua pemain.",
   "yes": "Ya",
-  "no": "Tidak"
+  "no": "Tidak",
+  "pwa": {
+    "installTitle": "Instal QuizRush untuk pengalaman lebih baik!",
+    "install": "Instal",
+    "later": "Nanti"
+  }
 }
