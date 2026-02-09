@@ -244,14 +244,13 @@ export default function HostGamePage() {
       if (Array.isArray(pending) && pending.length > 0) {
         await Promise.all(
           pending.map((p: any) => {
-            const newHealth = { ...(p.health || {}), current: 0 };
+            // FIXED: Tetap pertahankan health yang ada, jangan di-0-kan
             return mysupa
               .from("participants")
               .update({
                 finished_at: finishAt,
                 completion: true,
-                is_alive: false,
-                health: newHealth,
+                // is_alive dan health TETAP seperti adanya
               })
               .eq("id", p.id);
           })

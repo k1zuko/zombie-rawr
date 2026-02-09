@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mysupa } from "@/lib/supabase"; // GANTI INI SAJA
+import { shuffleArray } from "@/utils/gameHelpers";
 import SoulStatus from "@/components/game/SoulStatus";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
@@ -244,15 +245,29 @@ export default function LobbyPage() {
 
       if (!freshPlayer) throw new Error("Player tidak ditemukan");
 
+      // BARU: Generate question_order per player (shuffle indices)
+      const questionCount = freshSession.current_questions?.length || 0;
+      let questionOrder = freshPlayer.question_order;
+
+      // Jika belum ada question_order, generate dan simpan ke DB
+      if (!questionOrder || questionOrder.length !== questionCount) {
+        questionOrder = shuffleArray([...Array(questionCount).keys()]); // [0,1,2,...n-1] lalu di-shuffle
+
+        await mysupa
+          .from("participants")
+          .update({ question_order: questionOrder })
+          .eq("id", playerId);
+      }
+
       // Simpan data lengkap ke localStorage untuk QuizPage
       const quizData = {
         session: freshSession,
-        currentPlayer: freshPlayer,
+        currentPlayer: { ...freshPlayer, question_order: questionOrder },
         questions: freshSession.current_questions || [],
       };
       localStorage.setItem("quizPrefetchData", JSON.stringify(quizData));
 
-      console.log("Data Quiz berhasil di-prefetch!");
+      console.log("Data Quiz berhasil di-prefetch dengan question_order!");
     } catch (err) {
       console.error("Gagal prefetch data Quiz:", err);
       toast.error("Gagal mempersiapkan game!");

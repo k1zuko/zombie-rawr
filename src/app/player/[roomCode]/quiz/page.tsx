@@ -48,6 +48,7 @@ interface Participant {
   answers: any[]
   finished_at: string | null
   completion?: boolean
+  question_order?: number[]
 }
 
 export default function QuizPage() {
@@ -77,6 +78,8 @@ export default function QuizPage() {
   const [isAnswered, setIsAnswered] = useState(false)
   const [countdown, setCountdown] = useState<number | null>(null)
   const [zoomedImage, setZoomedImage] = useState<string | null>(null)
+  const [questionOrder, setQuestionOrder] = useState<number[]>([])
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
   // Derived state for question index - STRICTLY derived from data
   const realIndex = currentPlayer?.answers?.length || 0
@@ -93,7 +96,9 @@ export default function QuizPage() {
 
   const questions = session?.current_questions ?? []
   const totalQuestions = session?.question_limit ?? questions.length ?? 0
-  const currentQuestion = questions[visualIndex] ?? null
+  // BARU: Gunakan questionOrder untuk mapping urutan soal per player
+  const mappedIndex = questionOrder.length > 0 ? questionOrder[visualIndex] : visualIndex
+  const currentQuestion = questions[mappedIndex] ?? null
 
   const pulseIntensity = timeLeft <= 30 ? (31 - timeLeft) / 30 : 0
   const FEEDBACK_DURATION = 1400
@@ -127,6 +132,11 @@ export default function QuizPage() {
           setPlayerHealth(p.health.current)
           setPlayerSpeed(p.health.speed || 1)
           setCorrectAnswers(p.correct_answers || 0)
+
+          // BARU: Set question_order dari prefetch
+          if (p.question_order && Array.isArray(p.question_order)) {
+            setQuestionOrder(p.question_order)
+          }
 
           // Initial sync
           setVisualIndex(p.answers?.length || 0)
@@ -164,6 +174,11 @@ export default function QuizPage() {
         setPlayerSpeed(player.health.speed || 1)
         setCorrectAnswers(player.correct_answers || 0)
 
+        // BARU: Set question_order dari DB
+        if (player.question_order && Array.isArray(player.question_order)) {
+          setQuestionOrder(player.question_order)
+        }
+
         // Initial sync
         setVisualIndex(player.answers?.length || 0)
 
@@ -177,6 +192,28 @@ export default function QuizPage() {
 
     loadData()
   }, [gamePin, router])
+
+  // ── CRITICAL: Monitor session finished and health=0 INDEPENDENTLY ──────────
+  // Ini berjalan terpisah dari feedback/processing state agar redirect PASTI terjadi
+  useEffect(() => {
+    if (!session || !currentPlayer || !isClient || isRedirecting) return
+
+    // Jika session sudah finished, langsung redirect
+    if (session.status === "finished") {
+      console.log("Session finished detected, redirecting to result...")
+      setIsRedirecting(true)
+      redirectToResults(playerHealth, correctAnswers, totalQuestions, playerHealth <= 0)
+      return
+    }
+
+    // Jika health sudah 0 atau is_alive false, langsung redirect
+    if (playerHealth <= 0 || currentPlayer.is_alive === false) {
+      console.log("Player eliminated (health=0 or is_alive=false), redirecting to result...")
+      setIsRedirecting(true)
+      redirectToResults(0, correctAnswers, totalQuestions, true)
+      return
+    }
+  }, [session?.status, playerHealth, currentPlayer?.is_alive, isClient, isRedirecting, correctAnswers, totalQuestions])
 
   // ── COUNTDOWN LOGIC ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -267,13 +304,29 @@ export default function QuizPage() {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${session.id}` },
-        (payload) => {
+        async (payload) => {
           const updSession = payload.new as Session
           setSession(updSession) // Fix: Always update session state (for timer/status)
 
           if (updSession.status === "finished") {
-            // Host ended the game, redirect to results
-            redirectToResults(playerHealth, correctAnswers, totalQuestions, playerHealth <= 0)
+            // FIX: Fetch fresh participant data before redirect (avoid stale closure)
+            const playerId = localStorage.getItem("playerId")
+            if (playerId) {
+              const { data: freshPlayer } = await mysupa
+                .from("participants")
+                .select("*")
+                .eq("id", playerId)
+                .single()
+
+              if (freshPlayer) {
+                const health = freshPlayer.health?.current ?? 0
+                const correct = freshPlayer.correct_answers ?? 0
+                redirectToResults(health, correct, totalQuestions, health <= 0)
+                return
+              }
+            }
+            // Fallback jika fetch gagal
+            redirectToResults(0, correctAnswers, totalQuestions, true)
           }
         }
       )
@@ -403,7 +456,8 @@ export default function QuizPage() {
   }
 
   const redirectToResults = async (health: number, correct: number, total: number, eliminated: boolean) => {
-    if (!currentPlayer || !session) return
+    if (!currentPlayer || !session || isRedirecting) return
+    setIsRedirecting(true)
 
     await mysupa.from("participants").update({
       finished_at: new Date().toISOString(),
